@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EWART WOODS — Aģentu Ferma (Live)</title>
+<style>
+  :root{
+    --ink:#2f2418;
+    --card:#fffefa;
+    --accent:#e8934a;
+    --work:#3fae5a;
+    --rest:#b9a26a;
+    --wood:#8a5a2b;
+    --wood-dark:#5f3a1a;
+    --shadow: 0 12px 32px rgba(30,20,10,.35);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(180deg,#efe6d3 0%, #e4d6b8 100%);
+    color:var(--ink);
+    padding:24px;
+    min-height:100vh;
+  }
+  header{
+    max-width:1400px;
+    margin:0 auto 18px;
+    text-align:center;
+  }
+  h1{
+    font-size:2rem;
+    margin:0 0 6px;
+    letter-spacing:.5px;
+  }
+  header p{
+    margin:4px 0;
+    color:#5a4a34;
+    font-size:.95rem;
+  }
+  .live-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+    padding:5px 14px;
+    background:#e3f6e7;
+    border:1px solid #a9dcb6;
+    color:#2b7a3f;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+  }
+  .live-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#2b7a3f;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .err-badge{
+    display:inline-block;
+    margin-top:8px;
+    padding:5px 14px;
+    background:#fbe3e3;
+    border:1px solid #e8a4a4;
+    color:#8a2c2c;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:600;
+  }
+
+  .farm-wrap{
+    max-width:1400px;
+    margin:0 auto;
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    border:6px solid #fff;
+  }
+  .scene{
+    position:relative;
+    width:100%;
+    aspect-ratio: 21/9;
+    background-image:url('https://d8j0ntlcm91z4.cloudfront.net/user_3HlY8PKXkIh0uLUWus0x3Sf05L2/hf_20260815_205940_bdd8765f-549f-4fbf-bbd7-39fd7a4a2d88.png');
+    background-size: cover;
+    background-position: center;
+    overflow:hidden;
+  }
+  .zoom-hint{
+    position:absolute;
+    bottom:10px; right:14px;
+    font-size:.68rem;
+    background:rgba(255,255,255,.8);
+    padding:3px 9px;
+    border-radius:999px;
+    color:#5a4a34;
+    z-index:9;
+  }
+
+  .agent{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .18s ease;
+    z-index:5;
+  }
+  .agent:hover{ transform:translate(-50%,-52%) scale(1.06); z-index:20;}
+  .figure{
+    position:relative;
+    height: clamp(90px, 13vw, 190px);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .agent.boss .figure{
+    height: clamp(130px, 18vw, 250px);
+  }
+  .figure img{
+    height:100%;
+    width:auto;
+    display:block;
+    filter: drop-shadow(0 10px 8px rgba(20,14,6,.45));
+    pointer-events:none;
+  }
+  .figure::after{
+    content:'';
+    position:absolute;
+    bottom:-4px; left:50%;
+    transform:translateX(-50%);
+    width:58%; height:14%;
+    background: radial-gradient(ellipse at center, rgba(20,14,6,.38) 0%, rgba(20,14,6,0) 72%);
+    border-radius:50%;
+    z-index:-1;
+  }
+  .status-dot{
+    position:absolute;
+    top:4%; right:6%;
+    width:13px; height:13px;
+    border-radius:50%;
+    background:var(--work);
+    border:2.5px solid #fff;
+    box-shadow:0 0 0 0 rgba(63,174,90,.55);
+    animation: pulse 1.6s ease-in-out infinite;
+    z-index:2;
+  }
+  .status-dot.resting{
+    background:var(--rest);
+    animation:none;
+    box-shadow:none;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(63,174,90,.55); }
+    70%{ box-shadow:0 0 0 7px rgba(63,174,90,0); }
+    100%{ box-shadow:0 0 0 0 rgba(63,174,90,0); }
+  }
+  .bubble{
+    position:relative;
+    max-width: 150px;
+    background:#fffdf6;
+    border:1.5px solid #3b2c18;
+    border-radius:12px;
+    padding:4px 10px;
+    font-size:.66rem;
+    font-weight:600;
+    line-height:1.25;
+    text-align:center;
+    color:#3b2c18;
+    box-shadow:0 3px 7px rgba(0,0,0,.22);
+    white-space:normal;
+    min-height: 1.2em;
+  }
+  .bubble::after{
+    content:'';
+    position:absolute;
+    bottom:-7px; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:7px solid transparent;
+    border-right:7px solid transparent;
+    border-top:7px solid #3b2c18;
+  }
+  .bubble::before{
+    content:'';
+    position:absolute;
+    bottom:-5px; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:6px solid #fffdf6;
+    z-index:1;
+  }
+  .agent-name{
+    font-size:.72rem;
+    font-weight:700;
+    background:rgba(255,255,255,.92);
+    padding:2px 9px;
+    border-radius:8px;
+    color:#3b2c18;
+    white-space:nowrap;
+    box-shadow:0 2px 4px rgba(0,0,0,.15);
+  }
+
+  .event-ticker{
+    max-width:1400px;
+    margin:12px auto 0;
+    background:#fffdf6;
+    border:1px solid #e6d8b8;
+    border-radius:12px;
+    padding:8px 16px;
+    font-size:.82rem;
+    color:#5a4a34;
+    text-align:center;
+  }
+  .event-ticker b{ color:#3b2c18; }
+
+  footer{
+    max-width:1400px;
+    margin:16px auto 0;
+    text-align:center;
+    font-size:.78rem;
+    color:#8a7a5e;
+  }
+
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(25,18,10,.55);
+    display:none;
+    align-items:center; justify-content:center;
+    padding:20px;
+    z-index:100;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background:var(--card);
+    border-radius:18px;
+    max-width:420px;
+    width:100%;
+    padding:26px 24px 22px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    position:relative;
+    animation: pop .18s ease;
+  }
+  @keyframes pop{
+    from{ transform:scale(.92); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+  .modal .close{
+    position:absolute; top:12px; right:14px;
+    background:none; border:none;
+    font-size:1.3rem; cursor:pointer;
+    color:#9a9a8a;
+    line-height:1;
+  }
+  .modal .close:hover{ color:#3b4a30; }
+  .modal-head{
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:6px;
+  }
+  .modal-video{
+    width:64px; height:64px;
+    border-radius:50%;
+    overflow:hidden;
+    border:3px solid var(--accent);
+    flex-shrink:0;
+    background:#ccc;
+  }
+  .modal-video video{ width:100%; height:100%; object-fit:cover; }
+  .modal h2{
+    margin:0 0 2px;
+    font-size:1.15rem;
+  }
+  .modal .role{
+    font-size:.82rem;
+    color:#7a7a6a;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:12px;
+    padding:4px 12px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+    background:#e3f6e7; color:#2b7a3f;
+  }
+  .status-pill.resting{
+    background:#f3ecd9; color:#8a7434;
+  }
+  .modal-section{ margin-top:16px; }
+  .modal-section h3{
+    margin:0 0 6px;
+    font-size:.78rem;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:#9a9a8a;
+  }
+  .modal-section p{ margin:0; font-size:.92rem; line-height:1.4; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌾 EWART WOODS — Aģentu Ferma</h1>
+  <p>Katrs tēls uz fermas atspoguļo reālu statusu no datubāzes (strādā / atpūšas) un pēdējo teikto. Uzklikšķini uz aģenta, lai atvērtu profilu ar 2 sekunžu darbības cilpu.</p>
+  <span class="live-badge" id="liveBadge"><span class="live-dot"></span> Ielādē datus no datubāzes…</span>
+</header>
+
+<div class="farm-wrap">
+  <div class="scene" id="scene">
+    <span class="zoom-hint">🔍 Fona attēls ir 6336×2688&nbsp;px — var piezoomēt</span>
+    <!-- agents injected by JS -->
+  </div>
+</div>
+
+<div class="event-ticker" id="eventTicker">Ielādē pēdējo notikumu…</div>
+
+<footer>EWART WOODS · Aģentu Ferma — dzīvs skats, dati no Supabase</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <button class="close" id="closeBtn">✕</button>
+    <div class="modal-head">
+      <div class="modal-video" id="mVideoWrap"><video id="mVideo" autoplay loop muted playsinline></video></div>
+      <div>
+        <h2 id="mName"></h2>
+        <div class="role" id="mRole"></div>
+      </div>
+    </div>
+    <span class="status-pill" id="mStatusPill">🟢 Strādā</span>
+    <div class="modal-section">
+      <h3>Pašreizējā darbība</h3>
+      <p id="mTask"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+const REFRESH_MS = 15000;
+
+const scene = document.getElementById('scene');
+const liveBadge = document.getElementById('liveBadge');
+const eventTicker = document.getElementById('eventTicker');
+const overlay = document.getElementById('overlay');
+const mVideo = document.getElementById('mVideo');
+mVideo.muted = true;
+
+let agentsById = {};
+
+function sbHeaders(){
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+  };
+}
+
+async function sbGet(pathAndQuery){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + pathAndQuery, { headers: sbHeaders() });
+  if(!res.ok){ throw new Error('Supabase pieprasījums neizdevās: ' + res.status); }
+  return res.json();
+}
+
+function renderAgents(agents, statuses){
+  const statusByAgent = {};
+  statuses.forEach(s => { statusByAgent[s.agent_id] = s; });
+
+  scene.querySelectorAll('.agent').forEach(el => el.remove());
+
+  agents.forEach(a => {
+    const st = statusByAgent[a.id] || { status:'resting', current_task:'', quote:'' };
+    const isBoss = a.tier === 'boss';
+    const working = st.status === 'working';
+
+    const el = document.createElement('div');
+    el.className = 'agent' + (isBoss ? ' boss' : '');
+    el.style.left = a.pos_x + '%';
+    el.style.top = a.pos_y + '%';
+    el.innerHTML = `
+      <div class="bubble">${st.quote ? st.quote : (working ? 'Strādā…' : 'Atpūšas 😴')}</div>
+      <div class="figure">
+        <img src="${a.cutout_url}" alt="${a.name}" loading="lazy">
+        <span class="status-dot ${working ? '' : 'resting'}"></span>
+      </div>
+      <div class="agent-name">${a.name}</div>
+    `;
+    el.addEventListener('click', () => openModal(a, st));
+    scene.appendChild(el);
+
+    agentsById[a.id] = a;
+  });
+}
+
+function renderTicker(events){
+  if(!events || !events.length){
+    eventTicker.textContent = 'Vēl nav notikumu žurnālā.';
+    return;
+  }
+  const e = events[0];
+  const when = new Date(e.created_at);
+  const agentName = e.agent_id && agentsById[e.agent_id] ? agentsById[e.agent_id].name : 'Ferma';
+  eventTicker.innerHTML = `📋 <b>${agentName}:</b> ${e.event_text} <span style="opacity:.6">(${when.toLocaleString('lv-LV')})</span>`;
+}
+
+function openModal(a, st){
+  const working = st.status === 'working';
+  document.getElementById('mName').textContent = a.name;
+  document.getElementById('mRole').textContent = a.role;
+  document.getElementById('mTask').textContent = st.current_task || 'Nav norādīts.';
+  const pill = document.getElementById('mStatusPill');
+  pill.textContent = working ? '🟢 Strādā' : '💤 Atpūšas';
+  pill.className = 'status-pill' + (working ? '' : ' resting');
+  mVideo.src = a.video_url;
+  const p = mVideo.play();
+  if(p && typeof p.catch === 'function'){ p.catch(()=>{}); }
+  overlay.classList.add('show');
+}
+document.getElementById('closeBtn').addEventListener('click', ()=>{
+  overlay.classList.remove('show');
+  mVideo.pause();
+});
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay){ overlay.classList.remove('show'); mVideo.pause(); } });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ overlay.classList.remove('show'); mVideo.pause(); } });
+
+async function loadAndRender(){
+  try{
+    const [agents, statuses, events] = await Promise.all([
+      sbGet('agents?select=*&order=created_at.asc'),
+      sbGet('agent_status?select=*'),
+      sbGet('agent_events?select=*&order=created_at.desc&limit=1')
+    ]);
+    renderAgents(agents, statuses);
+    renderTicker(events);
+    liveBadge.className = 'live-badge';
+    liveBadge.innerHTML = '<span class="live-dot"></span> Live — dati no Supabase';
+  }catch(err){
+    console.error(err);
+    liveBadge.className = 'err-badge';
+    liveBadge.textContent = '⚠️ Neizdevās ielādēt datus no datubāzes — pārbaudi savienojumu';
+  }
+}
+
+loadAndRender();
+setInterval(loadAndRender, REFRESH_MS);
+</script>
+
+</body>
+</html>
