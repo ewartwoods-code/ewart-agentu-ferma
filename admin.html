@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EWART WOODS — Fermas Admin</title>
+<style>
+  :root{
+    --ink:#2f2418;
+    --accent:#e8934a;
+    --work:#3fae5a;
+    --rest:#b9a26a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:linear-gradient(180deg,#efe6d3 0%, #e4d6b8 100%);
+    color:var(--ink);
+    padding:24px;
+    min-height:100vh;
+  }
+  .wrap{ max-width:900px; margin:0 auto; }
+  h1{ font-size:1.5rem; margin:0 0 4px; }
+  p.sub{ color:#5a4a34; margin:0 0 18px; font-size:.9rem; }
+  a{ color:#7a5b1c; }
+
+  .token-bar{
+    display:flex; gap:8px; align-items:center;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:12px;
+    padding:10px 14px; margin-bottom:18px;
+  }
+  .token-bar input{
+    flex:1; padding:8px 10px; border-radius:8px; border:1.5px solid #d8c69a; font-family:monospace;
+  }
+  .token-bar button{
+    padding:8px 16px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer;
+  }
+  .token-status{ font-size:.78rem; }
+  .token-status.ok{ color:#2b7a3f; }
+  .token-status.bad{ color:#8a2c2c; }
+
+  .card{
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:14px;
+    padding:16px 18px; margin-bottom:16px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
+  }
+  .card h2{ margin:0 0 12px; font-size:1.05rem; }
+
+  table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+  th, td{ text-align:left; padding:6px 6px; border-bottom:1px solid #efe6d3; vertical-align:top; }
+  th{ color:#8a7a5e; font-weight:600; font-size:.75rem; text-transform:uppercase; }
+  select, input[type=text], textarea{
+    width:100%; padding:6px 8px; border-radius:6px; border:1.3px solid #d8c69a; font-family:inherit; font-size:.85rem;
+  }
+  textarea{ min-height:44px; resize:vertical; }
+  .row-save{
+    padding:6px 12px; border-radius:8px; border:none; background:#3fae5a; color:#fff; font-weight:700; cursor:pointer; font-size:.8rem;
+  }
+  .row-save:hover{ background:#329049; }
+  .row-msg{ font-size:.72rem; margin-top:3px; }
+  .row-msg.ok{ color:#2b7a3f; }
+  .row-msg.bad{ color:#8a2c2c; }
+
+  .cmd-item{
+    border-bottom:1px dashed #e6d8b8; padding:10px 0;
+  }
+  .cmd-item:last-child{ border-bottom:none; }
+  .cmd-meta{ font-size:.72rem; color:#9a8a6a; margin-bottom:4px; }
+  .cmd-msg{ font-size:.88rem; margin-bottom:6px; }
+  .cmd-reply{ display:flex; gap:6px; }
+  .cmd-reply textarea{ flex:1; }
+  .cmd-reply button{
+    padding:6px 14px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; font-size:.8rem; align-self:flex-start;
+  }
+  .empty-hint{ font-size:.85rem; color:#9a8a6a; font-style:italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛠️ EWART WOODS — Fermas Admin</h1>
+  <p class="sub">Šeit var manuāli atjaunot katra aģenta statusu un atbildēt uz ziņām, ko lietotāji sūta Hermem fermas lapā. <a href="/">← atpakaļ uz fermu</a></p>
+
+  <div class="token-bar">
+    <input type="password" id="tokenInput" placeholder="Admin marķieris (token)…">
+    <button id="tokenSave">Saglabāt</button>
+    <span class="token-status" id="tokenStatus"></span>
+  </div>
+
+  <div class="card">
+    <h2>🐑 Aģentu statusi</h2>
+    <table id="agentsTable">
+      <thead>
+        <tr><th>Aģents</th><th>Statuss</th><th>Pašreizējā darbība</th><th>Citāts (runas mākonis)</th><th></th></tr>
+      </thead>
+      <tbody id="agentsBody"><tr><td colspan="5" class="empty-hint">Ielādē…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>💬 Ziņas Hermem</h2>
+    <div id="cmdsList"><div class="empty-hint">Ielādē…</div></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+
+let adminToken = '';
+
+const tokenInput = document.getElementById('tokenInput');
+const tokenStatus = document.getElementById('tokenStatus');
+document.getElementById('tokenSave').addEventListener('click', ()=>{
+  adminToken = tokenInput.value.trim();
+  tokenStatus.textContent = adminToken ? 'Marķieris iestatīts (šai sesijai).' : '';
+  tokenStatus.className = 'token-status ok';
+});
+
+function sbHeaders(){
+  return { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
+}
+async function sbGet(pathAndQuery){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + pathAndQuery, { headers: sbHeaders() });
+  if(!res.ok) throw new Error('GET neizdevās: ' + res.status);
+  return res.json();
+}
+async function sbRpc(fn, body){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers: { ...sbHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> '');
+    throw new Error(res.status === 400 || t.includes('invalid token') ? 'Nepareizs admin marķieris.' : ('RPC kļūda: ' + res.status));
+  }
+  return res.json().catch(()=>null);
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : s;
+  return d.innerHTML;
+}
+
+let agentsCache = [];
+
+async function loadAgents(){
+  const [agents, statuses] = await Promise.all([
+    sbGet('agents?select=*&order=created_at.asc'),
+    sbGet('agent_status?select=*')
+  ]);
+  agentsCache = agents;
+  const statusByAgent = {};
+  statuses.forEach(s => statusByAgent[s.agent_id] = s);
+
+  const body = document.getElementById('agentsBody');
+  body.innerHTML = agents.map(a => {
+    const st = statusByAgent[a.id] || { status:'resting', current_task:'', quote:'' };
+    return `
+      <tr data-agent="${a.id}">
+        <td><b>${escapeHtml(a.name)}</b><br><span style="font-size:.72rem;color:#9a8a6a;">${escapeHtml(a.role||'')}</span></td>
+        <td>
+          <select class="f-status">
+            <option value="working" ${st.status==='working'?'selected':''}>🟢 Strādā</option>
+            <option value="resting" ${st.status==='resting'?'selected':''}>💤 Atpūšas</option>
+          </select>
+        </td>
+        <td><textarea class="f-task">${escapeHtml(st.current_task||'')}</textarea></td>
+        <td><textarea class="f-quote">${escapeHtml(st.quote||'')}</textarea></td>
+        <td>
+          <button class="row-save">Saglabāt</button>
+          <div class="row-msg"></div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  body.querySelectorAll('.row-save').forEach(btn => {
+    btn.addEventListener('click', async ()=>{
+      const tr = btn.closest('tr');
+      const agentId = tr.dataset.agent;
+      const status = tr.querySelector('.f-status').value;
+      const task = tr.querySelector('.f-task').value;
+      const quote = tr.querySelector('.f-quote').value;
+      const msg = tr.querySelector('.row-msg');
+      if(!adminToken){ msg.textContent = 'Vispirms ievadi admin marķieri augšā.'; msg.className='row-msg bad'; return; }
+      btn.disabled = true;
+      try{
+        await sbRpc('admin_update_status', { p_token: adminToken, p_agent_id: agentId, p_status: status, p_task: task, p_quote: quote });
+        msg.textContent = '✔ Saglabāts';
+        msg.className = 'row-msg ok';
+      }catch(err){
+        msg.textContent = '✖ ' + err.message;
+        msg.className = 'row-msg bad';
+      }finally{
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function loadCommands(){
+  const commands = await sbGet('commands?select=*&order=created_at.desc&limit=20');
+  const list = document.getElementById('cmdsList');
+  if(!commands.length){
+    list.innerHTML = '<div class="empty-hint">Vēl nav neviena ziņa.</div>';
+    return;
+  }
+  list.innerHTML = commands.map(c => {
+    const when = new Date(c.created_at).toLocaleString('lv-LV');
+    const statusTag = c.status === 'done' ? '✔ atbildēts' : (c.status === 'acknowledged' ? '👀 redzēts' : '⏳ gaida');
+    return `
+      <div class="cmd-item" data-cmd="${c.id}">
+        <div class="cmd-meta">${when} · ${statusTag}</div>
+        <div class="cmd-msg"><b>🧑‍🌾:</b> ${escapeHtml(c.message)}</div>
+        ${c.response ? `<div class="cmd-msg" style="color:#2b6a3f;"><b>🤠 Herme:</b> ${escapeHtml(c.response)}</div>` : ''}
+        <div class="cmd-reply">
+          <textarea class="reply-text" placeholder="Atbilde Herme vārdā…">${c.response ? '' : ''}</textarea>
+          <button class="reply-send">Atbildēt</button>
+        </div>
+        <div class="row-msg"></div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.reply-send').forEach(btn => {
+    btn.addEventListener('click', async ()=>{
+      const item = btn.closest('.cmd-item');
+      const cmdId = item.dataset.cmd;
+      const text = item.querySelector('.reply-text').value.trim();
+      const msg = item.querySelector('.row-msg');
+      if(!adminToken){ msg.textContent = 'Vispirms ievadi admin marķieri augšā.'; msg.className='row-msg bad'; return; }
+      if(!text){ msg.textContent = 'Ieraksti atbildes tekstu.'; msg.className='row-msg bad'; return; }
+      btn.disabled = true;
+      try{
+        await sbRpc('admin_respond_command', { p_token: adminToken, p_command_id: Number(cmdId), p_response: text, p_status: 'done' });
+        msg.textContent = '✔ Nosūtīts';
+        msg.className = 'row-msg ok';
+        await loadCommands();
+      }catch(err){
+        msg.textContent = '✖ ' + err.message;
+        msg.className = 'row-msg bad';
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function loadAll(){
+  try{
+    await Promise.all([loadAgents(), loadCommands()]);
+  }catch(err){
+    console.error(err);
+  }
+}
+loadAll();
+setInterval(loadAll, 20000);
+</script>
+</body>
+</html>
