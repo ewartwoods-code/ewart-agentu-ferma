@@ -302,6 +302,67 @@
     color:#9a9a8a;
   }
   .modal-section p{ margin:0; font-size:.92rem; line-height:1.4; }
+
+  /* ===== Mobile / phone format ===== */
+  @media (max-width: 768px){
+    body{ padding:12px; }
+    header{ margin-bottom:12px; }
+    h1{ font-size:1.35rem; }
+    header p{ font-size:.82rem; }
+    .live-badge, .err-badge{ font-size:.72rem; padding:4px 12px; }
+
+    .farm-wrap{
+      border-radius:16px;
+      border-width:4px;
+    }
+    .scene{
+      /* Taller, portrait-oriented crop so the farm fills a phone screen
+         instead of showing a thin horizontal sliver of the wide image. */
+      aspect-ratio: 3 / 4;
+      background-position: center 30%;
+    }
+    .zoom-hint{
+      font-size:.6rem;
+      padding:2px 7px;
+      bottom:8px; right:8px;
+    }
+
+    .figure{
+      height: clamp(70px, 22vw, 150px);
+    }
+    .agent.boss .figure{
+      height: clamp(95px, 28vw, 190px);
+    }
+    .bubble{
+      max-width:120px;
+      font-size:.62rem;
+      padding:3px 8px;
+    }
+    .agent-name{
+      font-size:.66rem;
+      padding:2px 7px;
+    }
+
+    .event-ticker{
+      font-size:.76rem;
+      padding:7px 12px;
+      margin-top:10px;
+    }
+    footer{ font-size:.72rem; margin-top:12px; }
+
+    .modal{
+      max-width:100%;
+      padding:20px 18px 18px;
+      border-radius:16px;
+    }
+    .modal-video{ width:52px; height:52px; }
+    .modal h2{ font-size:1.05rem; }
+  }
+
+  @media (max-width: 400px){
+    .scene{ aspect-ratio: 2 / 3; }
+    h1{ font-size:1.15rem; }
+  }
 </style>
 </head>
 <body>
