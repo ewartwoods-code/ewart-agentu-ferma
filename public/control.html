@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EWART WOODS — Fermas Vadības Panelis</title>
+<style>
+  :root{
+    --ink:#2f2418;
+    --accent:#e8934a;
+    --work:#3fae5a;
+    --rest:#b9a26a;
+    --bad:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:linear-gradient(180deg,#efe6d3 0%, #e4d6b8 100%);
+    color:var(--ink);
+    padding:20px;
+    min-height:100vh;
+  }
+  .wrap{ max-width:1100px; margin:0 auto; }
+  h1{ font-size:1.5rem; margin:0 0 4px; }
+  p.sub{ color:#5a4a34; margin:0 0 16px; font-size:.88rem; }
+  a{ color:#7a5b1c; }
+
+  .tabs{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab-btn{
+    padding:8px 16px; border-radius:999px; border:1.5px solid #d8c69a;
+    background:#fffdf6; font-weight:700; font-size:.84rem; cursor:pointer; color:#5a4a34;
+  }
+  .tab-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .token-bar{
+    display:flex; gap:8px; align-items:center;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:12px;
+    padding:10px 14px; margin-bottom:18px;
+  }
+  .token-bar input{
+    flex:1; padding:8px 10px; border-radius:8px; border:1.5px solid #d8c69a; font-family:monospace;
+  }
+  .token-bar button{
+    padding:8px 16px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer;
+  }
+  .token-status{ font-size:.78rem; }
+  .token-status.ok{ color:#2b7a3f; }
+  .token-status.bad{ color:#8a2c2c; }
+
+  .card{
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:14px;
+    padding:16px 18px; margin-bottom:16px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
+  }
+  .card h2{ margin:0 0 12px; font-size:1.05rem; }
+
+  table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+  th, td{ text-align:left; padding:6px 6px; border-bottom:1px solid #efe6d3; vertical-align:top; }
+  th{ color:#8a7a5e; font-weight:600; font-size:.75rem; text-transform:uppercase; }
+  select, input[type=text], input[type=number], textarea{
+    width:100%; padding:6px 8px; border-radius:6px; border:1.3px solid #d8c69a; font-family:inherit; font-size:.85rem;
+  }
+  textarea{ min-height:44px; resize:vertical; }
+  label{ font-size:.76rem; color:#8a7a5e; display:block; margin-bottom:3px; }
+  .field{ margin-bottom:10px; }
+  .btn{
+    padding:7px 14px; border-radius:8px; border:none; font-weight:700; cursor:pointer; font-size:.8rem;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; }
+  .btn-primary:hover{ background:#d67f36; }
+  .btn-good{ background:var(--work); color:#fff; }
+  .btn-good:hover{ background:#329049; }
+  .btn-bad{ background:var(--bad); color:#fff; }
+  .btn-bad:hover{ background:#a5301f; }
+  .btn-ghost{ background:#fffdf6; border:1px solid #d8c69a; color:#5a4a34; }
+  .status-tag{
+    display:inline-block; padding:2px 9px; border-radius:999px; font-size:.72rem; font-weight:700;
+  }
+  .status-tag.active{ background:#e3f6e7; color:#2b7a3f; }
+  .status-tag.review{ background:#fef0dc; color:#a8631a; }
+  .status-tag.done{ background:#eef0f2; color:#57606a; }
+  .status-tag.rejected{ background:#fbe3e3; color:#8a2c2c; }
+  .row-msg{ font-size:.72rem; margin-top:3px; }
+  .row-msg.ok{ color:#2b7a3f; }
+  .row-msg.bad{ color:#8a2c2c; }
+  .empty-hint{ font-size:.85rem; color:#9a8a6a; font-style:italic; }
+  .btn-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:700px){ .grid-2{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🖥️ EWART WOODS — Fermas Vadības Panelis</h1>
+  <p class="sub">Uzdevumu saraksts, plāns un datu pārlūks. <a href="/">← atpakaļ uz fermu</a></p>
+
+  <div class="token-bar">
+    <input type="password" id="tokenInput" placeholder="Admin marķieris (token)…">
+    <button id="tokenSave">Saglabāt</button>
+    <span class="token-status" id="tokenStatus"></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tasks">📋 Uzdevumi</button>
+    <button class="tab-btn" data-tab="plan">🗺️ Plāns</button>
+    <button class="tab-btn" data-tab="data">📊 Datu pārlūks</button>
+    <button class="tab-btn" data-tab="history">🕓 Vēsture</button>
+  </div>
+
+  <!-- ===== TASKS ===== -->
+  <div class="tab-panel active" id="tab-tasks">
+    <div class="card">
+      <h2>➕ Jauns uzdevums</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label>Minjons</label>
+          <select id="newTaskAgent"></select>
+        </div>
+        <div class="field">
+          <label>Nosaukums</label>
+          <input type="text" id="newTaskTitle" placeholder="piem., Amazon PPC atskaite (DE)">
+        </div>
+      </div>
+      <div class="field">
+        <label>Apraksts (nav obligāts)</label>
+        <textarea id="newTaskDesc"></textarea>
+      </div>
+      <button class="btn btn-primary" id="newTaskSubmit">Iedot uzdevumu — minjons dodas uz lauku</button>
+      <div class="row-msg" id="newTaskMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Aktīvie un neseni uzdevumi</h2>
+      <table>
+        <thead><tr><th>Minjons</th><th>Uzdevums</th><th>Statuss</th><th>Kad</th><th></th></tr></thead>
+        <tbody id="tasksBody"><tr><td colspan="5" class="empty-hint">Ielādē…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PLAN ===== -->
+  <div class="tab-panel" id="tab-plan">
+    <div class="card">
+      <h2>🗺️ Fermas plāns</h2>
+      <p class="sub" style="margin-top:-6px;">Brīvs teksts — stratēģija, prioritātes, piezīmes nākamajam periodam.</p>
+      <textarea id="planText" style="min-height:280px;"></textarea>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-primary" id="planSave">Saglabāt plānu</button>
+      </div>
+      <div class="row-msg" id="planMsg"></div>
+    </div>
+  </div>
+
+  <!-- ===== DATA BROWSER ===== -->
+  <div class="tab-panel" id="tab-data">
+    <div class="card">
+      <h2>🐑 Minjoni — skilli, tokeni, Anthropic piesaiste</h2>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn btn-ghost" id="usageSyncBtn">🔄 Sinhronizēt tokenus (Anthropic Console)</button>
+      </div>
+      <div class="row-msg" id="usageSyncMsg"></div>
+      <table>
+        <thead><tr><th>Aģents</th><th>Skilli</th><th>Tokeni (in / out)</th><th>Izmaksas</th><th>Anthropic workspace / key id</th></tr></thead>
+        <tbody id="agentsDataBody"><tr><td colspan="5" class="empty-hint">Ielādē…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>➕ Pievienot / atjaunot skilu</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label>Minjons</label>
+          <select id="skillAgent"></select>
+        </div>
+        <div class="field">
+          <label>Skila nosaukums</label>
+          <input type="text" id="skillName" placeholder="piem., Amazon PPC">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Līmenis</label>
+          <select id="skillLevel">
+            <option value="mācās">mācās</option>
+            <option value="proficient" selected>proficient</option>
+            <option value="expert">expert</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Apraksts (nav obligāts)</label>
+          <input type="text" id="skillDesc">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="skillSave">Saglabāt skilu</button>
+      <div class="row-msg" id="skillMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔗 Anthropic Console piesaiste</h2>
+      <p class="sub" style="margin-top:-6px;">Lai tokenu sinhronizācija zinātu, kurš workspace/API key pieder kuram minjonam.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>Minjons</label>
+          <select id="mapAgent"></select>
+        </div>
+        <div class="field">
+          <label>Workspace ID</label>
+          <input type="text" id="mapWorkspace" placeholder="wrkspc_...">
+        </div>
+      </div>
+      <div class="field">
+        <label>API Key ID (ja izmanto atsevišķu atslēgu vietā)</label>
+        <input type="text" id="mapApiKey" placeholder="apikey_...">
+      </div>
+      <button class="btn btn-primary" id="mapSave">Saglabāt piesaisti</button>
+      <div class="row-msg" id="mapMsg"></div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY ===== -->
+  <div class="tab-panel" id="tab-history">
+    <div class="card">
+      <h2>🕓 Notikumu žurnāls</h2>
+      <div id="historyList"><div class="empty-hint">Ielādē…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+
+let adminToken = sessionStorage.getItem('ewart_admin_token') || '';
+let agentsCache = [];
+
+const tokenInput = document.getElementById('tokenInput');
+const tokenStatus = document.getElementById('tokenStatus');
+if(adminToken){ tokenInput.value = adminToken; tokenStatus.textContent = 'Marķieris iestatīts.'; tokenStatus.className = 'token-status ok'; }
+document.getElementById('tokenSave').addEventListener('click', () => {
+  adminToken = tokenInput.value.trim();
+  if(adminToken) sessionStorage.setItem('ewart_admin_token', adminToken);
+  tokenStatus.textContent = adminToken ? 'Marķieris iestatīts (šai sesijai).' : '';
+  tokenStatus.className = 'token-status ok';
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+function sbHeaders(){ return { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }; }
+async function sbGet(pathAndQuery){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + pathAndQuery, { headers: sbHeaders() });
+  if(!res.ok) throw new Error('GET neizdevās: ' + res.status);
+  return res.json();
+}
+async function sbRpc(fn, body){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers: { ...sbHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> '');
+    throw new Error(res.status === 400 || t.includes('invalid token') ? 'Nepareizs admin marķieris.' : ('RPC kļūda: ' + res.status + ' ' + t));
+  }
+  return res.json().catch(()=>null);
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : s;
+  return d.innerHTML;
+}
+function requireToken(msgEl){
+  if(!adminToken){ msgEl.textContent = 'Vispirms ievadi admin marķieri augšā.'; msgEl.className = 'row-msg bad'; return false; }
+  return true;
+}
+
+async function loadAgents(){
+  agentsCache = await sbGet('agents?select=*&order=created_at.asc');
+  const minions = agentsCache.filter(a => a.tier !== 'boss');
+  const opts = minions.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  ['newTaskAgent','skillAgent','mapAgent'].forEach(id => { document.getElementById(id).innerHTML = opts; });
+}
+
+// ---------- Tasks ----------
+
+async function loadTasks(){
+  const tasks = await sbGet('tasks?select=*&order=created_at.desc&limit=60');
+  const body = document.getElementById('tasksBody');
+  if(!tasks.length){ body.innerHTML = '<tr><td colspan="5" class="empty-hint">Vēl nav uzdevumu.</td></tr>'; return; }
+  body.innerHTML = tasks.map(t => {
+    const agent = agentsCache.find(a => a.id === t.agent_id);
+    const when = new Date(t.created_at).toLocaleString('lv-LV');
+    let actions = '';
+    if(t.status === 'active'){
+      actions = `<button class="btn btn-ghost review-btn" data-id="${t.id}">Atzīmēt kā gatavu</button>`;
+    } else if(t.status === 'review'){
+      actions = `<button class="btn btn-good approve-btn" data-id="${t.id}">✔ Apstiprināt</button>
+                 <button class="btn btn-bad reject-btn" data-id="${t.id}">↺ Atgriezt</button>`;
+    }
+    return `<tr data-task="${t.id}">
+      <td>${escapeHtml(agent ? agent.name : t.agent_id || '—')}</td>
+      <td><b>${escapeHtml(t.title)}</b>${t.description ? '<br><span style="color:#8a7a5e;font-size:.78rem;">' + escapeHtml(t.description) + '</span>' : ''}${t.result_summary && t.status !== 'active' ? '<br><span style="color:#2b7a3f;font-size:.78rem;">✅ ' + escapeHtml(t.result_summary) + '</span>' : ''}</td>
+      <td><span class="status-tag ${t.status}">${t.status}</span></td>
+      <td style="font-size:.76rem;color:#8a7a5e;">${when}</td>
+      <td><div class="btn-row">${actions}</div><div class="row-msg"></div></td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('.review-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const msg = btn.closest('tr').querySelector('.row-msg');
+    if(!requireToken(msg)) return;
+    const summary = window.prompt('Ko minjons izdarīja? (īss teksts runas mākonim)');
+    if(summary === null) return;
+    try{
+      await sbRpc('admin_mark_task_review', { p_token: adminToken, p_task_id: Number(btn.dataset.id), p_result_summary: summary });
+      msg.textContent = '✔ Atzīmēts'; msg.className = 'row-msg ok';
+      loadTasks();
+    }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+  }));
+  body.querySelectorAll('.approve-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const msg = btn.closest('tr').querySelector('.row-msg');
+    if(!requireToken(msg)) return;
+    try{
+      await sbRpc('admin_approve_task', { p_token: adminToken, p_task_id: Number(btn.dataset.id) });
+      msg.textContent = '✔ Apstiprināts, minjons devās mājās'; msg.className = 'row-msg ok';
+      loadTasks();
+    }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+  }));
+  body.querySelectorAll('.reject-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const msg = btn.closest('tr').querySelector('.row-msg');
+    if(!requireToken(msg)) return;
+    const note = window.prompt('Kāpēc jāpārtaisa? (piezīme minjonam)') || '';
+    try{
+      await sbRpc('admin_reject_task', { p_token: adminToken, p_task_id: Number(btn.dataset.id), p_note: note });
+      msg.textContent = '↺ Nosūtīts pārtaisīšanai'; msg.className = 'row-msg ok';
+      loadTasks();
+    }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+  }));
+}
+
+document.getElementById('newTaskSubmit').addEventListener('click', async () => {
+  const msg = document.getElementById('newTaskMsg');
+  if(!requireToken(msg)) return;
+  const agentId = document.getElementById('newTaskAgent').value;
+  const title = document.getElementById('newTaskTitle').value.trim();
+  const desc = document.getElementById('newTaskDesc').value.trim();
+  if(!agentId || !title){ msg.textContent = 'Izvēlies minjonu un ieraksti nosaukumu.'; msg.className = 'row-msg bad'; return; }
+  try{
+    await sbRpc('admin_create_task', { p_token: adminToken, p_agent_id: agentId, p_title: title, p_description: desc });
+    msg.textContent = '✔ Uzdevums iedots, minjons devās uz lauku'; msg.className = 'row-msg ok';
+    document.getElementById('newTaskTitle').value = '';
+    document.getElementById('newTaskDesc').value = '';
+    loadTasks();
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+// ---------- Plan ----------
+
+async function loadPlan(){
+  const rows = await sbGet('farm_plan?select=content&id=eq.1');
+  document.getElementById('planText').value = (rows[0] && rows[0].content) || '';
+}
+document.getElementById('planSave').addEventListener('click', async () => {
+  const msg = document.getElementById('planMsg');
+  if(!requireToken(msg)) return;
+  try{
+    await sbRpc('admin_save_plan', { p_token: adminToken, p_content: document.getElementById('planText').value });
+    msg.textContent = '✔ Saglabāts'; msg.className = 'row-msg ok';
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+// ---------- Data browser ----------
+
+async function loadDataBrowser(){
+  const [skillRows, usageRows, mapRows] = await Promise.all([
+    sbGet('agent_skills?select=agent_id,level,skills(name)'),
+    sbGet('agent_usage?select=*'),
+    sbGet('agent_workspace_map?select=*')
+  ]);
+  const skillsByAgent = {}, usageByAgent = {}, mapByAgent = {};
+  skillRows.forEach(s => { (skillsByAgent[s.agent_id] = skillsByAgent[s.agent_id] || []).push(s); });
+  usageRows.forEach(u => { usageByAgent[u.agent_id] = u; });
+  mapRows.forEach(m => { mapByAgent[m.agent_id] = m; });
+
+  const minions = agentsCache.filter(a => a.tier !== 'boss');
+  const body = document.getElementById('agentsDataBody');
+  body.innerHTML = minions.map(a => {
+    const skills = (skillsByAgent[a.id] || []).map(s => escapeHtml((s.skills ? s.skills.name : '') + ' (' + (s.level||'') + ')')).join(', ') || '—';
+    const u = usageByAgent[a.id];
+    const tokens = u ? `${(u.input_tokens||0).toLocaleString('lv-LV')} / ${(u.output_tokens||0).toLocaleString('lv-LV')}` : '—';
+    const cost = u ? '$' + (u.cost_usd||0).toFixed(2) : '—';
+    const m = mapByAgent[a.id];
+    const mapText = m ? [m.anthropic_workspace_id, m.anthropic_api_key_id].filter(Boolean).join(' / ') || '—' : '—';
+    return `<tr><td><b>${escapeHtml(a.name)}</b></td><td>${skills}</td><td>${tokens}</td><td>${cost}</td><td style="font-family:monospace;font-size:.76rem;">${escapeHtml(mapText)}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty-hint">Nav minjonu.</td></tr>';
+}
+
+document.getElementById('skillSave').addEventListener('click', async () => {
+  const msg = document.getElementById('skillMsg');
+  if(!requireToken(msg)) return;
+  const agentId = document.getElementById('skillAgent').value;
+  const name = document.getElementById('skillName').value.trim();
+  const level = document.getElementById('skillLevel').value;
+  const desc = document.getElementById('skillDesc').value.trim();
+  if(!agentId || !name){ msg.textContent = 'Izvēlies minjonu un ieraksti skila nosaukumu.'; msg.className = 'row-msg bad'; return; }
+  try{
+    await sbRpc('admin_upsert_agent_skill', { p_token: adminToken, p_agent_id: agentId, p_skill_name: name, p_description: desc, p_level: level });
+    msg.textContent = '✔ Saglabāts'; msg.className = 'row-msg ok';
+    document.getElementById('skillName').value = '';
+    document.getElementById('skillDesc').value = '';
+    loadDataBrowser();
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+document.getElementById('mapSave').addEventListener('click', async () => {
+  const msg = document.getElementById('mapMsg');
+  if(!requireToken(msg)) return;
+  const agentId = document.getElementById('mapAgent').value;
+  const ws = document.getElementById('mapWorkspace').value.trim();
+  const key = document.getElementById('mapApiKey').value.trim();
+  try{
+    await sbRpc('admin_set_workspace_map', { p_token: adminToken, p_agent_id: agentId, p_workspace_id: ws || null, p_api_key_id: key || null });
+    msg.textContent = '✔ Saglabāts'; msg.className = 'row-msg ok';
+    document.getElementById('mapWorkspace').value = '';
+    document.getElementById('mapApiKey').value = '';
+    loadDataBrowser();
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+document.getElementById('usageSyncBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('usageSyncMsg');
+  if(!requireToken(msg)) return;
+  msg.textContent = 'Sinhronizē…'; msg.className = 'row-msg';
+  try{
+    const res = await fetch('/api/usage/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: adminToken })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ msg.textContent = '✖ ' + (data.error || res.status); msg.className = 'row-msg bad'; return; }
+    const okCount = (data.synced || []).filter(r => r.ok).length;
+    msg.textContent = `✔ Sinhronizēti ${okCount} / ${(data.synced||[]).length} minjoni.`;
+    msg.className = 'row-msg ok';
+    loadDataBrowser();
+  }catch(err){ msg.textContent = '✖ Kļūda: ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+// ---------- History ----------
+
+async function loadHistory(){
+  const events = await sbGet('agent_events?select=*&order=created_at.desc&limit=80');
+  const list = document.getElementById('historyList');
+  if(!events.length){ list.innerHTML = '<div class="empty-hint">Vēl nav notikumu.</div>'; return; }
+  list.innerHTML = events.map(e => {
+    const agent = agentsCache.find(a => a.id === e.agent_id);
+    const when = new Date(e.created_at).toLocaleString('lv-LV');
+    return `<div style="padding:6px 0;border-bottom:1px dashed #efe6d3;font-size:.84rem;">
+      <span style="color:#8a7a5e;font-size:.76rem;">${when}</span> —
+      <b>${escapeHtml(agent ? agent.name : 'Ferma')}:</b> ${escapeHtml(e.event_text)}
+    </div>`;
+  }).join('');
+}
+
+async function loadAll(){
+  try{
+    await loadAgents();
+    await Promise.all([loadTasks(), loadPlan(), loadDataBrowser(), loadHistory()]);
+  }catch(err){
+    console.error(err);
+  }
+}
+loadAll();
+setInterval(loadAll, 20000);
+</script>
+</body>
+</html>
