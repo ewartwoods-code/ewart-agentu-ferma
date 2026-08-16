@@ -353,26 +353,117 @@
     font-weight:600;
     margin:0 5px 5px 0;
   }
-  .usage-row{ display:flex; gap:14px; font-size:.82rem; }
+  .usage-row{ display:flex; flex-wrap:wrap; gap:14px; font-size:.82rem; }
   .usage-row b{ display:block; font-size:1rem; }
-  .report-btn, .modal-actions button{
-    margin-top:14px;
-    padding:8px 14px;
-    border-radius:10px;
-    border:1px solid #d8c69a;
-    background:#fffdf6;
-    color:#5a4a34;
-    font-weight:700;
-    font-size:.82rem;
-    cursor:pointer;
-  }
-  .report-btn:hover{ background:#f3ecd9; }
-  .full-report{ display:none; margin-top:14px; border-top:1px dashed #e6d8b8; padding-top:12px; }
-  .full-report.show{ display:block; }
-  .full-report .event-row{
+  .event-row{
     font-size:.78rem; color:#5a4a34; padding:4px 0; border-bottom:1px dashed #efe6d3;
   }
-  .full-report .event-row b{ color:#3b2c18; }
+  .event-row b{ color:#3b2c18; }
+  .muted{ font-size:.82rem; color:#9a8a6a; font-style:italic; }
+
+  /* ===== Per-minion personal profile: tabs, identity, own work ===== */
+  .modal-tabs{
+    display:flex; gap:4px; margin-top:14px;
+    border-bottom:1px solid #efe6d3;
+  }
+  .modal-tab{
+    padding:7px 11px;
+    border:none; background:none; cursor:pointer;
+    font-family:inherit; font-weight:700; font-size:.78rem;
+    color:#9a8a6a;
+    border-bottom:2.5px solid transparent;
+    margin-bottom:-1px;
+  }
+  .modal-tab.active{ color:#3b2c18; border-bottom-color:var(--agent-accent, var(--accent)); }
+  .tab-body{ display:none; }
+  .tab-body.active{ display:block; }
+
+  .quote-line{
+    margin-top:10px; padding:8px 12px;
+    background:#f6f0e0;
+    border-left:3px solid var(--agent-accent, var(--accent));
+    border-radius:0 10px 10px 0;
+    font-size:.86rem; font-style:italic; color:#5a4a34;
+  }
+  .badge-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .mini-badge{
+    display:inline-block; padding:3px 10px; border-radius:999px;
+    font-size:.7rem; font-weight:700;
+    background:#f3ecd9; color:#7a5b1c;
+  }
+  .mini-badge.gate{ background:#fef0dc; color:#a8631a; }
+  .mini-badge.tier{ background:var(--agent-accent, var(--accent)); color:#fff; }
+
+  .count-grid{ display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 4px; }
+  .count-tile{
+    flex:1 1 68px; text-align:center; padding:8px 6px;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:10px;
+  }
+  .count-tile b{ display:block; font-size:1.15rem; line-height:1.15; }
+  .count-tile span{
+    font-size:.62rem; text-transform:uppercase; letter-spacing:.4px; color:#9a8a6a;
+  }
+
+  .work-item{
+    border:1px solid #efe6d3; border-radius:10px;
+    padding:8px 10px; margin-bottom:8px; background:#fffdf6;
+  }
+  .work-item .wi-head{ display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .work-item .wi-title{ font-size:.86rem; font-weight:700; }
+  .work-item .wi-meta{ font-size:.7rem; color:#9a8a6a; margin-top:3px; }
+  .work-item .wi-summary{ font-size:.78rem; color:#5a4a34; margin-top:5px; }
+  .work-item .wi-note{ font-size:.75rem; color:#8a2c2c; margin-top:4px; }
+  .status-tag{
+    display:inline-block; padding:2px 8px; border-radius:999px;
+    font-size:.68rem; font-weight:700; white-space:nowrap;
+  }
+  .status-tag.active{ background:#e3f6e7; color:#2b7a3f; }
+  .status-tag.review{ background:#fef0dc; color:#a8631a; }
+  .status-tag.done{ background:#eef0f2; color:#57606a; }
+  .status-tag.rejected{ background:#fbe3e3; color:#8a2c2c; }
+  .status-tag.queued{ background:#f3ecd9; color:#7a5b1c; }
+
+  /* ===== Herme aggregation panel — the only farm-wide summary surface ===== */
+  .stats-modal .modal{ max-width:760px; }
+  .stats-section{ margin-top:18px; }
+  .stats-section h3{
+    margin:0 0 8px; font-size:.78rem;
+    text-transform:uppercase; letter-spacing:.6px; color:#9a9a8a;
+  }
+  .agent-line{
+    display:flex; align-items:center; gap:10px; width:100%;
+    padding:7px 9px; margin-bottom:6px;
+    border:1px solid #efe6d3; border-radius:10px;
+    background:#fffdf6;
+    font-family:inherit; color:inherit; text-align:left;
+    cursor:pointer;
+  }
+  .agent-line:hover{ background:#f3ecd9; }
+  .agent-line img{ width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+  .agent-line .al-main{ flex:1; min-width:0; }
+  .agent-line .al-name{ display:block; font-size:.84rem; font-weight:700; }
+  .agent-line .al-sub{
+    display:block; font-size:.72rem; color:#8a7a5e;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .agent-line .al-num{ font-size:.7rem; color:#8a7a5e; text-align:right; white-space:nowrap; }
+  .approval-line{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 10px; margin-bottom:6px;
+    border:1px solid #f0dcc0; border-radius:10px; background:#fff8ee;
+  }
+  .approval-line .ap-main{ flex:1; min-width:0; font-size:.8rem; }
+  .approval-line .ap-agent{ font-weight:700; }
+  .approve-inline{
+    padding:5px 11px; border-radius:999px; border:none;
+    background:var(--work); color:#fff; font-weight:700; font-size:.7rem; cursor:pointer;
+  }
+  .approve-inline:hover{ background:#329049; }
+  .plan-box{
+    white-space:pre-wrap; font-size:.82rem; line-height:1.45; color:#5a4a34;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:10px;
+    padding:10px 12px; max-height:200px; overflow-y:auto;
+  }
 
   .herme-menu .modal{ max-width:300px; text-align:center; }
   .herme-menu-btn{
@@ -498,6 +589,10 @@
     .modal-video{ width:52px; height:52px; }
     .modal h2{ font-size:1.05rem; }
     .chat-modal .modal{ height:80vh; }
+    /* Beats the .stats-modal .modal width rule above (same specificity, later). */
+    .stats-modal .modal{ max-width:100%; }
+    .modal-tab{ padding:6px 8px; font-size:.72rem; }
+    .count-tile{ flex:1 1 58px; }
   }
 
   @media (max-width: 400px){
@@ -526,7 +621,8 @@
 
 <footer>EWART WOODS · Aģentu Ferma — dzīvs skats, dati no Supabase</footer>
 
-<!-- Agent info modal (+ full report) -->
+<!-- Per-minion personal profile: who it is + ITS OWN work, events and numbers.
+     Nothing farm-wide belongs in here — aggregation lives in Herme's panel. -->
 <div class="overlay" id="overlay">
   <div class="modal" id="modal">
     <button class="close" id="closeBtn">✕</button>
@@ -538,22 +634,47 @@
       </div>
     </div>
     <span class="status-pill" id="mStatusPill">🟢 Strādā</span>
-    <div class="modal-section">
-      <h3>Pašreizējā darbība</h3>
-      <p id="mTask"></p>
+    <div class="badge-row" id="mBadges"></div>
+    <div class="quote-line" id="mQuote"></div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-mtab="work">🧰 Viņa darbs</button>
+      <button class="modal-tab" data-mtab="profile">🪪 Profils</button>
+      <button class="modal-tab" data-mtab="history">🕓 Vēsture</button>
     </div>
-    <div class="modal-section" id="mSkillsSection">
-      <h3>Skilli</h3>
-      <div id="mSkills">—</div>
+
+    <div class="tab-body active" id="mtab-work">
+      <div class="modal-section">
+        <h3>Pašreizējā darbība</h3>
+        <p id="mTask"></p>
+      </div>
+      <div class="count-grid" id="mCounts"></div>
+      <div class="modal-section">
+        <h3>Viņa uzdevumi</h3>
+        <div id="mTasks">Ielādē…</div>
+      </div>
     </div>
-    <div class="modal-section" id="mUsageSection">
-      <h3>Tokeni / izmaksas</h3>
-      <div class="usage-row" id="mUsage">—</div>
+
+    <div class="tab-body" id="mtab-profile">
+      <div class="modal-section">
+        <h3>Kas viņš ir</h3>
+        <p id="mAbout"></p>
+      </div>
+      <div class="modal-section">
+        <h3>Skilli</h3>
+        <div id="mSkills">—</div>
+      </div>
+      <div class="modal-section">
+        <h3>Viņa skaitļi</h3>
+        <div class="usage-row" id="mUsage">—</div>
+      </div>
     </div>
-    <button class="report-btn" id="mReportBtn">ℹ️ Pilns pārskats</button>
-    <div class="full-report" id="mFullReport">
-      <h3 style="margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;color:#9a9a8a;">Vēsture</h3>
-      <div id="mHistory">Ielādē…</div>
+
+    <div class="tab-body" id="mtab-history">
+      <div class="modal-section">
+        <h3>Notikumu lente</h3>
+        <div id="mHistory">Ielādē…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -564,8 +685,50 @@
     <button class="close" id="hermeMenuClose">✕</button>
     <h2 style="margin:0 0 4px;">🤠 Herme</h2>
     <div class="role">Fermas boss</div>
+    <button class="herme-menu-btn" id="hermeStatsBtn">📊 Visas fermas kopskats</button>
     <button class="herme-menu-btn" id="hermeChatBtn">💬 Sarunāties čatā</button>
     <button class="herme-menu-btn" id="hermeControlBtn">🖥️ Atvērt vadības paneli</button>
+  </div>
+</div>
+
+<!-- Herme aggregation panel — the ONE place where whole-farm numbers live. -->
+<div class="overlay stats-modal" id="hermeStatsOverlay">
+  <div class="modal" id="hermeStatsModal">
+    <button class="close" id="hermeStatsClose">✕</button>
+    <h2 style="margin:0 0 2px;">📊 Fermas kopskats</h2>
+    <div class="role">Herme skatās pār visu fermu — kopējie skaitļi vienuviet</div>
+
+    <div class="stats-section">
+      <h3>Uzdevumi pēc statusa</h3>
+      <div class="count-grid" id="sCounts"><span class="muted">Ielādē…</span></div>
+      <div class="muted" id="sCountsNote"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Gaida saimnieka apstiprinājumu</h3>
+      <div id="sApprovals">Ielādē…</div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Minjoni (klikšķini, lai atvērtu profilu)</h3>
+      <div id="sAgents">Ielādē…</div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Tokeni un izmaksas — visa ferma</h3>
+      <div class="usage-row" id="sUsage">Ielādē…</div>
+      <div class="muted" id="sUsageNote"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Pēdējie notikumi fermā</h3>
+      <div id="sEvents">Ielādē…</div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Fermas plāns</h3>
+      <div class="plan-box" id="sPlan">Ielādē…</div>
+    </div>
   </div>
 </div>
 
@@ -710,6 +873,8 @@ async function approveTask(taskId){
   try{
     await sbRpc('admin_approve_task', { p_token: token, p_task_id: taskId });
     await loadAndRender();
+    // Keep the boss panel in sync when the approval was made from inside it.
+    if(hermeStatsOverlay.classList.contains('show')) await loadHermeStats();
   }catch(err){
     alert('Neizdevās apstiprināt: ' + err.message);
   }
@@ -726,70 +891,216 @@ function renderTicker(events){
   eventTicker.innerHTML = `📋 <b>${escapeHtml(agentName)}:</b> ${escapeHtml(e.event_text)} <span style="opacity:.6">(${when.toLocaleString('lv-LV')})</span>`;
 }
 
-// ---------- Agent info modal + full report ----------
+// ---------- Shared task / formatting helpers ----------
+
+// The five task states allowed by tasks.status (see the schema migration).
+const TASK_STATUSES = [
+  { key: 'active',   label: 'Strādā'    },
+  { key: 'review',   label: 'Gaida OK'  },
+  { key: 'done',     label: 'Pabeigts'  },
+  { key: 'rejected', label: 'Atgriezts' },
+  { key: 'queued',   label: 'Rindā'     }
+];
+
+function fmtDateTime(v){ return v ? new Date(v).toLocaleString('lv-LV') : '—'; }
+function fmtDay(v){ return v ? new Date(v).toLocaleDateString('lv-LV') : '—'; }
+function fmtNum(n){ return Number(n || 0).toLocaleString('lv-LV'); }
+
+function countByStatus(tasks){
+  const counts = {};
+  TASK_STATUSES.forEach(s => { counts[s.key] = 0; });
+  tasks.forEach(t => { if(counts[t.status] !== undefined) counts[t.status]++; });
+  return counts;
+}
+
+function countTilesHtml(counts){
+  return TASK_STATUSES
+    .map(s => `<div class="count-tile"><b>${counts[s.key]}</b><span>${s.label}</span></div>`)
+    .join('');
+}
+
+// One task row, showing only the timestamps that actually exist on it.
+function taskItemHtml(t){
+  const meta = [
+    t.created_at ? 'izveidots ' + fmtDay(t.created_at) : null,
+    t.started_at ? 'sākts ' + fmtDay(t.started_at) : null,
+    t.reviewed_at ? 'nodots ' + fmtDay(t.reviewed_at) : null,
+    t.completed_at ? 'pabeigts ' + fmtDay(t.completed_at) : null
+  ].filter(Boolean).join(' · ');
+  const summary = t.result_summary
+    ? `<div class="wi-summary">📄 ${escapeHtml(t.result_summary)}</div>` : '';
+  const note = t.reject_note
+    ? `<div class="wi-note">↩ Pārtaisīt: ${escapeHtml(t.reject_note)}</div>` : '';
+  return `<div class="work-item">
+      <div class="wi-head">
+        <div class="wi-title">${escapeHtml(t.title || 'Bez nosaukuma')}</div>
+        <span class="status-tag ${escapeHtml(t.status)}">${escapeHtml(t.status)}</span>
+      </div>
+      <div class="wi-meta">${escapeHtml(meta || 'nav laika zīmogu')}</div>
+      ${summary}${note}
+    </div>`;
+}
+
+function eventRowsHtml(events, agentNameFor){
+  return events.map(e => {
+    const who = agentNameFor ? `<b>${escapeHtml(agentNameFor(e.agent_id))}:</b> ` : '';
+    return `<div class="event-row">${who}${escapeHtml(e.event_text)}
+      <span style="opacity:.6">(${fmtDateTime(e.created_at)})</span></div>`;
+  }).join('');
+}
+
+// Deterministic accent colour per agent id, so every minion's profile looks
+// like its own page. Presentation only — no data is derived from it.
+function agentAccent(id){
+  const s = String(id || '');
+  let h = 0;
+  for(let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) % 360; }
+  return `hsl(${h}, 58%, 42%)`;
+}
+
+// ---------- Per-minion personal profile (its own work only) ----------
+
+function setModalTab(name){
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.toggle('active', b.dataset.mtab === name));
+  document.querySelectorAll('.tab-body').forEach(p => p.classList.toggle('active', p.id === 'mtab-' + name));
+}
+document.querySelectorAll('.modal-tab').forEach(btn => {
+  btn.addEventListener('click', () => setModalTab(btn.dataset.mtab));
+});
 
 async function openModal(a, task){
+  const modal = document.getElementById('modal');
+  const accent = agentAccent(a.id);
+  modal.style.setProperty('--agent-accent', accent);
+  document.getElementById('mVideoWrap').style.borderColor = accent;
+
   document.getElementById('mName').textContent = a.name;
   document.getElementById('mRole').textContent = a.role;
-  document.getElementById('mTask').textContent = (task && (task.status === 'review' ? task.result_summary : task.title)) || 'Nav norādīts.';
+  document.getElementById('mTask').textContent =
+    (task && (task.status === 'review' ? task.result_summary : task.title)) || 'Nav norādīts.';
+
   const pill = document.getElementById('mStatusPill');
   const inReview = task && task.status === 'review';
   pill.textContent = inReview ? '🕓 Gaida apstiprinājumu' : (task ? '🟢 Strādā' : '💤 Atpūšas mājās');
   pill.className = 'status-pill' + (inReview ? ' review' : (task ? '' : ' resting'));
+
   mVideo.src = a.video_url;
   const p = mVideo.play();
   if(p && typeof p.catch === 'function'){ p.catch(()=>{}); }
 
-  document.getElementById('mFullReport').classList.remove('show');
+  document.getElementById('mAbout').textContent =
+    `${a.role}. Fermā kopš ${fmtDay(a.created_at)} (ID: ${a.id}).`;
+  document.getElementById('mBadges').innerHTML = '';
+  const quoteEl = document.getElementById('mQuote');
+  quoteEl.style.display = 'none';
+  document.getElementById('mCounts').innerHTML = '';
+  document.getElementById('mTasks').textContent = 'Ielādē…';
   document.getElementById('mHistory').textContent = 'Ielādē…';
-
   document.getElementById('mSkills').textContent = 'Ielādē…';
   document.getElementById('mUsage').textContent = 'Ielādē…';
-  try{
-    const [skills, usageRows] = await Promise.all([
-      sbGet(`agent_skills?select=level,skills(name)&agent_id=eq.${encodeURIComponent(a.id)}`),
-      sbGet(`agent_usage?select=*&agent_id=eq.${encodeURIComponent(a.id)}`)
-    ]);
-    const skillsEl = document.getElementById('mSkills');
-    if(skills.length){
-      skillsEl.innerHTML = skills.map(s => `<span class="skill-chip">${escapeHtml(s.skills ? s.skills.name : '')} · ${escapeHtml(s.level||'')}</span>`).join('');
-    } else {
-      skillsEl.textContent = 'Vēl nav pievienotu skillu.';
-    }
-    const u = usageRows[0];
-    const usageEl = document.getElementById('mUsage');
-    if(u && u.last_synced_at){
-      usageEl.innerHTML = `<div><b>${(u.input_tokens||0).toLocaleString('lv-LV')}</b>ievad. tokeni</div>
-        <div><b>${(u.output_tokens||0).toLocaleString('lv-LV')}</b>izvad. tokeni</div>
-        <div><b>$${(u.cost_usd||0).toFixed(2)}</b>izmaksas</div>`;
-    } else {
-      usageEl.textContent = 'Vēl nav sinhronizēts (skat. vadības paneli).';
-    }
-  }catch(err){
-    console.error(err);
-    document.getElementById('mSkills').textContent = 'Neizdevās ielādēt.';
-    document.getElementById('mUsage').textContent = 'Neizdevās ielādēt.';
-  }
+  setModalTab('work');
+  modal.scrollTop = 0;
 
   overlay.dataset.agentId = a.id;
   overlay.classList.add('show');
-}
 
-document.getElementById('mReportBtn').addEventListener('click', async () => {
-  const fr = document.getElementById('mFullReport');
-  fr.classList.toggle('show');
-  if(!fr.classList.contains('show')) return;
-  const agentId = overlay.dataset.agentId;
-  const hist = document.getElementById('mHistory');
-  hist.textContent = 'Ielādē…';
+  const q = encodeURIComponent(a.id);
+  let skills, usageRows, statusRows, tasks, events;
   try{
-    const events = await sbGet(`agent_events?select=*&agent_id=eq.${encodeURIComponent(agentId)}&order=created_at.desc&limit=25`);
-    if(!events.length){ hist.textContent = 'Vēl nav vēstures.'; return; }
-    hist.innerHTML = events.map(e => `<div class="event-row"><b>${new Date(e.created_at).toLocaleString('lv-LV')}</b> — ${escapeHtml(e.event_text)}</div>`).join('');
+    [skills, usageRows, statusRows, tasks, events] = await Promise.all([
+      sbGet(`agent_skills?select=level,skills(name)&agent_id=eq.${q}`),
+      sbGet(`agent_usage?select=*&agent_id=eq.${q}`),
+      sbGet(`agent_status?select=*&agent_id=eq.${q}`),
+      sbGet(`tasks?select=*&agent_id=eq.${q}&order=created_at.desc&limit=50`),
+      sbGet(`agent_events?select=*&agent_id=eq.${q}&order=created_at.desc&limit=25`)
+    ]);
   }catch(err){
-    hist.textContent = 'Neizdevās ielādēt vēsturi.';
+    console.error(err);
+    ['mTasks','mHistory','mSkills','mUsage'].forEach(id => {
+      document.getElementById(id).textContent = 'Neizdevās ielādēt.';
+    });
+    return;
   }
-});
+  // A slower profile fetch must not overwrite a profile the visitor opened since.
+  if(overlay.dataset.agentId !== a.id) return;
+
+  // --- identity: quote + badges (all from this agent's own rows) ---
+  const st = statusRows[0];
+  if(st && st.quote){
+    quoteEl.textContent = '„' + st.quote + '”';
+    quoteEl.style.display = '';
+  }
+  const counts = countByStatus(tasks);
+  const badges = [
+    `<span class="mini-badge tier">${a.tier === 'boss' ? '🤠 Fermas boss' : '🧑‍🌾 Minjons'}</span>`,
+    `<span class="mini-badge gate">✋ Darbu apstiprina saimnieks</span>`,
+    `<span class="mini-badge">🗂️ ${tasks.length} uzdevumi</span>`
+  ];
+  if(events.length){
+    badges.push(`<span class="mini-badge">⏱️ Pēdējā kustība: ${fmtDay(events[0].created_at)}</span>`);
+  }
+  document.getElementById('mBadges').innerHTML = badges.join('');
+
+  // --- his own work ---
+  document.getElementById('mCounts').innerHTML = countTilesHtml(counts);
+  const tasksEl = document.getElementById('mTasks');
+  if(tasks.length){
+    const open = tasks.filter(t => t.status === 'active' || t.status === 'review' || t.status === 'queued');
+    const closed = tasks.filter(t => t.status === 'done' || t.status === 'rejected');
+    const block = (title, rows) => rows.length
+      ? `<div class="wi-meta" style="margin:6px 0 6px;">${title}</div>` + rows.map(taskItemHtml).join('')
+      : '';
+    tasksEl.innerHTML = block('ATVĒRTIE', open) + block('PABEIGTIE', closed);
+  } else {
+    tasksEl.innerHTML = '<span class="muted">Šim minjonam vēl nav neviena uzdevuma.</span>';
+  }
+
+  // --- his own timeline ---
+  const histEl = document.getElementById('mHistory');
+  histEl.innerHTML = events.length
+    ? eventRowsHtml(events, null)
+    : '<span class="muted">Vēl nav notikumu.</span>';
+
+  // --- skills ---
+  const skillsEl = document.getElementById('mSkills');
+  if(skills.length){
+    skillsEl.innerHTML = skills
+      .map(s => `<span class="skill-chip">${escapeHtml(s.skills ? s.skills.name : '')} · ${escapeHtml(s.level || '')}</span>`)
+      .join('');
+  } else {
+    skillsEl.innerHTML = '<span class="muted">Vēl nav pievienotu skillu.</span>';
+  }
+
+  // --- his own numbers: only tiles that have a real row behind them ---
+  const u = usageRows[0];
+  const tiles = [];
+  if(u && u.last_synced_at){
+    tiles.push(`<div><b>${fmtNum(u.input_tokens)}</b>ievad. tokeni</div>`);
+    tiles.push(`<div><b>${fmtNum(u.output_tokens)}</b>izvad. tokeni</div>`);
+    // cost_usd is written by /api/usage/sync, which does not yet read a real
+    // cost report — show it only when it is non-zero instead of faking $0.00.
+    tiles.push(Number(u.cost_usd) > 0
+      ? `<div><b>$${Number(u.cost_usd).toFixed(2)}</b>izmaksas</div>`
+      : `<div><b>—</b>izmaksas netiek uzskaitītas</div>`);
+  }
+  tiles.push(`<div><b>${counts.done}</b>pabeigti darbi</div>`);
+  if(counts.review) tiles.push(`<div><b>${counts.review}</b>gaida OK</div>`);
+  if(counts.rejected) tiles.push(`<div><b>${counts.rejected}</b>atgriezti</div>`);
+  const durations = tasks
+    .filter(t => t.started_at && t.completed_at)
+    .map(t => new Date(t.completed_at) - new Date(t.started_at))
+    .filter(ms => ms >= 0);
+  if(durations.length){
+    const avgMin = Math.round(durations.reduce((s, ms) => s + ms, 0) / durations.length / 60000);
+    tiles.push(`<div><b>${fmtNum(avgMin)} min</b>vidēji vienam darbam</div>`);
+  }
+  const usageEl = document.getElementById('mUsage');
+  usageEl.innerHTML = tiles.join('');
+  if(!(u && u.last_synced_at)){
+    usageEl.insertAdjacentHTML('beforeend',
+      '<div class="muted" style="flex-basis:100%">Tokeni vēl nav sinhronizēti (skat. vadības paneli).</div>');
+  }
+}
 
 document.getElementById('closeBtn').addEventListener('click', ()=>{
   overlay.classList.remove('show');
@@ -812,6 +1123,152 @@ document.getElementById('hermeChatBtn').addEventListener('click', () => {
   closeHermeMenu();
   openChat();
 });
+document.getElementById('hermeStatsBtn').addEventListener('click', () => {
+  closeHermeMenu();
+  openHermeStats();
+});
+
+// ---------- Herme aggregation panel (whole farm, boss only) ----------
+
+const hermeStatsOverlay = document.getElementById('hermeStatsOverlay');
+// Client-side aggregation window. If the farm ever exceeds it the panel says so
+// rather than presenting a partial count as the total.
+const FARM_TASKS_LIMIT = 500;
+
+function openHermeStats(){
+  hermeStatsOverlay.classList.add('show');
+  document.getElementById('hermeStatsModal').scrollTop = 0;
+  loadHermeStats();
+}
+function closeHermeStats(){ hermeStatsOverlay.classList.remove('show'); }
+document.getElementById('hermeStatsClose').addEventListener('click', closeHermeStats);
+hermeStatsOverlay.addEventListener('click', (e)=>{ if(e.target===hermeStatsOverlay) closeHermeStats(); });
+
+async function loadHermeStats(){
+  const ids = ['sCounts','sApprovals','sAgents','sUsage','sEvents','sPlan'];
+  let agents, tasks, statuses, usage, events, planRows;
+  try{
+    [agents, tasks, statuses, usage, events, planRows] = await Promise.all([
+      sbGet('agents?select=*&order=created_at.asc'),
+      sbGet(`tasks?select=*&order=created_at.desc&limit=${FARM_TASKS_LIMIT}`),
+      sbGet('agent_status?select=*'),
+      sbGet('agent_usage?select=*'),
+      sbGet('agent_events?select=*&order=created_at.desc&limit=12'),
+      sbGet('farm_plan?select=content,updated_at&id=eq.1')
+    ]);
+  }catch(err){
+    console.error(err);
+    ids.forEach(id => { document.getElementById(id).textContent = 'Neizdevās ielādēt.'; });
+    return;
+  }
+
+  const agentById = {};
+  agents.forEach(a => { agentById[a.id] = a; });
+  const statusById = {};
+  statuses.forEach(s => { statusById[s.agent_id] = s; });
+  const usageById = {};
+  usage.forEach(u => { usageById[u.agent_id] = u; });
+  const nameFor = (id) => (agentById[id] ? agentById[id].name : 'Ferma');
+
+  // --- totals by task status ---
+  document.getElementById('sCounts').innerHTML = countTilesHtml(countByStatus(tasks));
+  document.getElementById('sCountsNote').textContent = tasks.length >= FARM_TASKS_LIMIT
+    ? `Rādīti pēdējie ${FARM_TASKS_LIMIT} uzdevumi — kopskaits var būt lielāks.`
+    : `Kopā ${tasks.length} uzdevumi visā fermā.`;
+
+  // --- approval queue ---
+  const review = tasks.filter(t => t.status === 'review');
+  const apprEl = document.getElementById('sApprovals');
+  if(review.length){
+    apprEl.innerHTML = review.map(t => `<div class="approval-line">
+        <div class="ap-main">
+          <span class="ap-agent">${escapeHtml(nameFor(t.agent_id))}</span> —
+          ${escapeHtml(t.result_summary || t.title || 'Darbs pabeigts')}
+          <div class="wi-meta">${escapeHtml(t.title || '')} · nodots ${fmtDay(t.reviewed_at)}</div>
+        </div>
+        <button class="approve-inline" data-task="${t.id}">✔ Pieņemt</button>
+      </div>`).join('');
+    apprEl.querySelectorAll('.approve-inline').forEach(btn => {
+      btn.addEventListener('click', () => approveTask(Number(btn.dataset.task)));
+    });
+  } else {
+    apprEl.innerHTML = '<span class="muted">Nekas negaida apstiprinājumu.</span>';
+  }
+
+  // --- one line per minion (click -> that minion's personal profile) ---
+  const minions = agents.filter(a => a.tier !== 'boss');
+  const agentsEl = document.getElementById('sAgents');
+  if(minions.length){
+    agentsEl.innerHTML = minions.map(a => {
+      const own = tasks.filter(t => t.agent_id === a.id);
+      const c = countByStatus(own);
+      const st = statusById[a.id];
+      const u = usageById[a.id];
+      const line = (st && st.current_task) ? st.current_task
+        : (st && st.quote ? st.quote : 'Atpūšas mājās');
+      const tokens = (u && u.last_synced_at)
+        ? fmtNum((u.input_tokens || 0) + (u.output_tokens || 0)) + ' tok.'
+        : 'tokeni nav sinh.';
+      return `<button class="agent-line" data-agent="${escapeHtml(a.id)}">
+          <img src="${escapeHtml(a.cutout_url)}" alt="" loading="lazy">
+          <span class="al-main">
+            <span class="al-name">${escapeHtml(a.name)}</span>
+            <span class="al-sub">${escapeHtml(line)}</span>
+          </span>
+          <span class="al-num">${c.active} akt. · ${c.review} OK? · ${c.done} pab.<br>${escapeHtml(tokens)}</span>
+        </button>`;
+    }).join('');
+    agentsEl.querySelectorAll('.agent-line').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const a = agentById[btn.dataset.agent];
+        if(!a) return;
+        // Latest active/review task, same rule the field uses.
+        const live = tasks
+          .filter(t => t.agent_id === a.id && (t.status === 'active' || t.status === 'review'))
+          .sort((x, y) => new Date(y.created_at) - new Date(x.created_at))[0];
+        closeHermeStats();
+        openModal(a, live);
+      });
+    });
+  } else {
+    agentsEl.innerHTML = '<span class="muted">Reģistrā vēl nav minjonu.</span>';
+  }
+
+  // --- farm-wide usage ---
+  const synced = usage.filter(u => u.last_synced_at);
+  const totalIn = synced.reduce((s, u) => s + Number(u.input_tokens || 0), 0);
+  const totalOut = synced.reduce((s, u) => s + Number(u.output_tokens || 0), 0);
+  const totalCost = synced.reduce((s, u) => s + Number(u.cost_usd || 0), 0);
+  const usageEl = document.getElementById('sUsage');
+  const noteEl = document.getElementById('sUsageNote');
+  if(synced.length){
+    usageEl.innerHTML = `<div><b>${fmtNum(totalIn)}</b>ievad. tokeni</div>
+      <div><b>${fmtNum(totalOut)}</b>izvad. tokeni</div>
+      <div><b>${totalCost > 0 ? '$' + totalCost.toFixed(2) : '—'}</b>${totalCost > 0 ? 'izmaksas' : 'izmaksas netiek uzskaitītas'}</div>
+      <div><b>${synced.length}/${usage.length}</b>aģenti sinhronizēti</div>`;
+    const last = synced
+      .map(u => new Date(u.last_synced_at))
+      .sort((x, y) => y - x)[0];
+    noteEl.textContent = 'Pēdējā sinhronizācija: ' + last.toLocaleString('lv-LV');
+  } else {
+    usageEl.innerHTML = '<span class="muted">Neviens aģents vēl nav sinhronizēts.</span>';
+    noteEl.textContent = 'Tokenus sinhronizē vadības panelī.';
+  }
+
+  // --- farm-wide event overview ---
+  document.getElementById('sEvents').innerHTML = events.length
+    ? eventRowsHtml(events, nameFor)
+    : '<span class="muted">Vēl nav notikumu žurnālā.</span>';
+
+  // --- farm plan ---
+  const plan = planRows && planRows[0];
+  const planEl = document.getElementById('sPlan');
+  if(plan && plan.content && plan.content.trim()){
+    planEl.textContent = plan.content;
+  } else {
+    planEl.innerHTML = '<span class="muted">Plāns vēl nav ierakstīts (vadības panelis → Plāns).</span>';
+  }
+}
 
 // ---------- Herme chat ----------
 
