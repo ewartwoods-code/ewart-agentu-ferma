@@ -96,6 +96,20 @@
     color:#5a4a34;
     z-index:9;
   }
+  .control-link{
+    position:absolute;
+    top:10px; right:14px;
+    font-size:.72rem;
+    font-weight:700;
+    background:rgba(255,255,255,.88);
+    padding:5px 12px;
+    border-radius:999px;
+    color:#5a4a34;
+    z-index:9;
+    text-decoration:none;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .control-link:hover{ background:#fff; }
 
   .agent{
     position:absolute;
@@ -153,6 +167,9 @@
     animation:none;
     box-shadow:none;
   }
+  .status-dot.review{
+    background:#e8934a;
+  }
   @keyframes pulse{
     0%{ box-shadow:0 0 0 0 rgba(63,174,90,.55); }
     70%{ box-shadow:0 0 0 7px rgba(63,174,90,0); }
@@ -160,7 +177,7 @@
   }
   .bubble{
     position:relative;
-    max-width: 150px;
+    max-width: 160px;
     background:#fffdf6;
     border:1.5px solid #3b2c18;
     border-radius:12px;
@@ -174,6 +191,25 @@
     white-space:normal;
     min-height: 1.2em;
   }
+  .bubble.review{
+    background:#fff4e2;
+    border-color:var(--accent);
+  }
+  .bubble .approve-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    margin-top:5px;
+    padding:3px 9px;
+    border-radius:999px;
+    border:none;
+    background:var(--work);
+    color:#fff;
+    font-weight:700;
+    font-size:.64rem;
+    cursor:pointer;
+  }
+  .bubble .approve-btn:hover{ background:#329049; }
   .bubble::after{
     content:'';
     position:absolute;
@@ -245,6 +281,8 @@
     box-shadow:0 20px 60px rgba(0,0,0,.35);
     position:relative;
     animation: pop .18s ease;
+    max-height:85vh;
+    overflow-y:auto;
   }
   @keyframes pop{
     from{ transform:scale(.92); opacity:0; }
@@ -293,6 +331,9 @@
   .status-pill.resting{
     background:#f3ecd9; color:#8a7434;
   }
+  .status-pill.review{
+    background:#fef0dc; color:#a8631a;
+  }
   .modal-section{ margin-top:16px; }
   .modal-section h3{
     margin:0 0 6px;
@@ -302,6 +343,100 @@
     color:#9a9a8a;
   }
   .modal-section p{ margin:0; font-size:.92rem; line-height:1.4; }
+  .skill-chip{
+    display:inline-block;
+    background:#f3ecd9;
+    color:#7a5b1c;
+    border-radius:999px;
+    padding:3px 10px;
+    font-size:.74rem;
+    font-weight:600;
+    margin:0 5px 5px 0;
+  }
+  .usage-row{ display:flex; gap:14px; font-size:.82rem; }
+  .usage-row b{ display:block; font-size:1rem; }
+  .report-btn, .modal-actions button{
+    margin-top:14px;
+    padding:8px 14px;
+    border-radius:10px;
+    border:1px solid #d8c69a;
+    background:#fffdf6;
+    color:#5a4a34;
+    font-weight:700;
+    font-size:.82rem;
+    cursor:pointer;
+  }
+  .report-btn:hover{ background:#f3ecd9; }
+  .full-report{ display:none; margin-top:14px; border-top:1px dashed #e6d8b8; padding-top:12px; }
+  .full-report.show{ display:block; }
+  .full-report .event-row{
+    font-size:.78rem; color:#5a4a34; padding:4px 0; border-bottom:1px dashed #efe6d3;
+  }
+  .full-report .event-row b{ color:#3b2c18; }
+
+  .herme-menu .modal{ max-width:300px; text-align:center; }
+  .herme-menu-btn{
+    display:block; width:100%;
+    margin-top:12px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1.5px solid #d8c69a;
+    background:#fffdf6;
+    font-weight:700;
+    font-size:.92rem;
+    cursor:pointer;
+    color:#3b2c18;
+  }
+  .herme-menu-btn:hover{ background:#f3ecd9; }
+
+  .chat-modal .modal{ max-width:440px; display:flex; flex-direction:column; height:70vh; max-height:640px; }
+  .chat-log{
+    flex:1; overflow-y:auto;
+    margin-top:10px; padding-right:2px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .chat-msg{
+    max-width:80%;
+    padding:8px 12px;
+    border-radius:14px;
+    font-size:.86rem;
+    line-height:1.35;
+  }
+  .chat-msg.user{
+    align-self:flex-end;
+    background:var(--accent);
+    color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .chat-msg.herme{
+    align-self:flex-start;
+    background:#f3ecd9;
+    color:#3b2c18;
+    border-bottom-left-radius:4px;
+  }
+  .chat-msg.pending{ opacity:.6; font-style:italic; }
+  .chat-input-row{
+    display:flex; gap:8px; margin-top:10px;
+  }
+  .chat-input-row input{
+    flex:1;
+    padding:9px 12px;
+    border-radius:10px;
+    border:1.5px solid #d8c69a;
+    font-size:.88rem;
+    font-family:inherit;
+  }
+  .chat-input-row button{
+    padding:9px 16px;
+    border-radius:10px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .chat-input-row button:disabled{ opacity:.5; cursor:default; }
+  .chat-err{ font-size:.76rem; color:#8a2c2c; margin-top:6px; }
 
   /* ===== Mobile / phone format ===== */
   @media (max-width: 768px){
@@ -325,6 +460,11 @@
       font-size:.6rem;
       padding:2px 7px;
       bottom:8px; right:8px;
+    }
+    .control-link{
+      font-size:.64rem;
+      padding:4px 10px;
+      top:8px; right:8px;
     }
 
     .figure{
@@ -357,6 +497,7 @@
     }
     .modal-video{ width:52px; height:52px; }
     .modal h2{ font-size:1.05rem; }
+    .chat-modal .modal{ height:80vh; }
   }
 
   @media (max-width: 400px){
@@ -369,12 +510,13 @@
 
 <header>
   <h1>🌾 EWART WOODS — Aģentu Ferma</h1>
-  <p>Katrs tēls uz fermas atspoguļo reālu statusu no datubāzes (strādā / atpūšas) un pēdējo teikto. Uzklikšķini uz aģenta, lai atvērtu profilu ar 2 sekunžu darbības cilpu.</p>
+  <p>Uzklikšķini uz Hermes, lai sarunātos vai atvērtu vadības paneli. Minjoni dodas uz lauku tikai tad, kad viņiem iedots uzdevums.</p>
   <span class="live-badge" id="liveBadge"><span class="live-dot"></span> Ielādē datus no datubāzes…</span>
 </header>
 
 <div class="farm-wrap">
   <div class="scene" id="scene">
+    <a class="control-link" href="/control" target="_blank" rel="noopener">🖥️ Vadības panelis</a>
     <span class="zoom-hint">🔍 Fona attēls ir 6336×2688&nbsp;px — var piezoomēt</span>
     <!-- agents injected by JS -->
   </div>
@@ -384,6 +526,7 @@
 
 <footer>EWART WOODS · Aģentu Ferma — dzīvs skats, dati no Supabase</footer>
 
+<!-- Agent info modal (+ full report) -->
 <div class="overlay" id="overlay">
   <div class="modal" id="modal">
     <button class="close" id="closeBtn">✕</button>
@@ -398,6 +541,45 @@
     <div class="modal-section">
       <h3>Pašreizējā darbība</h3>
       <p id="mTask"></p>
+    </div>
+    <div class="modal-section" id="mSkillsSection">
+      <h3>Skilli</h3>
+      <div id="mSkills">—</div>
+    </div>
+    <div class="modal-section" id="mUsageSection">
+      <h3>Tokeni / izmaksas</h3>
+      <div class="usage-row" id="mUsage">—</div>
+    </div>
+    <button class="report-btn" id="mReportBtn">ℹ️ Pilns pārskats</button>
+    <div class="full-report" id="mFullReport">
+      <h3 style="margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;color:#9a9a8a;">Vēsture</h3>
+      <div id="mHistory">Ielādē…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Herme click menu: chat vs control panel -->
+<div class="overlay herme-menu" id="hermeMenuOverlay">
+  <div class="modal">
+    <button class="close" id="hermeMenuClose">✕</button>
+    <h2 style="margin:0 0 4px;">🤠 Herme</h2>
+    <div class="role">Fermas boss</div>
+    <button class="herme-menu-btn" id="hermeChatBtn">💬 Sarunāties čatā</button>
+    <button class="herme-menu-btn" id="hermeControlBtn">🖥️ Atvērt vadības paneli</button>
+  </div>
+</div>
+
+<!-- Herme chat modal -->
+<div class="overlay chat-modal" id="chatOverlay">
+  <div class="modal">
+    <button class="close" id="chatClose">✕</button>
+    <h2 style="margin:0 0 2px;">💬 Sarunā ar Hermi</h2>
+    <div class="role">Boss atbild reālā laikā</div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-err" id="chatErr"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Uzraksti Hermem…" maxlength="600">
+      <button id="chatSend">Sūtīt</button>
     </div>
   </div>
 </div>
@@ -415,6 +597,7 @@ const mVideo = document.getElementById('mVideo');
 mVideo.muted = true;
 
 let agentsById = {};
+let latestTaskByAgent = {}; // agent_id -> most recent active/review task
 
 function sbHeaders(){
   return {
@@ -429,34 +612,107 @@ async function sbGet(pathAndQuery){
   return res.json();
 }
 
-function renderAgents(agents, statuses){
-  const statusByAgent = {};
-  statuses.forEach(s => { statusByAgent[s.agent_id] = s; });
+async function sbRpc(fn, body){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: { ...sbHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> '');
+    throw new Error(t || ('RPC kļūda: ' + res.status));
+  }
+  return res.json().catch(()=>null);
+}
+
+function getAdminToken(promptIfMissing){
+  let t = sessionStorage.getItem('ewart_admin_token') || '';
+  if(!t && promptIfMissing){
+    t = window.prompt('Admin marķieris (lai apstiprinātu darbu):') || '';
+    if(t) sessionStorage.setItem('ewart_admin_token', t);
+  }
+  return t;
+}
+
+function renderAgents(agents, tasks){
+  latestTaskByAgent = {};
+  tasks.forEach(t => {
+    const cur = latestTaskByAgent[t.agent_id];
+    if(!cur || new Date(t.created_at) > new Date(cur.created_at)) latestTaskByAgent[t.agent_id] = t;
+  });
 
   scene.querySelectorAll('.agent').forEach(el => el.remove());
 
   agents.forEach(a => {
-    const st = statusByAgent[a.id] || { status:'resting', current_task:'', quote:'' };
     const isBoss = a.tier === 'boss';
-    const working = st.status === 'working';
+    const task = latestTaskByAgent[a.id];
+    const isOut = isBoss || !!task; // minions only show up when they have an active/review task
+
+    if(!isOut) return;
+
+    const inReview = task && task.status === 'review';
+    const working = isBoss ? true : (task && task.status === 'active');
 
     const el = document.createElement('div');
     el.className = 'agent' + (isBoss ? ' boss' : '');
     el.style.left = a.pos_x + '%';
     el.style.top = a.pos_y + '%';
+
+    let bubbleHtml;
+    if(inReview){
+      bubbleHtml = `<div class="bubble review">✅ ${escapeHtml(task.result_summary || 'Darbs pabeigts')}<br>
+        <button class="approve-btn" data-task="${task.id}">✔ Pieņemt un sūtīt mājās</button></div>`;
+    } else if(task){
+      bubbleHtml = `<div class="bubble">${escapeHtml(task.title || 'Strādā…')}</div>`;
+    } else {
+      bubbleHtml = `<div class="bubble">Fermas boss 🤠</div>`;
+    }
+
     el.innerHTML = `
-      <div class="bubble">${st.quote ? st.quote : (working ? 'Strādā…' : 'Atpūšas 😴')}</div>
+      ${bubbleHtml}
       <div class="figure">
-        <img src="${a.cutout_url}" alt="${a.name}" loading="lazy">
-        <span class="status-dot ${working ? '' : 'resting'}"></span>
+        <img src="${a.cutout_url}" alt="${escapeHtml(a.name)}" loading="lazy">
+        <span class="status-dot ${inReview ? 'review' : (working ? '' : 'resting')}"></span>
       </div>
-      <div class="agent-name">${a.name}</div>
+      <div class="agent-name">${escapeHtml(a.name)}</div>
     `;
-    el.addEventListener('click', () => openModal(a, st));
+
+    const approveBtn = el.querySelector('.approve-btn');
+    if(approveBtn){
+      approveBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        approveTask(task.id);
+      });
+    }
+
+    el.addEventListener('click', () => {
+      if(isBoss) openHermeMenu();
+      else openModal(a, task);
+    });
     scene.appendChild(el);
 
     agentsById[a.id] = a;
   });
+
+  // Boss always cached even if not in loop order issues
+  agents.forEach(a => { agentsById[a.id] = a; });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : s;
+  return d.innerHTML;
+}
+
+async function approveTask(taskId){
+  const token = getAdminToken(true);
+  if(!token) return;
+  try{
+    await sbRpc('admin_approve_task', { p_token: token, p_task_id: taskId });
+    await loadAndRender();
+  }catch(err){
+    alert('Neizdevās apstiprināt: ' + err.message);
+  }
 }
 
 function renderTicker(events){
@@ -467,37 +723,182 @@ function renderTicker(events){
   const e = events[0];
   const when = new Date(e.created_at);
   const agentName = e.agent_id && agentsById[e.agent_id] ? agentsById[e.agent_id].name : 'Ferma';
-  eventTicker.innerHTML = `📋 <b>${agentName}:</b> ${e.event_text} <span style="opacity:.6">(${when.toLocaleString('lv-LV')})</span>`;
+  eventTicker.innerHTML = `📋 <b>${escapeHtml(agentName)}:</b> ${escapeHtml(e.event_text)} <span style="opacity:.6">(${when.toLocaleString('lv-LV')})</span>`;
 }
 
-function openModal(a, st){
-  const working = st.status === 'working';
+// ---------- Agent info modal + full report ----------
+
+async function openModal(a, task){
   document.getElementById('mName').textContent = a.name;
   document.getElementById('mRole').textContent = a.role;
-  document.getElementById('mTask').textContent = st.current_task || 'Nav norādīts.';
+  document.getElementById('mTask').textContent = (task && (task.status === 'review' ? task.result_summary : task.title)) || 'Nav norādīts.';
   const pill = document.getElementById('mStatusPill');
-  pill.textContent = working ? '🟢 Strādā' : '💤 Atpūšas';
-  pill.className = 'status-pill' + (working ? '' : ' resting');
+  const inReview = task && task.status === 'review';
+  pill.textContent = inReview ? '🕓 Gaida apstiprinājumu' : (task ? '🟢 Strādā' : '💤 Atpūšas mājās');
+  pill.className = 'status-pill' + (inReview ? ' review' : (task ? '' : ' resting'));
   mVideo.src = a.video_url;
   const p = mVideo.play();
   if(p && typeof p.catch === 'function'){ p.catch(()=>{}); }
+
+  document.getElementById('mFullReport').classList.remove('show');
+  document.getElementById('mHistory').textContent = 'Ielādē…';
+
+  document.getElementById('mSkills').textContent = 'Ielādē…';
+  document.getElementById('mUsage').textContent = 'Ielādē…';
+  try{
+    const [skills, usageRows] = await Promise.all([
+      sbGet(`agent_skills?select=level,skills(name)&agent_id=eq.${encodeURIComponent(a.id)}`),
+      sbGet(`agent_usage?select=*&agent_id=eq.${encodeURIComponent(a.id)}`)
+    ]);
+    const skillsEl = document.getElementById('mSkills');
+    if(skills.length){
+      skillsEl.innerHTML = skills.map(s => `<span class="skill-chip">${escapeHtml(s.skills ? s.skills.name : '')} · ${escapeHtml(s.level||'')}</span>`).join('');
+    } else {
+      skillsEl.textContent = 'Vēl nav pievienotu skillu.';
+    }
+    const u = usageRows[0];
+    const usageEl = document.getElementById('mUsage');
+    if(u && u.last_synced_at){
+      usageEl.innerHTML = `<div><b>${(u.input_tokens||0).toLocaleString('lv-LV')}</b>ievad. tokeni</div>
+        <div><b>${(u.output_tokens||0).toLocaleString('lv-LV')}</b>izvad. tokeni</div>
+        <div><b>$${(u.cost_usd||0).toFixed(2)}</b>izmaksas</div>`;
+    } else {
+      usageEl.textContent = 'Vēl nav sinhronizēts (skat. vadības paneli).';
+    }
+  }catch(err){
+    console.error(err);
+    document.getElementById('mSkills').textContent = 'Neizdevās ielādēt.';
+    document.getElementById('mUsage').textContent = 'Neizdevās ielādēt.';
+  }
+
+  overlay.dataset.agentId = a.id;
   overlay.classList.add('show');
 }
+
+document.getElementById('mReportBtn').addEventListener('click', async () => {
+  const fr = document.getElementById('mFullReport');
+  fr.classList.toggle('show');
+  if(!fr.classList.contains('show')) return;
+  const agentId = overlay.dataset.agentId;
+  const hist = document.getElementById('mHistory');
+  hist.textContent = 'Ielādē…';
+  try{
+    const events = await sbGet(`agent_events?select=*&agent_id=eq.${encodeURIComponent(agentId)}&order=created_at.desc&limit=25`);
+    if(!events.length){ hist.textContent = 'Vēl nav vēstures.'; return; }
+    hist.innerHTML = events.map(e => `<div class="event-row"><b>${new Date(e.created_at).toLocaleString('lv-LV')}</b> — ${escapeHtml(e.event_text)}</div>`).join('');
+  }catch(err){
+    hist.textContent = 'Neizdevās ielādēt vēsturi.';
+  }
+});
+
 document.getElementById('closeBtn').addEventListener('click', ()=>{
   overlay.classList.remove('show');
   mVideo.pause();
 });
 overlay.addEventListener('click', (e)=>{ if(e.target===overlay){ overlay.classList.remove('show'); mVideo.pause(); } });
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ overlay.classList.remove('show'); mVideo.pause(); } });
+
+// ---------- Herme menu ----------
+
+const hermeMenuOverlay = document.getElementById('hermeMenuOverlay');
+function openHermeMenu(){ hermeMenuOverlay.classList.add('show'); }
+function closeHermeMenu(){ hermeMenuOverlay.classList.remove('show'); }
+document.getElementById('hermeMenuClose').addEventListener('click', closeHermeMenu);
+hermeMenuOverlay.addEventListener('click', (e)=>{ if(e.target===hermeMenuOverlay) closeHermeMenu(); });
+document.getElementById('hermeControlBtn').addEventListener('click', () => {
+  closeHermeMenu();
+  window.open('/control', '_blank');
+});
+document.getElementById('hermeChatBtn').addEventListener('click', () => {
+  closeHermeMenu();
+  openChat();
+});
+
+// ---------- Herme chat ----------
+
+const chatOverlay = document.getElementById('chatOverlay');
+const chatLog = document.getElementById('chatLog');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSend');
+const chatErr = document.getElementById('chatErr');
+
+function chatSessionId(){
+  let id = localStorage.getItem('ewart_chat_session');
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : ('sess-' + Date.now() + '-' + Math.random().toString(16).slice(2)));
+    localStorage.setItem('ewart_chat_session', id);
+  }
+  return id;
+}
+
+function addChatBubble(role, text, pending){
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (role === 'herme' ? 'herme' : 'user') + (pending ? ' pending' : '');
+  div.textContent = text;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return div;
+}
+
+async function openChat(){
+  chatOverlay.classList.add('show');
+  chatErr.textContent = '';
+  chatLog.innerHTML = '';
+  try{
+    const history = await sbGet(`chat_messages?select=role,content&session_id=eq.${encodeURIComponent(chatSessionId())}&order=created_at.asc&limit=50`);
+    if(!history.length){
+      addChatBubble('herme', 'Čau! Es esmu Herme, fermas boss. Ko vēlies zināt?');
+    } else {
+      history.forEach(m => addChatBubble(m.role, m.content));
+    }
+  }catch(err){
+    addChatBubble('herme', 'Čau! Es esmu Herme, fermas boss. Ko vēlies zināt?');
+  }
+  chatInput.focus();
+}
+document.getElementById('chatClose').addEventListener('click', () => chatOverlay.classList.remove('show'));
+chatOverlay.addEventListener('click', (e)=>{ if(e.target===chatOverlay) chatOverlay.classList.remove('show'); });
+
+async function sendChat(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+  chatErr.textContent = '';
+  chatInput.value = '';
+  chatSendBtn.disabled = true;
+  addChatBubble('user', text);
+  const pendingEl = addChatBubble('herme', 'Herme raksta…', true);
+  try{
+    const res = await fetch('/api/herme-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: chatSessionId(), message: text })
+    });
+    const data = await res.json().catch(()=>({}));
+    pendingEl.remove();
+    if(!res.ok){
+      chatErr.textContent = data.error || 'Kļūda sūtot ziņu.';
+      return;
+    }
+    addChatBubble('herme', data.reply || '…');
+  }catch(err){
+    pendingEl.remove();
+    chatErr.textContent = 'Kļūda sūtot ziņu — pārbaudi savienojumu.';
+  }finally{
+    chatSendBtn.disabled = false;
+  }
+}
+chatSendBtn.addEventListener('click', sendChat);
+chatInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChat(); });
+
+// ---------- Main polling loop ----------
 
 async function loadAndRender(){
   try{
-    const [agents, statuses, events] = await Promise.all([
+    const [agents, tasks, events] = await Promise.all([
       sbGet('agents?select=*&order=created_at.asc'),
-      sbGet('agent_status?select=*'),
+      sbGet('tasks?select=*&status=in.(active,review)&order=created_at.desc'),
       sbGet('agent_events?select=*&order=created_at.desc&limit=1')
     ]);
-    renderAgents(agents, statuses);
+    renderAgents(agents, tasks);
     renderTicker(events);
     liveBadge.className = 'live-badge';
     liveBadge.innerHTML = '<span class="live-dot"></span> Live — dati no Supabase';
