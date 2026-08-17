@@ -1,1 +1,1 @@
-window.BRAIN_DELTA={"updated":"2026-08-17 18:47","changed":[]};
+window.BRAIN_DELTA={"updated":"2026-08-17 18:50","changed":["products"],"products":"<div class=\"row\" data-code=\"PRD\"><div class=\"c\">PRD</div><b>Produktu master</b><span>249 produkti · skatīt <a href=\"/data/product-master.csv\">product-master.csv</a></span></div>"};
