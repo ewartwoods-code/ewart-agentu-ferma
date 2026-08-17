@@ -377,11 +377,14 @@ app.post('/api/task-inbox', (req, res) => {
 // his GPT "Action" (webhook): Gatis polls for a task, works it, and posts the
 // result back. Files live in exchange/gatis/ (inbox.ndjson / outbox.ndjson).
 const GATIS_DIR = process.env.GATIS_DIR || (() => {
-  // Resolve the farm's exchange/gatis/ wherever the server runs:
+  // The app ships its own synced copy of the gatis channel at <app>/exchange/gatis
+  // (kept in sync with the farm repo by Hermes). Fallbacks for local dev:
   //  - farm repo app/src → ../.. /exchange/gatis
-  //  - live app repo     → may be a sibling of this repo; fall back to env.
-  const cand = path.join(__dirname, '..', '..', 'exchange', 'gatis');
-  return fs.existsSync(cand) ? cand : path.join(__dirname, '..', 'exchange', 'gatis');
+  //  - app repo root     → ./exchange/gatis
+  const inApp = path.join(__dirname, '..', 'exchange', 'gatis');          // app/exchange/gatis
+  if (fs.existsSync(inApp)) return inApp;
+  const inFarm = path.join(__dirname, '..', '..', 'exchange', 'gatis');   // farm repo
+  return fs.existsSync(inFarm) ? inFarm : inApp;
 })();
 const gatisPath = (f) => path.join(GATIS_DIR, f);
 function gatisRead(f){ try { return require('fs').readFileSync(gatisPath(f),'utf8').trim().split('\n').filter(Boolean); } catch(_){ return []; } }

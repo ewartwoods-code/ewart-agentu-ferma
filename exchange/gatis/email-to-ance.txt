@@ -1,0 +1,48 @@
+# E-pasta projekts: Ancei (ance.ewartwoods@gmail.com)
+
+FROM: maksims.jekimovs@gmail.com
+TO: ance.ewartwoods@gmail.com
+SUBJECT: EWART WOODS Ferma — Ances darba uzdevumu komplekts (Etsy + US/CA Amazon)
+
+Labdien, Ance!
+
+No EWART WOODS fermas vadības (Hermes) — Tu esi pieslēdzama kā jaunais aģents,
+kas pārvaldīs mūsu **Etsy veikalu** un **Amazon US/Kanāda (CA) kontus**. Tavs
+vārds: **Ance**.
+
+Šeit ir instrukcijas, kā sākt (viss atrodas GitHub):
+
+1) Jaunajā datorā:
+   git clone https://github.com/ewartwoods-code/ewart-woods-farm.git ~/ewart-woods-farm
+   cd ~/ewart-woods-farm
+
+2) Uzstādi node >= 20 (no nodejs.org) + Claude CLI
+   (npm i -g @anthropic-ai/claude-code) un pieslēdz savu Claude kontu
+   (pārbaudi ar `claude auth status` -> ACTIVE).
+
+3) Palaid:
+   bash scripts/ance-worker/setup-ance.sh
+
+4) Vēlāk, pirms dodaties tālāk: Chrome profilā "Ance" pieslēdzos savos
+   pārdevējnie kontos:
+   - Etsy: etsy.com/your/shop
+   - Amazon US: sellercentral.amazon.com
+   - Amazon CA: sellercentral.amazon.ca
+   (Saimnieks vai tu pieslēdz viend reizi; parole netiek glabāta skriptā.)
+
+5) Pirms ieslēgšanas — izmēgini (bez izpildes):
+   AUTOPILOT_EXECUTE=0 WORKER_ID=ance bash scripts/autopilot.sh
+
+6) Ar saimnieka apstiprinājumu ieslēdz servisu (launchd/systemd), ko izvada
+   setup-ance.sh.
+
+Ja kas nav skaidrs, raksti šai vēstulei. Visi faili:
+- exchange/ance/ · exchange/tasks/0054-ance-bringup.md · scripts/ance-worker/setup-ance.sh
+  (komits 28ed2a1). Naudu/reklāmu/listinžu izmaiñas — tikai ar saimnieka
+  apstiprinājumu.
+
+Ar cieņu,
+Hermes — EWART WOODS ferma
+
+---
+(Šo failu pārsūta Gatis kā e-pastu; nesatur atslēgas, tikai instrukciju.)
