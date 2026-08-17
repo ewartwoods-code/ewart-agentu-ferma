@@ -2,113 +2,82 @@
 <html lang="lv">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Amazon EU PPC — Pārskats un ieteikumi (2026-08-17)</title>
+<title>Amazon EU PPC — Analize un priekslikumi (v2)</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0b1220; color: #e2e8f0; padding: 22px; line-height: 1.55; }
-  .wrap { max-width: 1100px; margin: 0 auto; }
-  h1 { font-size: 24px; color: #f1f5f9; margin-bottom: 4px; }
-  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 22px; }
-  .card { background: #111a2e; border: 1px solid #1e293b; border-radius: 14px; padding: 18px 20px; margin-bottom: 18px; }
-  .card h2 { font-size: 17px; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-  .badge { display: inline-block; padding: 1px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .badge.ok { background: #065f46; color: #6ee7b7; }
-  .badge.warn { background: #78350f; color: #fcd34d; }
-  .badge.danger { background: #7f1d1d; color: #fca5a5; }
-  .badge.info { background: #1e3a5f; color: #93c5fd; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
-  th { text-align: left; color: #94a3b8; font-weight: 600; padding: 8px 8px; border-bottom: 1px solid #1e293b; }
-  td { padding: 8px; border-bottom: 1px solid #16213a; }
-  tr:hover td { background: #16213a; }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .high { color: #f87171; font-weight: 700; }
-  .ok-c { color: #34d399; font-weight: 700; }
-  .med { color: #fbbf24; font-weight: 600; }
-  ul { padding-left: 18px; font-size: 13.5px; }
-  li { margin-bottom: 6px; }
-  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-  .kpi { background: #0f1729; border-radius: 10px; padding: 12px 14px; text-align: center; border: 1px solid #1e293b; }
-  .kpi .v { font-size: 22px; font-weight: 800; color: #60a5fa; }
-  .kpi .l { font-size: 11px; color: #94a3b8; }
-  .tag { font-size: 11px; background: #1e293b; padding: 2px 8px; border-radius: 10px; color: #cbd5e1; }
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:24px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:22px;color:#f1f5f9;margin-bottom:4px}
+.sub{color:#94a3b8;font-size:13px;margin-bottom:20px}
+.card{background:#111a2e;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.card h2{font-size:16px;color:#60a5fa;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#94a3b8;padding:6px 8px;border-bottom:1px solid #1e293b}
+td{padding:6px 8px;border-bottom:1px solid #16213a}
+.num{text-align:right}
+.high{color:#f87171;font-weight:700}
+.ok{color:#34d399;font-weight:700}
+.med{color:#fbbf24;font-weight:600}
+.step{background:#0f1729;border-left:3px solid #3b82f6;padding:8px 12px;border-radius:0 8px 8px 0;margin-bottom:8px;font-size:13px}
+ul{padding-left:18px;font-size:13.5px}li{margin-bottom:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>📊 Amazon EU PPC — Reklāmu pārskats &amp; ieteikumi</h1>
-<div class="sub">Secret (Seller Labs MCP, 9 veikali, dati 22.03.–17.08.2026) · Guards: ACoS ≤30% · TACoS ≤10% · ROAS ≥2 · Avots: data/secret/ppc-intel-2026-08-17.json</div>
+<h1>Amazon EU PPC — Analize un priekslikumi (v2)</h1>
+<div class="sub">Avots: Secret / Seller Labs, 22.03.-17.08.2026 (9 veikali). Robezas: ACoS &le;30%, TACoS &le;10%, ROAS &ge;2</div>
 
 <div class="card">
-  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;">
-    <div class="kpi"><div class="v">~144 €/mēn</div><div class="l">Iztērētā nauda novēršama (jau)</div></div>
-    <div class="kpi"><div class="v">9 / 9</div><div class="l">Saslēgtas venues</div></div>
-    <div class="kpi"><div class="v">5+4</div><div class="l">Kampaņas pauzētas + negatīvi</div></div>
-    <div class="kpi"><div class="v">67.9% →~45%</div><div class="l">DE ACoS (1000 → enabled)</div></div>
-  </div>
+<h2>1. Vesturiskais skats (ROAS pa menejiem)</h2>
+<table>
+<tr><th>Tirgus</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">Mai</th><th class="num">Jun</th><th class="num">Jul</th><th class="num">Avg(17d)</th><th>Vertejums</th></tr>
+<tr><td>FR</td><td class="num">4.8</td><td class="num">3.5</td><td class="num">3.8</td><td class="num">3.7</td><td class="num">3.6</td><td class="num">2.5</td><td class="ok">Veseligs</td></tr>
+<tr><td>NL</td><td class="num">0.0</td><td class="num">4.4</td><td class="num">12.3</td><td class="num">7.5</td><td class="num">6.9</td><td class="num">6.4</td><td class="ok">Izcils</td></tr>
+<tr><td>UK</td><td class="num">1.2</td><td class="num">7.7</td><td class="num">2.6</td><td class="num">7.5</td><td class="num">6.3</td><td class="num">4.0</td><td class="ok">Stabils</td></tr>
+<tr><td>DE</td><td class="num">1.9</td><td class="num">3.1</td><td class="num">5.8</td><td class="num">3.9</td><td class="num">3.4</td><td class="num">1.4</td><td class="med">Kritums</td></tr>
+<tr><td>ES</td><td class="num">7.4</td><td class="num">2.5</td><td class="num">2.5</td><td class="num">0.0</td><td class="num">4.0</td><td class="num">7.9</td><td class="med">Svarstigs</td></tr>
+<tr><td>SE</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="high">0 konversiju</td></tr>
+<tr><td>IT</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">3.4</td><td class="num">2.4</td><td class="num">1.8</td><td class="num">0.0</td><td class="high">Pasliktinas</td></tr>
+</table>
 </div>
 
 <div class="card">
-  <h2>🎯 30 dienu rādītāji pēc tirgus</h2>
-  <table>
-    <tr><th>Tirgus</th><th class="num">Spend 30d</th><th class="num">Ad sales 30d</th><th class="num">ACoS 30d</th><th class="num">TACoS 30d</th><th>Vērtējums</th></tr>
-    <tr><td>🇩🇪 DE</td><td class="num">611.05</td><td class="num">900.03</td><td class="num high">67.9%</td><td class="num med">20.6%</td><td>Problēma — 62% tēriņa jau no pauzētām</td></tr>
-    <tr><td>🇫🇷 FR</td><td class="num">656.38</td><td class="num">1,770.63</td><td class="num med">37.1%</td><td class="num med">13.7%</td><td>Veselīgi (viena SB kampaņa velk augšā)</td></tr>
-    <tr><td>🇧🇪 BE</td><td class="num">60.85</td><td class="num">52.07</td><td class="num high">116.9%</td><td class="num high">96.6%</td><td>~40 kampaņu drupas (no 1 kampaņas viss pārdoš.)</td></tr>
-    <tr><td>🇸🇪 SE</td><td class="num">45.54</td><td class="num">0.00</td><td class="num high">100%</td><td class="num ok">3.9%</td><td>0 konversiju; organiskais spēcīgs</td></tr>
-    <tr><td>🇮🇹 IT</td><td class="num">20.50</td><td class="num">0.00</td><td class="num high">100%</td><td class="num med">14.3%</td><td>0 konversiju — tērejas nauda</td></tr>
-    <tr><td>🇪🇸 ES</td><td class="num">25.87</td><td class="num">111.36</td><td class="num ok">23.2%</td><td class="num ok">5.3%</td><td>Labi</td></tr>
-    <tr><td>🇬🇧 UK</td><td class="num">85.38</td><td class="num">546.09</td><td class="num ok">15.6%</td><td class="num ok">6.3%</td><td>Labi</td></tr>
-    <tr><td>🇳🇱 NL</td><td class="num">27.04</td><td class="num">262.93</td><td class="num ok">10.3%</td><td class="num ok">5.4%</td><td>Lieliski</td></tr>
-    <tr><td>🇵🇱 PL</td><td class="num">0</td><td class="num">0</td><td class="num">n/a</td><td class="num">n/a</td><td>Nav reklāmu — konta neaķts</td></tr>
-  </table>
+<h2>P0 — izdarits (labos, pauze = pedeja tiesa)</h2>
+<p style="font-size:13px">Katrs gadjums vispirms dianosticets (bid/vardi/negativi/preces) — pauze tikai tad, ja labojumam nav cela uz merki.</p>
+<table>
+<tr><th>Tirgus</th><th>Objekts</th><th>Riciba</th><th>Terauds veras</th></tr>
+<tr><td>DE</td><td>4 kampanas (0 sales)</td><td>PAUSED</td><td class="num">~69 EUR</td></tr>
+<tr><td>FR</td><td>SB Floating Shelves video</td><td>PAUSED</td><td class="num">48.45 EUR</td></tr>
+<tr><td>SE</td><td>2 plass zienieti</td><td>NEG EXACT</td><td class="num">~16 EUR</td></tr>
+<tr><td>UK</td><td>tall plant stand</td><td>NEG EXACT</td><td class="num">10.77 EUR</td></tr>
+</table>
 </div>
 
 <div class="card">
-  <h2>🔍 Galvenie secinālumi (vadoties pēc datiem)</h2>
-  <ul>
-    <li><b>DE:</b> ACoS <span class="high">67.9%</span>, bet <b>62% no tēraude</b> (378.47 €) pieder jau pauzētām kampaendām — enabled-only ir ~<span class="med">45%</span>. Tendence pasliktināšies (17→25→29→72%).</li>
-    <li><b>SE un IT:</b> visi enabled kampaļu ar <b>0 konversijam</b> — reklāma tētē naudu (SE 45.5€, IT 20.5€) kamēr organiskie precējas spēcīgi.</li>
-    <li><b>BE:</b> ~40 mazo kampaņu (katra zem 1€) — <b>visu pārdošanu dod 1 kampaķa</b> („TP Wave auto”, ROAS 17.7x).</li>
-    <li><b>Neticams aizrāvums:</b> auto kampă aizrāvusies neatbilstošus vaicājumus: DE `couch tablett armlehne` (18.7€) & UK `tall plant stand` (10.8€) — jāslēdz ar negatīvi.</li>
-  </ul>
+<h2>Jaunas kampanas (vajag tavu OK — tauret izdevumus)</h2>
+<div class="step"><b>FR</b> — „Manual phrase” (ACoS 29.7%) — neliels budzeta tests +30..40 EUR.</div>
+<div class="step"><b>DE</b> — EXACT spinoff no „TP Honey auto" (ROAS 2.0) labakiem vardiem.</div>
+<div class="step"><b>NL</b> — „TP Wave auto" formula (ROAS 17x) uz citiem produktiem.</div>
+<div class="step"><b>SE + IT</b> — pilna parbobve: EXACT-first, mazi bidi, negativi, placements.</div>
 </div>
 
 <div class="card">
-  <h2>🟢 P0 — JAU PIEVIETOTS (teva apstiprints, nulles riskam — 137-144€/mēn no nulases)</h2>
-  <table>
-    <tr><th>#</th><th>Tirgus</th><th>Kampaķa / objekts</th><th>Darbība</th><th class="num">Tēraudz (30d)</th></tr>
-    <tr><td>1</td><td>🇩🇪</td><td>SP Sofarm trays | manual exact</td><td>⏸ PAUSED</td><td class="num">19.65</td></tr>
-    <tr><td>2</td><td>🇩🇪</td><td>C-SP | TP Honey | broad 1</td><td>⏸ PAUSED</td><td class="num">24.85</td></tr>
-    <tr><td>3</td><td>🇩🇪</td><td>C-SP | TP Cloud | phrase 1</td><td>⏸ PAUSED</td><td class="num">12.33</td></tr>
-    <tr><td>4</td><td>🇩🇪</td><td>C-SP | TP Cloud | auto</td><td>⏸ PAUSED</td><td class="num">12.18</td></tr>
-    <tr><td>5</td><td>🇫🇷</td><td>SB Floating Shelves video/store</td><td>⏸ PAUSED</td><td class="num">48.45</td></tr>
-    <tr><td>6</td><td>🇬🇧</td><td>Negatīvs: “tall plant stand”</td><td>➖ NEG EXACT</td><td class="num">10.77</td></tr>
-    <tr><td>7</td><td>🇸🇪</td><td>Negatīvie: 2 sveves vārdi</td><td>➖ NEG EXACT</td><td class="num">16.01</td></tr>
-    <tr><td>8</td><td>🇸🇪</td><td>Negatīvs auto (badrum toalettpapper)</td><td>➖ NEG EXACT</td><td class="num">(dalīts)</td></tr>
-  </table>
+<h2>Optimizet esoosas (bez pauzem)</h2>
+<div class="step"><b>DE</b> — SP_TP Wave_FBA_broad (ACoS ~101%): bids -15..20%, merkiim acos un +seko.</div>
+<div class="step"><b>FR</b> — SP_TP Wave Fba_auto (ACoS 44.5%): bids -zem, negigli vairmais; budzets tikai phrase.</div>
+<div class="step"><b>BE</b> — ~40 siko kampanu konsolidac: viss uz „TP Wave auto" (ROAS 17x).</div>
 </div>
 
 <div class="card">
-  <h2>🟡 P1 — pirms izlešanas jāizpēta (naud neaiztiekam)</h2>
-  <ul>
-    <li><b>DE:</b> pēc augusta beigām pārbaudīt, vai ACoS pacēlēšana (17→72%) ir reāla vai augusta datu neatbilstība.</li>
-    <li><b>SE + IT:</b> lēmums — <b>apturēt reklāmu pilnībā</b> šajos 2 tirgos līdz jaunas struktūras samontētai?  (organikālā sales paliek.)</li>
-    <li><b>BE:</b> apvienot ~40 sīko kampaņu uz 1–2 darbinētām ap „TP Wave”.</li>
-  </ul>
+<h2>Testa cilpa (kas sak — uz to ejam)</h2>
+<ul>
+<li>Pec 7-14 dienam: atkarti dati, salidzinet ACoS/TACoS/ROAS.</li>
+<li>Test: EXACT-first vs phrase vs auto (FR/DE/NL), paturi 2 labakos.</li>
+<li>Vienmer vispirms labot (bids, negat angit), saja pauze.</li>
+<li>Merki: ACoS &le;30%, TACoS &le;10%, ROAS &ge;2 — tad skalot augsu (jauni tirgi, vardi, produkti).</li>
+</ul>
 </div>
 
-<div class="card">
-  <h2>🟢 P2 — Izaugsme: palielinam to, kas strādē (jaunas kampaņas = neatskaitēm)</h2>
-  <ul>
-    <li><b>FR:</b> „SP_TP ALL_Manual_phrase” (121€, ACoS 29.7%) — mazs budžeta testa pieaugums, jo jau zem 30%.</li>
-    <li><b>FR:</b> „SP_TP Wave Fba_auto” (235€, ACoS 44.5%) — nepiecie їami samazinājums vai pārbūve (nav mēŗkis).</li>
-    <li><b>DE:</b> „C-SP TP Honey auto” (33.3€, ROAS 2.0) — izlāstīt exact-spinoff no viņa top konvertēro vārdiem pēc P0 tīrīšanas.</li>
-  </ul>
-  <p style="font-size:12px; color:#94a3b8; margin-top:8px;">Visi skaitļi lati no Seller Labs datiem — nevienu nepublicējam bez tavas avotaprskatīšanas<p>
-</div>
-
-<div class="sub" style="margin-top:20px;">Prepared: Hermione · Source: exchange/results/t-0053-ppc-analysis.md · JSON: data/secret/ppc-intel-2026-08-17.json</div>
+<div class="sub" style="margin-top:18px;color:#94a3b8">Hermione · avots data/secret/ppc-intel-2026-08-17.json · 2026-08-17</div>
 </div>
 </body>
 </html>
