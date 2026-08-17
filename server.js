@@ -438,6 +438,19 @@ app.post('/api/gatis/skill', (req, res) => {
   res.json({ ok:true });
 });
 
+// GET /data/* -> serve the shipped product master (and other farm data files)
+// from the repo's data/ dir (public static does not cover it). Path-traversal
+// guarded: only files that exist under data/ are served.
+app.get('/data/:file', (req, res) => {
+  const file = path.basename(req.params.file);
+  const candidate = path.join(__dirname, 'data', file);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    res.type(path.extname(candidate) || 'text/plain').send(fs.readFileSync(candidate));
+  } else {
+    res.status(404).send('not found');
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
