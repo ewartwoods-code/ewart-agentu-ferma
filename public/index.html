@@ -16,13 +16,16 @@
     --shadow: 0 12px 32px rgba(30,20,10,.35);
   }
   *{box-sizing:border-box;}
+  html,body{ height:100%; }
   body{
     margin:0;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: linear-gradient(180deg,#efe6d3 0%, #e4d6b8 100%);
     color:var(--ink);
-    padding:24px;
-    min-height:100vh;
+    /* The stage IS the page now: it fills the viewport and the only thing that
+       scrolls is the side panel. Without this the scene would push the document
+       around while the owner pans. */
+    overflow:hidden;
   }
   header{
     max-width:1400px;
@@ -69,47 +72,117 @@
     font-weight:600;
   }
 
-  .farm-wrap{
-    max-width:1400px;
-    margin:0 auto;
-    border-radius:22px;
+  /* ===== The stage: the farm fills the whole screen =====
+     .stage is the fixed window onto the farm; .scene is the WORLD that moves
+     inside it. Panning and zooming only ever change the scene's transform, so
+     every agent keeps its stored percentage coordinates untouched. */
+  .stage{
+    position:fixed;
+    inset:0;
     overflow:hidden;
-    box-shadow:var(--shadow);
-    border:6px solid #fff;
+    background:#d9c7a2;
+    /* Without this a touch drag would scroll/zoom the page instead of the farm. */
+    touch-action:none;
+    cursor:grab;
   }
+  .stage.panning{ cursor:grabbing; }
   .scene{
-    position:relative;
-    width:100%;
-    aspect-ratio: 21/9;
-    background-image:url('https://d8j0ntlcm91z4.cloudfront.net/user_3HlY8PKXkIh0uLUWus0x3Sf05L2/hf_20260815_205940_bdd8765f-549f-4fbf-bbd7-39fd7a4a2d88.png');
-    background-size: cover;
-    background-position: center;
-    overflow:hidden;
-  }
-  .zoom-hint{
     position:absolute;
-    bottom:10px; right:14px;
-    font-size:.68rem;
-    background:rgba(255,255,255,.8);
-    padding:3px 9px;
-    border-radius:999px;
-    color:#5a4a34;
-    z-index:9;
+    top:0; left:0;
+    transform-origin:0 0;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    will-change:transform;
   }
-  .control-link{
-    position:absolute;
-    top:10px; right:14px;
-    font-size:.72rem;
-    font-weight:700;
-    background:rgba(255,255,255,.88);
-    padding:5px 12px;
-    border-radius:999px;
-    color:#5a4a34;
-    z-index:9;
-    text-decoration:none;
-    box-shadow:0 2px 6px rgba(0,0,0,.15);
+
+  /* ===== HUD: the thin layer of controls that stays above the farm =====
+     The bar itself takes clicks; the gaps between the bars do not, so a drag
+     that starts on empty sky still pans the scene. */
+  .hud{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:8px;
+    pointer-events:none;
   }
-  .control-link:hover{ background:#fff; }
+  .hud-row{ display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+  .hud-row.bottom{ align-items:flex-end; }
+  .hud-bar{
+    pointer-events:auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    max-width:100%;
+    background:rgba(255,253,246,.93);
+    border:1px solid #e6d8b8;
+    border-radius:16px;
+    padding:6px 12px;
+    box-shadow:0 4px 14px rgba(30,20,10,.20);
+    font-size:.78rem;
+    color:#5a4a34;
+  }
+  .hud-title{ font-weight:800; color:var(--ink); white-space:nowrap; }
+  .hud-bar .live-badge, .hud-bar .err-badge{ margin-top:0; }
+  .hud-btn{
+    font-family:inherit; font-size:.74rem; font-weight:700;
+    color:#5a4a34; text-decoration:none; white-space:nowrap;
+    background:#f5eeda; border:1px solid #e6d8b8; border-radius:999px;
+    padding:5px 11px; cursor:pointer;
+  }
+  .hud-btn:hover{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .hud-btn.round{ padding:5px 10px; font-size:.85rem; line-height:1; }
+  .zoom-level{ min-width:44px; text-align:center; font-weight:700; }
+
+  .scene-chip{
+    font-family:inherit; font-size:.74rem; font-weight:700;
+    color:#7a6743; white-space:nowrap;
+    background:#f5eeda; border:1px solid #e6d8b8; border-radius:999px;
+    padding:5px 11px; cursor:pointer;
+  }
+  .scene-chip:hover{ background:#efe2c4; }
+  .scene-switcher{ gap:6px; }
+  .scene-chip.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .scene-chip .scene-count{ margin-left:6px; opacity:.65; font-weight:600; }
+  .hud-hint{ color:#7a6743; }
+  .hud-note{ color:#8a7a5e; font-size:.72rem; }
+  /* The live event line is one sentence, so it stays a block (a flex bar would
+     tear the <b> and the timestamp into separate items) and never pushes the
+     bar wider than the screen. */
+  .hud-ticker{
+    display:block;
+    max-width:min(62vw, 560px);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .hud-ticker b{ color:var(--ink); }
+
+  /* ===== Side panel: everything that used to sit under the farm =====
+     Platform band, system map, subscriptions and the footer keep their own
+     markup and ids — they just live in a drawer now, so the farm can be
+     fullscreen without losing a single existing surface. */
+  .side-panel{
+    position:fixed;
+    top:0; right:0; bottom:0;
+    width:min(560px, 100%);
+    z-index:60;
+    padding:16px 16px 30px;
+    overflow-y:auto;
+    background: linear-gradient(180deg,#efe6d3 0%, #e4d6b8 100%);
+    border-left:1px solid #d8c69a;
+    box-shadow:-14px 0 40px rgba(30,20,10,.28);
+    transform:translateX(102%);
+    transition: transform .22s ease;
+  }
+  .side-panel.open{ transform:translateX(0); }
+  .panel-close{
+    position:sticky; top:0; float:right;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:999px;
+    width:30px; height:30px; font-size:1rem; line-height:1;
+    color:#7a6743; cursor:pointer; z-index:2;
+  }
+  .panel-close:hover{ background:var(--accent); color:#fff; }
 
   .agent{
     position:absolute;
@@ -118,12 +191,24 @@
     flex-direction:column;
     align-items:center;
     gap:4px;
-    cursor:pointer;
+    /* Grab, not pointer: a character can be picked up and put somewhere else,
+       and a short press still opens its profile. */
+    cursor:grab;
     user-select:none;
     transition: transform .18s ease;
     z-index:5;
   }
   .agent:hover{ transform:translate(-50%,-52%) scale(1.06); z-index:20;}
+  /* Being carried: no transition (it has to track the finger exactly), lifted
+     above the rest of the field, and its name badge lights up so the owner can
+     see which minion he is holding. */
+  .agent.dragging{
+    transition:none;
+    transform:translate(-50%,-54%) scale(1.10);
+    z-index:30;
+    cursor:grabbing;
+  }
+  .agent.dragging .agent-name{ background:var(--accent); color:#fff; }
   .figure{
     position:relative;
     height: clamp(90px, 13vw, 190px);
@@ -241,19 +326,359 @@
     white-space:nowrap;
     box-shadow:0 2px 4px rgba(0,0,0,.15);
   }
+  /* An idle character stays on the field (see renderAgents) but steps back
+     visually, so the eye still lands on whoever is actually working. */
+  .agent.idle .figure img,
+  .agent.idle .figure-ph{ filter: drop-shadow(0 10px 8px rgba(20,14,6,.35)) saturate(.82); opacity:.9; }
+  .agent.idle .bubble{ background:#f6f1e4; color:#6a5a44; font-weight:600; }
+  .agent.idle .bubble::before{ border-top-color:#f6f1e4; } /* keep the tail in step */
+  .agent.idle:hover .figure img,
+  .agent.idle:hover .figure-ph{ filter:none; opacity:1; }
 
-  .event-ticker{
+  /* Placeholder avatar: an agent with no cutout art still needs a body on the
+     field, otherwise a newly added minion silently disappears. */
+  .figure-ph{
+    height:74%;
+    aspect-ratio:1;
+    border-radius:50% 50% 44% 44%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:#fffdf6;
+    font-size: clamp(.8rem, 2.2vw, 1.5rem);
+    letter-spacing:.5px;
+    background: var(--ph-accent, #8a7a5e);
+    border:3px solid #fffdf6;
+    box-shadow:0 10px 8px rgba(20,14,6,.35);
+  }
+
+  /* ===== Rooms / zones =====
+     A room is a labelled patch of the scene that groups minions by what they
+     do (art barn, Amazon house, code workshop...). The layer sits behind the
+     characters and never eats a click. */
+  .room-layer{
+    position:absolute; inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
+  .room{
+    position:absolute;
+    border:1.5px dashed rgba(59,44,24,.38);
+    border-radius:20px;
+    background:rgba(255,253,246,.20);
+    box-shadow: inset 0 0 34px rgba(255,255,255,.20);
+  }
+  .room-label{
+    position:absolute; top:0; left:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,253,246,.92);
+    border:1px solid #e6d8b8;
+    border-radius:999px;
+    padding:2px 11px;
+    font-size:.68rem; font-weight:700;
+    color:#5a4a34;
+    white-space:nowrap;
+    box-shadow:0 2px 5px rgba(0,0,0,.12);
+  }
+  .room-label .room-count{ opacity:.6; font-weight:600; }
+
+  /* Subscription register — the one place on the main screen that answers
+     "where does the money go and what does each thing cost". */
+  .subs-band{
     max-width:1400px;
     margin:12px auto 0;
     background:#fffdf6;
     border:1px solid #e6d8b8;
-    border-radius:12px;
-    padding:8px 16px;
-    font-size:.82rem;
-    color:#5a4a34;
-    text-align:center;
+    border-radius:14px;
+    padding:13px 16px 15px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
   }
-  .event-ticker b{ color:#3b2c18; }
+  .subs-head{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin-bottom:2px;
+  }
+  .subs-head h2{ font-size:1rem; margin:0; font-weight:800; }
+  .subs-head .subs-source{ font-size:.7rem; color:#8a7a5e; }
+  .subs-totals{
+    display:flex; gap:8px; flex-wrap:wrap; margin:9px 0 4px;
+  }
+  .total-tile{
+    background:#f5eeda; border:1px solid #e6d8b8; border-radius:10px;
+    padding:6px 12px; min-width:130px;
+  }
+  .total-tile .tt-label{ display:block; font-size:.66rem; color:#8a7a5e; }
+  .total-tile .tt-value{ display:block; font-size:1rem; font-weight:800; }
+  .subs-note{ font-size:.68rem; color:#9a8a6a; font-style:italic; margin-top:2px; }
+
+  .sub-row{
+    display:flex; align-items:center; gap:10px;
+    padding:7px 4px;
+    border-top:1px solid #f0e7d2;
+    font-size:.82rem;
+  }
+  .sub-row:first-of-type{ border-top:none; }
+  .sub-dot{
+    width:9px; height:9px; border-radius:50%; flex-shrink:0;
+    background:var(--work);
+  }
+  .sub-dot.paused{ background:var(--accent); }
+  .sub-dot.cancelled{ background:#b9a26a; }
+  .sub-dot.unknown{ background:#c9bda0; }
+  .sub-main{ flex:1 1 220px; min-width:0; }
+  .sub-name{ font-weight:700; }
+  .sub-plan{
+    display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px;
+    background:#f0e7d2; color:#7a6743; font-size:.62rem; font-weight:700;
+    vertical-align:middle;
+  }
+  .sub-what{ display:block; font-size:.71rem; color:#8a7a5e; }
+  .sub-right{ text-align:right; flex-shrink:0; }
+  .sub-cost{ font-weight:800; white-space:nowrap; }
+  .sub-cost.unknown{ font-weight:600; color:#9a8a6a; font-style:italic; }
+  .sub-renew{ display:block; font-size:.66rem; color:#8a7a5e; }
+
+  /* ===== Target audience — who we actually sell to =====
+     Two surfaces for the same PERSONAS config: a compact avatar strip in the
+     HUD (always on the main screen) and a full card band in the side panel.
+     Clicking any avatar opens that person's home. The portraits are drawn SVG,
+     not photographs — the .persona-note line under them says so, because a
+     stylised illustration must never read as a real customer photo. */
+  .persona-hud{ gap:6px; }
+  .persona-hud .ph-label{ font-weight:800; white-space:nowrap; font-size:.74rem; }
+  .persona-pick{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#f5eeda; border:1px solid #e6d8b8; border-radius:999px;
+    padding:3px 10px 3px 3px; cursor:pointer;
+    font-family:inherit; font-size:.72rem; font-weight:700; color:#5a4a34;
+  }
+  .persona-pick:hover{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .persona-pick .pp-face{ width:26px; height:26px; flex-shrink:0; display:block; }
+  .persona-pick .pp-face svg{ width:100%; height:100%; display:block; }
+
+  .persona-band{
+    max-width:1400px;
+    margin:12px auto 0;
+    background:#fffdf6;
+    border:1px solid #e6d8b8;
+    border-radius:14px;
+    padding:13px 16px 15px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
+  }
+  .persona-head{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .persona-head h2{ font-size:1rem; margin:0; font-weight:800; }
+  .persona-head .persona-source{ font-size:.7rem; color:#8a7a5e; }
+  .persona-grid{ display:flex; gap:10px; flex-wrap:wrap; }
+  .persona-card{
+    flex:1 1 240px; min-width:0;
+    display:flex; align-items:flex-start; gap:11px; text-align:left;
+    background:#fdf8ea; border:1px solid #e6d8b8; border-radius:12px;
+    padding:11px 12px;
+    font-family:inherit; color:var(--ink); cursor:pointer;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .persona-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .persona-card .pc-face{ width:64px; height:64px; flex-shrink:0; }
+  .persona-card .pc-face svg{ width:100%; height:100%; display:block; }
+  .persona-card .pc-main{ min-width:0; flex:1 1 auto; }
+  .persona-card .pc-name{ font-weight:800; font-size:.92rem; }
+  .persona-card .pc-rank{
+    display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px;
+    background:#f0e7d2; color:#7a6743; font-size:.6rem; font-weight:700;
+    vertical-align:middle;
+  }
+  .persona-card .pc-title{ font-size:.74rem; color:#7a6743; font-weight:700; }
+  .persona-card .pc-line{ font-size:.72rem; color:#8a7a5e; margin-top:4px; }
+  .persona-card .pc-open{ font-size:.68rem; color:var(--wood); font-weight:700; margin-top:6px; }
+  .persona-note{ font-size:.68rem; color:#9a8a6a; font-style:italic; margin-top:9px; }
+
+  /* ===== The home: one person's room, with every item labelled =====
+     The room is a single SVG (wall, floor, window, drawn furniture) and the
+     labels are real HTML buttons on top of it, so a tap and the keyboard both
+     work and nothing depends on hover. */
+  .home-modal .modal{ max-width:820px; }
+  .home-head{ display:flex; align-items:center; gap:14px; margin-bottom:4px; }
+  .home-head .hh-face{ width:66px; height:66px; flex-shrink:0; }
+  .home-head .hh-face svg{ width:100%; height:100%; display:block; }
+  .home-room{
+    position:relative;
+    margin:12px 0 4px;
+    border:1px solid #e6d8b8; border-radius:14px;
+    overflow:hidden;
+    background:#efe6d8;
+  }
+  .home-room svg{ display:block; width:100%; height:auto; }
+  .spot{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,253,246,.94);
+    border:1px solid #d8c69a; border-radius:999px;
+    padding:2px 9px 2px 5px;
+    font-family:inherit; font-size:.66rem; font-weight:700; color:#5a4a34;
+    cursor:pointer; white-space:nowrap;
+    box-shadow:0 3px 9px rgba(30,20,10,.22);
+    max-width:46%;
+  }
+  .spot .spot-icon{ font-size:.82rem; line-height:1; }
+  .spot .spot-text{ overflow:hidden; text-overflow:ellipsis; }
+  .spot:hover{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .spot.active{ background:var(--wood); color:#fff; border-color:var(--wood); }
+  .home-spot{
+    min-height:44px;
+    background:#fdf8ea; border:1px solid #e6d8b8; border-radius:12px;
+    padding:9px 12px; font-size:.8rem;
+  }
+  .home-spot .hs-title{ font-weight:800; }
+  .home-spot .hs-note{ display:block; font-size:.75rem; color:#7a6743; margin-top:2px; }
+  .home-facts{ display:flex; gap:7px; flex-wrap:wrap; margin-top:4px; }
+  .home-facts .fact{
+    flex:1 1 190px;
+    display:flex; align-items:flex-start; gap:7px;
+    background:#f5eeda; border:1px solid #e6d8b8; border-radius:10px;
+    padding:6px 10px; font-size:.75rem;
+  }
+  .home-switch{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .home-switch .persona-pick.active{ background:var(--wood); color:#fff; border-color:var(--wood); }
+
+  /* ===== System map — the whole ecosystem on one screen =====
+     Lanes stacked top to bottom (owner -> AI -> farm core -> connectors ->
+     stores) with a labelled arrow row between every pair, so the map reads as a
+     data-flow diagram and not as a decorative logo wall. A dashed arrow means
+     the flow is planned, not built — see MAP_FLOWS. */
+  .map-band{
+    max-width:1400px;
+    margin:12px auto 0;
+    background:#fffdf6;
+    border:1px solid #e6d8b8;
+    border-radius:14px;
+    padding:13px 16px 15px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
+  }
+  .map-head{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .map-head h2{ font-size:1rem; margin:0; font-weight:800; }
+  .map-head .map-source{ font-size:.7rem; color:#8a7a5e; }
+  .map-legend{ display:flex; gap:10px; flex-wrap:wrap; margin-left:auto; }
+  .map-legend span{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:.66rem; color:#8a7a5e;
+  }
+  .map-lane{
+    border:1px solid #e6d8b8; border-radius:12px;
+    background:#fdf8ea;
+    padding:9px 11px 11px;
+  }
+  .lane-head{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .lane-title{
+    font-size:.72rem; font-weight:800; letter-spacing:.6px;
+    text-transform:uppercase; color:#7a6743;
+  }
+  .lane-sub{ font-size:.66rem; color:#9a8a6a; }
+  .lane-nodes{ display:flex; flex-wrap:wrap; gap:8px; }
+
+  .map-node{
+    display:flex; align-items:flex-start; gap:6px;
+    padding:7px 8px;
+    border:1px solid #e6d8b8; border-radius:11px;
+    background:#fff;
+    flex:1 1 190px; max-width:260px;
+  }
+  .node-open{
+    flex:1; min-width:0;
+    display:flex; align-items:center; gap:8px;
+    border:none; background:none; padding:0;
+    font-family:inherit; color:inherit; text-align:left; cursor:pointer;
+  }
+  .node-open:hover .node-name{ text-decoration:underline; }
+  .node-logo{
+    position:relative;
+    width:28px; height:28px; flex-shrink:0;
+    border-radius:8px; background:#f3ecd9;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:800; color:#7a6743;
+  }
+  /* The monogram is always in the box; a logo that loads simply covers it, and
+     a logo that fails is hidden by the error handler, uncovering it again. */
+  .node-logo::before{ content:attr(data-monogram); }
+  .node-logo img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    border-radius:8px; background:#fff; padding:2px;
+  }
+  .node-logo img.failed{ display:none; }
+  .node-main{ flex:1; min-width:0; }
+  .node-name{
+    display:block; font-size:.79rem; font-weight:700;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .node-kind{ display:block; font-size:.63rem; color:#9a8a6a; }
+  .node-side{ display:flex; align-items:center; gap:5px; flex-shrink:0; }
+  .node-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--work);
+  }
+  .node-dot.pending{ background:var(--accent); }
+  .node-dot.blocked{ background:#c0392b; }
+  .node-dot.unknown{ background:#c9bda0; }
+  .node-info{
+    width:20px; height:20px; padding:0;
+    border:none; border-radius:50%;
+    background:#f3ecd9; color:#7a6743;
+    font-size:.72rem; font-weight:800; line-height:1;
+    cursor:pointer;
+  }
+  .node-info:hover{ background:var(--accent); color:#fff; }
+  .node-agents{
+    display:flex; flex-wrap:wrap; gap:4px;
+    margin-top:6px; padding-top:6px;
+    border-top:1px dashed #efe6d3;
+  }
+  .agent-chip{
+    padding:2px 8px; border-radius:999px;
+    border:1px solid #e6d8b8; background:#f5eeda;
+    color:#7a6743; font-size:.62rem; font-weight:700;
+    font-family:inherit; cursor:pointer;
+  }
+  .agent-chip:hover{ background:var(--accent); color:#fff; }
+  .agent-chip.plain{ cursor:default; font-weight:600; font-style:italic; color:#9a8a6a; }
+
+  .map-arrow{
+    display:flex; justify-content:center; align-items:center;
+    gap:8px; flex-wrap:wrap;
+    padding:6px 0;
+  }
+  .flow-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:2px 10px; border-radius:999px;
+    border:1px solid #e6d8b8; background:#f5eeda;
+    font-size:.66rem; color:#7a6743;
+  }
+  .flow-chip b{ color:#3b2c18; font-weight:800; }
+  .flow-chip.planned{
+    border-style:dashed; background:#fffdf6;
+    color:#9a8a6a; font-style:italic;
+  }
+  .map-note{ font-size:.68rem; color:#9a8a6a; font-style:italic; margin-top:8px; }
+
+  /* Node info popup */
+  .map-modal .modal{ max-width:460px; }
+  .map-modal .node-logo{ width:46px; height:46px; border-radius:12px; font-size:1.1rem; }
+  .map-modal .node-logo img{ border-radius:12px; padding:4px; }
+  .status-pill.blocked{ background:#fbe3e3; color:#8a2c2c; }
+  .info-chips{ display:flex; flex-wrap:wrap; gap:5px; }
+  .info-chip{
+    padding:3px 10px; border-radius:999px;
+    border:1px solid #e6d8b8; background:#f5eeda;
+    color:#7a6743; font-size:.72rem; font-weight:600;
+    font-family:inherit; cursor:pointer;
+  }
+  .info-chip:hover{ background:var(--accent); color:#fff; }
+  .flow-line{ display:block; font-size:.84rem; line-height:1.45; }
+  .flow-line b{ color:#3b2c18; }
 
   footer{
     max-width:1400px;
@@ -423,6 +848,90 @@
   .status-tag.rejected{ background:#fbe3e3; color:#8a2c2c; }
   .status-tag.queued{ background:#f3ecd9; color:#7a5b1c; }
 
+  /* Modules (the AI models a minion really ran on) and the artifact refs of a
+     finished work. Both are only ever drawn from a row that names them. */
+  .mod-chip{
+    display:inline-block; margin:0 6px 6px 0; padding:6px 10px;
+    border:1px solid #e6d8b8; border-radius:10px; background:#fffdf6;
+    font-size:.7rem; color:#8a7a5e;
+  }
+  .mod-chip b{ display:block; font-size:.8rem; color:#3b2c18; }
+  .art-chip{
+    display:inline-block; margin:5px 5px 0 0; padding:2px 8px;
+    border-radius:6px; background:#f3ecd9; color:#7a5b1c;
+    font-size:.68rem; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    text-decoration:none;
+  }
+  a.art-chip:hover{ background:#e8dcc0; }
+  .work-item .wi-artifacts{ margin-top:2px; }
+
+  /* ===== Big AI agents (platforms) + the token meter =====
+     A platform is a top-level agent: the AI engine that actually burns the
+     owner's tokens (Claude today; GPT / Gemini later). The small specialist
+     minions are nested under it. */
+  .platform-band{
+    max-width:1400px; margin:0 auto 12px;
+    display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .platform-card{
+    flex:1 1 280px;
+    display:flex; gap:11px; align-items:flex-start;
+    text-align:left; font-family:inherit; color:inherit; cursor:pointer;
+    background:#fffdf6; border:1px solid #e6d8b8; border-radius:14px;
+    padding:11px 13px;
+    box-shadow:0 4px 14px rgba(30,20,10,.08);
+  }
+  .platform-card:hover{ background:#fff; border-color:#d8c69a; }
+  .platform-logo{
+    width:40px; height:40px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:1.05rem; color:#fff;
+    background:var(--platform-accent, var(--wood));
+  }
+  .platform-logo img{ width:100%; height:100%; object-fit:contain; border-radius:12px; }
+  .platform-main{ flex:1; min-width:0; }
+  .platform-name{ font-size:.94rem; font-weight:800; }
+  .platform-sub{ font-size:.7rem; color:#8a7a5e; }
+  .pending-tag{
+    display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px;
+    background:#fef0dc; color:#a8631a; font-size:.62rem; font-weight:700;
+    vertical-align:middle;
+  }
+
+  .meter{ margin-top:8px; }
+  .meter-track{
+    height:9px; border-radius:999px; background:#efe6d3; overflow:hidden;
+  }
+  .meter-fill{
+    height:100%; border-radius:999px; width:0;
+    background:var(--meter-color, var(--work));
+    transition: width .3s ease;
+  }
+  .meter-legend{
+    display:flex; justify-content:space-between; gap:10px;
+    font-size:.68rem; color:#8a7a5e; margin-top:4px;
+  }
+  .meter-legend b{ color:#3b2c18; }
+  .meter-note{ font-size:.68rem; color:#9a8a6a; font-style:italic; margin-top:4px; }
+  .meter-empty{ font-size:.72rem; color:#9a8a6a; font-style:italic; margin-top:6px; }
+
+  .platform-modal .modal{ max-width:640px; }
+  .child-line{
+    display:flex; align-items:center; gap:10px; width:100%;
+    padding:7px 9px; margin-bottom:6px;
+    border:1px solid #efe6d3; border-radius:10px; background:#fffdf6;
+    font-family:inherit; color:inherit; text-align:left; cursor:pointer;
+  }
+  .child-line:hover{ background:#f3ecd9; }
+  .child-line img{ width:30px; height:30px; object-fit:contain; flex-shrink:0; }
+  .child-line .cl-main{ flex:1; min-width:0; }
+  .child-line .cl-name{ display:block; font-size:.84rem; font-weight:700; }
+  .child-line .cl-sub{
+    display:block; font-size:.7rem; color:#8a7a5e;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .child-line .cl-num{ font-size:.7rem; color:#8a7a5e; text-align:right; white-space:nowrap; }
+
   /* ===== Herme aggregation panel — the only farm-wide summary surface ===== */
   .stats-modal .modal{ max-width:760px; }
   .stats-section{ margin-top:18px; }
@@ -531,32 +1040,26 @@
 
   /* ===== Mobile / phone format ===== */
   @media (max-width: 768px){
-    body{ padding:12px; }
     header{ margin-bottom:12px; }
     h1{ font-size:1.35rem; }
     header p{ font-size:.82rem; }
     .live-badge, .err-badge{ font-size:.72rem; padding:4px 12px; }
 
-    .farm-wrap{
-      border-radius:16px;
-      border-width:4px;
+    /* The stage still fills the phone screen; the world is simply wider than
+       the viewport, so the owner pans sideways instead of squinting at a crop. */
+    .hud{ padding:8px; gap:6px; }
+    .hud-bar{ font-size:.72rem; padding:5px 9px; gap:6px; border-radius:14px; }
+    .hud-title{ display:none; }
+    .hud-btn, .scene-chip{ font-size:.68rem; padding:4px 9px; }
+    .hud-ticker{ max-width:82vw; }
+    /* One horizontal strip of scene chips instead of a stack that would cover
+       half the farm. */
+    .scene-switcher{
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      max-width:100%;
     }
-    .scene{
-      /* Taller, portrait-oriented crop so the farm fills a phone screen
-         instead of showing a thin horizontal sliver of the wide image. */
-      aspect-ratio: 3 / 4;
-      background-position: center 30%;
-    }
-    .zoom-hint{
-      font-size:.6rem;
-      padding:2px 7px;
-      bottom:8px; right:8px;
-    }
-    .control-link{
-      font-size:.64rem;
-      padding:4px 10px;
-      top:8px; right:8px;
-    }
+    .side-panel{ padding:12px 12px 26px; }
 
     .figure{
       height: clamp(70px, 22vw, 150px);
@@ -573,13 +1076,33 @@
       font-size:.66rem;
       padding:2px 7px;
     }
+    .room-label{ font-size:.58rem; padding:1px 8px; }
+    .room{ border-radius:14px; }
 
-    .event-ticker{
-      font-size:.76rem;
-      padding:7px 12px;
-      margin-top:10px;
-    }
     footer{ font-size:.72rem; margin-top:12px; }
+
+    .subs-band{ padding:11px 12px 13px; }
+    .total-tile{ flex:1 1 120px; min-width:0; }
+    /* Stack name/cost on a narrow screen instead of squeezing both onto one line. */
+    .sub-row{ flex-wrap:wrap; font-size:.78rem; }
+    .sub-right{ text-align:left; }
+
+    .persona-band{ padding:11px 12px 13px; }
+    /* One persona per row on a phone: two 240px cards side by side would clip
+       the name and the one-liner that carries the whole point of the card. */
+    .persona-card{ flex:1 1 100%; max-width:100%; }
+    .home-modal .modal{ max-width:100%; }
+    /* The room keeps its aspect ratio, so on a narrow screen the label chips
+       have to shrink with it or they would cover the furniture they point at. */
+    .spot{ font-size:.58rem; padding:1px 7px 1px 4px; }
+    .home-facts .fact{ flex:1 1 100%; }
+
+    .map-band{ padding:11px 12px 13px; }
+    .map-legend{ margin-left:0; }
+    /* One node per row on a phone: a 190px minimum would otherwise squeeze two
+       cards into a line and clip every name. */
+    .map-node{ flex:1 1 100%; max-width:100%; }
+    .map-modal .modal{ max-width:100%; }
 
     .modal{
       max-width:100%;
@@ -593,34 +1116,128 @@
     .stats-modal .modal{ max-width:100%; }
     .modal-tab{ padding:6px 8px; font-size:.72rem; }
     .count-tile{ flex:1 1 58px; }
+    .platform-band{ gap:8px; margin-bottom:10px; }
+    .platform-card{ flex:1 1 100%; padding:10px 11px; }
+    .platform-modal .modal{ max-width:100%; }
   }
 
   @media (max-width: 400px){
-    .scene{ aspect-ratio: 2 / 3; }
     h1{ font-size:1.15rem; }
+    .hud-hint{ display:none; }  /* on the smallest screens the bars come first */
   }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🌾 EWART WOODS — Aģentu Ferma</h1>
-  <p>Uzklikšķini uz Hermes, lai sarunātos vai atvērtu vadības paneli. Minjoni dodas uz lauku tikai tad, kad viņiem iedots uzdevums.</p>
-  <span class="live-badge" id="liveBadge"><span class="live-dot"></span> Ielādē datus no datubāzes…</span>
-</header>
-
-<div class="farm-wrap">
+<!-- The farm itself: a fixed, fullscreen stage holding a world that pans and
+     zooms. Everything else on the page floats above it. -->
+<div class="stage" id="stage">
   <div class="scene" id="scene">
-    <a class="control-link" href="/control" target="_blank" rel="noopener">🖥️ Vadības panelis</a>
-    <a class="control-link" href="/brain" target="_blank" rel="noopener">🧠 Smadzenes</a>
-    <span class="zoom-hint">🔍 Fona attēls ir 6336×2688&nbsp;px — var piezoomēt</span>
+    <!-- Room panels (behind the characters), drawn by renderRooms(). -->
+    <div class="room-layer" id="roomLayer"></div>
     <!-- agents injected by JS -->
   </div>
 </div>
 
-<div class="event-ticker" id="eventTicker">Ielādē pēdējo notikumu…</div>
+<!-- HUD. Only the bars take clicks — the empty space between them belongs to
+     the farm, so a drag that starts on the sky still pans the scene. -->
+<div class="hud">
+  <div class="hud-row">
+    <div class="hud-bar">
+      <span class="hud-title">🌾 Aģentu Ferma</span>
+      <span class="live-badge" id="liveBadge"><span class="live-dot"></span> Ielādē datus…</span>
+    </div>
+    <div class="hud-bar scene-switcher" id="sceneSwitcher"></div>
+    <!-- Target audience, on the main screen: click a face to walk into that
+         person's home. Filled by renderPersonaHud() from PERSONAS. -->
+    <div class="hud-bar persona-hud" id="personaHud"></div>
+    <div class="hud-bar">
+      <button class="hud-btn" id="panelBtn" type="button">📋 Paneļi</button>
+      <a class="hud-btn" href="/control" target="_blank" rel="noopener">🖥️ Vadības panelis</a>
+      <a class="hud-btn" href="/brain" target="_blank" rel="noopener">🧠 Smadzenes</a>
+    </div>
+  </div>
+
+  <div class="hud-row bottom">
+    <div class="hud-bar">
+      <span class="hud-hint">🖐️ Velc, lai pārvietotu ainu · velc minjonu, lai pārvietotu viņu</span>
+      <span class="hud-note" id="sceneNote"></span>
+      <span class="hud-note" id="saveNote"></span>
+      <button class="hud-btn" id="pushPosBtn" type="button" title="Saglabāt šīs ainas pozīcijas datubāzē (vajag admin marķieri)">☁️ Saglabāt datubāzē</button>
+      <button class="hud-btn" id="resetPosBtn" type="button" title="Atgriezt šīs ainas minjonus sākuma vietās">↺ Sākuma vietas</button>
+    </div>
+    <div class="hud-bar hud-ticker" id="eventTicker">Ielādē pēdējo notikumu…</div>
+    <div class="hud-bar">
+      <button class="hud-btn round" id="zoomOutBtn" type="button" title="Attālināt">−</button>
+      <span class="zoom-level" id="zoomLevel">100%</span>
+      <button class="hud-btn round" id="zoomInBtn" type="button" title="Pietuvināt">+</button>
+      <button class="hud-btn round" id="zoomResetBtn" type="button" title="Centrēt ainu">⌖</button>
+    </div>
+  </div>
+</div>
+
+<!-- Everything that used to sit under the farm now lives in this drawer: the
+     platform band, the system map, the subscription register and the footer.
+     Same markup, same ids, same JS — only the place changed. -->
+<aside class="side-panel" id="sidePanel">
+<button class="panel-close" id="panelClose" type="button" aria-label="Aizvērt paneļus">✕</button>
+
+<header>
+  <h1>🌾 EWART WOODS — Aģentu Ferma</h1>
+  <p>Visi minjoni vienmēr ir fermā. Zaļš punkts = strādā, dzeltens = gaida tavu apstiprinājumu, pelēks = atpūšas.</p>
+  <p>Uzklikšķini uz minjona, lai redzētu viņa darbu, vai uz Hermes, lai sarunātos un atvērtu vadības paneli.
+     Velc minjonu, lai pārvietotu viņu; velc tukšu vietu, lai pārvietotu ainu.</p>
+</header>
+
+<!-- Target audience. Who the farm actually sells to, as people you can look at.
+     The cards come from PERSONAS (curated from knowledge/audience/target-persona.md,
+     task t-0031) or from the `personas` table once its migration is applied. -->
+<section class="persona-band" id="personaBand">
+  <div class="persona-head">
+    <h2>🎯 Mērķauditorija</h2>
+    <span class="persona-source" id="personaSource">no personu analīzes (t-0031)</span>
+  </div>
+  <div class="persona-grid" id="personaGrid">Ielādē personas…</div>
+  <div class="persona-note" id="personaNote"></div>
+</section>
+
+<!-- Big AI agents (top level). One card per AI platform that runs the farm —
+     Claude today, GPT / Gemini later. Each card carries that platform's token
+     meter; clicking it opens the platform panel with its nested specialists. -->
+<div class="platform-band" id="platformBand"></div>
+
+<!-- System map. The whole ecosystem on one screen: who does what, what is
+     wired to what, and which way the data moves. Nodes come from SYSTEM_MAP
+     (curated real facts, each with its evidence) plus the live `agents`
+     hierarchy for the specialists nested under their AI platform. -->
+<section class="map-band" id="mapBand">
+  <div class="map-head">
+    <h2>🗺️ Sistēmas karte</h2>
+    <span class="map-source">kas ar ko ir savienots — spied uz jebkura lodziņa vai ⓘ, lai uzzinātu, kas tas ir</span>
+    <span class="map-legend">
+      <span><span class="node-dot"></span> savienots</span>
+      <span><span class="node-dot pending"></span> gaida savienojumu</span>
+      <span><span class="node-dot blocked"></span> bloķēts</span>
+      <span><span class="flow-chip planned">punktēta bultiņa = plāns, vēl nav uzbūvēts</span></span>
+    </span>
+  </div>
+  <div id="mapFlow">Zīmē karti…</div>
+  <div class="map-note" id="mapNote"></div>
+</section>
+
+<!-- Subscription register. Owner-declared rows from `subscriptions` — nothing
+     here is auto-detected, and the label says so. Sits on the main screen on
+     purpose: the owner asked to see where the money goes without clicking. -->
+<section class="subs-band" id="subsBand">
+  <div class="subs-head">
+    <h2>💳 Subskripcijas</h2>
+    <span class="subs-source">saimnieka reģistrs — rāda tikai to, kas ierakstīts datubāzē</span>
+  </div>
+  <div id="subsBody">Ielādē subskripcijas…</div>
+</section>
 
 <footer>EWART WOODS · Aģentu Ferma — dzīvs skats, dati no Supabase</footer>
+</aside>
 
 <!-- Per-minion personal profile: who it is + ITS OWN work, events and numbers.
      Nothing farm-wide belongs in here — aggregation lives in Herme's panel. -->
@@ -666,6 +1283,19 @@
         <div id="mSkills">—</div>
       </div>
       <div class="modal-section">
+        <h3>Padarītie darbi</h3>
+        <div id="mDoneWorks">Ielādē…</div>
+      </div>
+      <div class="modal-section">
+        <h3>Moduļi</h3>
+        <div id="mModules">Ielādē…</div>
+      </div>
+      <div class="modal-section">
+        <h3>Izmaksas un tokeni</h3>
+        <div id="mCost">Ielādē…</div>
+        <div id="mMeter">Ielādē…</div>
+      </div>
+      <div class="modal-section">
         <h3>Viņa skaitļi</h3>
         <div class="usage-row" id="mUsage">—</div>
       </div>
@@ -676,6 +1306,115 @@
         <h3>Notikumu lente</h3>
         <div id="mHistory">Ielādē…</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Big AI agent (platform) panel: its token meter + the specialists nested
+     under it. Clicking a specialist drops into that minion's own profile. -->
+<div class="overlay platform-modal" id="platformOverlay">
+  <div class="modal" id="platformModal">
+    <button class="close" id="platformClose">✕</button>
+    <div class="modal-head">
+      <div class="platform-logo" id="pLogo"></div>
+      <div>
+        <h2 id="pName"></h2>
+        <div class="role" id="pRole"></div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h3>Tokenu mērītājs</h3>
+      <div id="pMeter"></div>
+    </div>
+
+    <div class="modal-section">
+      <h3>Mazie speciālisti zem šīs platformas</h3>
+      <div id="pChildren">Ielādē…</div>
+    </div>
+
+    <div class="modal-section">
+      <h3>Kā šie skaitļi rodas</h3>
+      <p class="muted" id="pSourceNote"></p>
+    </div>
+  </div>
+</div>
+
+<!-- System-map node popup: what this thing is, what it does here, what it is
+     wired to, and the evidence behind its status. -->
+<div class="overlay map-modal" id="mapInfoOverlay">
+  <div class="modal" id="mapInfoModal">
+    <button class="close" id="mapInfoClose">✕</button>
+    <div class="modal-head">
+      <div id="miLogo"></div>
+      <div>
+        <h2 id="miName"></h2>
+        <div class="role" id="miKind"></div>
+      </div>
+    </div>
+    <span class="status-pill" id="miStatus"></span>
+
+    <div class="modal-section">
+      <h3>Kas tas ir</h3>
+      <p id="miWhat"></p>
+    </div>
+    <div class="modal-section">
+      <h3>Ko tas dara fermā</h3>
+      <p id="miDoes"></p>
+    </div>
+    <div class="modal-section">
+      <h3>Datu plūsma</h3>
+      <div id="miFlow"></div>
+    </div>
+    <div class="modal-section">
+      <h3>Savienots ar</h3>
+      <div class="info-chips" id="miConnects"></div>
+    </div>
+    <div class="modal-section">
+      <h3>No kurienes zinām statusu</h3>
+      <p class="muted" id="miEvidence"></p>
+    </div>
+  </div>
+</div>
+
+<!-- One persona's home. The room is drawn from her config; every labelled chip
+     on it is a lifestyle fact from the persona sheet, and clicking one explains
+     what it means for what we sell her. -->
+<div class="overlay home-modal" id="homeOverlay">
+  <div class="modal" id="homeModal">
+    <button class="close" id="homeClose">✕</button>
+    <div class="home-head">
+      <div class="hh-face" id="hFace"></div>
+      <div>
+        <h2 id="hName"></h2>
+        <div class="role" id="hTitle"></div>
+      </div>
+    </div>
+    <span class="status-pill" id="hMarket"></span>
+    <div class="quote-line" id="hLine"></div>
+
+    <div class="home-room" id="hRoom"></div>
+    <div class="home-spot" id="hSpot"></div>
+
+    <div class="modal-section">
+      <h3>Viņas dzīve</h3>
+      <div class="home-facts" id="hFacts"></div>
+    </div>
+    <div class="modal-section">
+      <h3>Kāpēc viņa pērk pie mums</h3>
+      <p id="hWhy"></p>
+    </div>
+    <div class="modal-section">
+      <h3>Ko viņa grib no mums</h3>
+      <p id="hWants"></p>
+    </div>
+    <div class="modal-section">
+      <h3>No kurienes šie dati</h3>
+      <p class="muted" id="hEvidence"></p>
+    </div>
+    <div class="modal-section">
+      <h3>Citas personas</h3>
+      <div class="home-switch" id="hSwitch"></div>
     </div>
   </div>
 </div>
@@ -711,13 +1450,14 @@
     </div>
 
     <div class="stats-section">
-      <h3>Minjoni (klikšķini, lai atvērtu profilu)</h3>
+      <h3>AI platformas un to speciālisti (klikšķini, lai atvērtu profilu)</h3>
       <div id="sAgents">Ielādē…</div>
     </div>
 
     <div class="stats-section">
-      <h3>Tokeni un izmaksas — visa ferma</h3>
-      <div class="usage-row" id="sUsage">Ielādē…</div>
+      <h3>Tokenu mērītājs — visa ferma</h3>
+      <div id="sMeter">Ielādē…</div>
+      <div class="usage-row" id="sUsage" style="margin-top:10px;">Ielādē…</div>
       <div class="muted" id="sUsageNote"></div>
     </div>
 
@@ -753,6 +1493,7 @@ const SUPABASE_URL = '__SUPABASE_URL__';
 const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
 const REFRESH_MS = 15000;
 
+const stage = document.getElementById('stage');
 const scene = document.getElementById('scene');
 const liveBadge = document.getElementById('liveBadge');
 const eventTicker = document.getElementById('eventTicker');
@@ -762,6 +1503,7 @@ mVideo.muted = true;
 
 let agentsById = {};
 let latestTaskByAgent = {}; // agent_id -> most recent active/review task
+let statusByAgent = {};     // agent_id -> its agent_status row (quote, current_task)
 
 function sbHeaders(){
   return {
@@ -798,74 +1540,761 @@ function getAdminToken(promptIfMissing){
   return t;
 }
 
-function renderAgents(agents, tasks){
+// ---------- Rooms: the scene split into labelled zones ----------
+//
+// A room is a patch of the farm that groups minions by what they do — the art
+// barn, the Amazon house, the code workshop. It is a VISUAL grouping only: no
+// number, permission or task ever depends on it.
+//
+// To add a room later: one entry in ROOMS (id, Latvian name, rectangle) and one
+// rule in ROOM_RULES. Nothing else in the page has to change. When the `agents`
+// table eventually gains a `room` column, that column wins over the rules
+// automatically (see roomForAgent) — the rules are only the fallback.
+
+const DEFAULT_ROOM = 'ferma';
+
+// Rectangles are percentages of the scene. The default room is the whole scene,
+// so an agent that belongs to it keeps exactly the pos_x / pos_y from its row.
+// The three named rooms sit along the empty upper band of the background image,
+// clear of the seeded character positions (which all sit below y = 45).
+const ROOMS = [
+  { id: 'art',        name: 'Mākslas šķūnis', rect: { x: 2,    y: 4, w: 29, h: 30 } },
+  { id: 'amazon',     name: 'Amazones ēka',   rect: { x: 35.5, y: 4, w: 29, h: 30 } },
+  { id: 'kods',       name: 'Koda darbnīca',  rect: { x: 69,   y: 4, w: 29, h: 30 } },
+  { id: DEFAULT_ROOM, name: 'Vispārējā ferma', rect: { x: 0, y: 0, w: 100, h: 100 }, whole: true }
+];
+
+// Plain-ASCII keywords matched against id + name + role. The haystack has its
+// Latvian diacritics stripped first, so 'makslas' also matches "Mākslas".
+const ROOM_RULES = [
+  { room: 'art',    words: ['art', 'visual', 'vizual', 'image', 'video', 'design', 'dizains',
+                            'render', 'maksla', 'makslas', 'makslinieks', 'attels', 'zimetajs'] },
+  { room: 'amazon', words: ['amazon', 'amazone', 'amazones', 'fba', 'ppc', 'asin', 'seller'] },
+  { room: 'kods',   words: ['koderis', 'koders', 'kods', 'koda', 'coder', 'code', 'dev',
+                            'developer', 'app', 'programmetajs'] }
+];
+
+// Fold Latvian diacritics down to plain ASCII so the keyword rules can stay
+// plain-ASCII: NFD splits "ā" into "a" + a combining mark, and every combining
+// mark sits in U+0300..U+036F, so dropping that block leaves the base letters.
+function asciiFold(s){
+  const nfd = String(s == null ? '' : s).normalize('NFD');
+  let out = '';
+  for(let i = 0; i < nfd.length; i++){
+    const code = nfd.charCodeAt(i);
+    if(code >= 0x300 && code <= 0x36f) continue;
+    out += nfd.charAt(i);
+  }
+  return out.toLowerCase();
+}
+
+// Whole-word match only: without the boundaries "kartupelus" would match 'art'.
+function hasWord(hay, word){
+  return new RegExp('(^|[^a-z0-9])' + word + '([^a-z0-9]|$)').test(hay);
+}
+
+function roomById(id){
+  return ROOMS.find(r => r.id === id) || ROOMS.find(r => r.id === DEFAULT_ROOM);
+}
+
+function roomForAgent(a){
+  if(a && a.room && ROOMS.some(r => r.id === a.room)) return roomById(a.room);
+  const hay = asciiFold([a && a.id, a && a.name, a && a.role].filter(Boolean).join(' '));
+  const hit = ROOM_RULES.find(r => r.words.some(w => hasWord(hay, w)));
+  return roomById(hit ? hit.room : DEFAULT_ROOM);
+}
+
+// pos_x / pos_y are read as percentages OF THE AGENT'S ROOM, so the full-scene
+// default room reproduces today's coordinates unchanged.
+function agentPosition(a){
+  const r = roomForAgent(a).rect;
+  const px = Number(a && a.pos_x);
+  const py = Number(a && a.pos_y);
+  return {
+    left: r.x + r.w * ((Number.isFinite(px) ? px : 50) / 100),
+    top:  r.y + r.h * ((Number.isFinite(py) ? py : 50) / 100)
+  };
+}
+
+// Only rooms that actually hold someone are drawn — an empty farm must not fill
+// up with labelled boxes for teams that do not exist yet.
+function renderRooms(agents){
+  const layer = document.getElementById('roomLayer');
+  if(!layer) return;
+  const counts = {};
+  agents.forEach(a => {
+    if(a.tier === PLATFORM_TIER) return;
+    const id = roomForAgent(a).id;
+    counts[id] = (counts[id] || 0) + 1;
+  });
+  layer.innerHTML = ROOMS
+    .filter(r => !r.whole && counts[r.id])
+    .map(r => `<div class="room" data-room="${escapeHtml(r.id)}"
+        style="left:${r.rect.x}%;top:${r.rect.y}%;width:${r.rect.w}%;height:${r.rect.h}%">
+        <span class="room-label">${escapeHtml(r.name)}
+          <span class="room-count">${counts[r.id]}</span></span>
+      </div>`)
+    .join('');
+}
+
+// ---------- Scenes: the farm is more than one screen ----------
+//
+// A scene is a whole room of the farm: its own background, its own cast and its
+// own saved positions. `ferma` is the default and behaves exactly as the farm
+// always did — same background image, same pos_x / pos_y coordinates from the
+// `agents` table.
+//
+// Membership is DECLARATIVE (rooms + tiers), never a list of agent ids, so a
+// minion added to the database tomorrow lands in the right scene with no code
+// change. To add a room later: one entry in SCENES. Nothing in the rendering
+// knows a scene by name except DEFAULT_SCENE, which is what keeps the old
+// coordinates working.
+
+const DEFAULT_SCENE = 'ferma';
+
+// The farm background. 6336x2688 px, so the world is much wider than any
+// screen — that is exactly the room the owner pans through.
+const FARM_BG_URL = 'https://d8j0ntlcm91z4.cloudfront.net/user_3HlY8PKXkIh0uLUWus0x3Sf05L2/hf_20260815_205940_bdd8765f-549f-4fbf-bbd7-39fd7a4a2d88.png';
+
+// The indoor rooms have no art yet. A painted gradient is an honest stand-in —
+// hot-linking more third-party CDN images would only deepen the dependency the
+// farm already has (see ferma-app-code.md §5).
+const SCENES = [
+  {
+    id: DEFAULT_SCENE,
+    name: 'Galvenā ferma',
+    desc: 'Visa ferma — šeit ir katrs minjons.',
+    background: { css: `url('${FARM_BG_URL}')`, ratio: 6336 / 2688 },
+    members: { all: true },
+    rooms: true            // only the main farm draws the room outlines
+  },
+  {
+    id: 'amazon',
+    name: 'Amazones ēka',
+    desc: 'Amazon tirdzniecība, reklāmas un krājumi.',
+    background: {
+      css: 'linear-gradient(170deg,#3d4b63 0%,#55637d 42%,#8d8674 100%),'
+         + ' repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,rgba(0,0,0,0) 2px 84px)',
+      ratio: 16 / 9
+    },
+    members: { rooms: ['amazon'], tiers: ['boss'] }
+  },
+  {
+    id: 'art',
+    name: 'Mākslas šķūnis',
+    desc: 'Bildes, video un dizains.',
+    background: {
+      css: 'linear-gradient(165deg,#7a4b2a 0%,#a8703f 45%,#e0b878 100%),'
+         + ' repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 3px,rgba(0,0,0,0) 3px 70px)',
+      ratio: 16 / 9
+    },
+    members: { rooms: ['art'], tiers: ['boss'] }
+  },
+  {
+    id: 'sistemas',
+    name: 'Sistēmu centrs',
+    desc: 'Kods, datubāze un savienojumi.',
+    background: {
+      css: 'linear-gradient(160deg,#1f2a33 0%,#31424f 48%,#5d7183 100%),'
+         + ' repeating-linear-gradient(45deg,rgba(120,220,190,.06) 0 2px,rgba(0,0,0,0) 2px 46px)',
+      ratio: 16 / 9
+    },
+    members: { rooms: ['kods'], tiers: ['boss'] }
+  }
+];
+
+let currentSceneId = DEFAULT_SCENE;
+
+// The last rows the field was drawn from, so switching scene redraws instantly
+// instead of waiting up to REFRESH_MS for the next fetch.
+let lastAgents = [];
+let lastTasks = [];
+let lastStatuses = [];
+
+function rememberRows(agents, tasks, statuses){
+  lastAgents = agents || [];
+  lastTasks = tasks || [];
+  lastStatuses = statuses || [];
+}
+
+function sceneById(id){
+  return SCENES.find(s => s.id === id) || SCENES[0];
+}
+
+function belongsToScene(sceneOrId, agent){
+  const m = (typeof sceneOrId === 'string' ? sceneById(sceneOrId) : sceneOrId).members || {};
+  if(m.all) return true;
+  if(m.tiers && m.tiers.indexOf(agent.tier) !== -1) return true;
+  if(m.rooms && m.rooms.indexOf(roomForAgent(agent).id) !== -1) return true;
+  return false;
+}
+
+// The cast of one scene, always in the same order (sorted by id), so the
+// fallback layout below is stable no matter what order the rows arrive in.
+// Platform rows are never field characters — they live in the side panel.
+function agentsForScene(sceneId, agents){
+  return (agents || [])
+    .filter(a => a.tier !== PLATFORM_TIER && belongsToScene(sceneId, a))
+    .slice()
+    .sort((x, y) => (String(x.id) < String(y.id) ? -1 : (String(x.id) > String(y.id) ? 1 : 0)));
+}
+
+// ---------- Saved positions (scene_id + agent_id) ----------
+//
+// Two layers, checked in this order:
+//   dbPositions    - rows from `agent_scene_positions`, written only through the
+//                    token-gated admin RPC. Shared by every device. Empty until
+//                    migration 20260817120000 is applied.
+//   localPositions - this browser only. The honest fallback, and the HUD says so
+//                    in plain Latvian rather than pretending the move was saved
+//                    for everyone.
+
+const POS_STORE_KEY = 'ewart_farm_positions_v1';
+const POS_MIN = 3, POS_MAX = 97;   // keep a dropped minion fully on the scene
+
+let dbPositions = {};
+let localPositions = readLocalPositions();
+let dbPositionsAvailable = false;  // does the table exist in this database?
+
+function posKey(sceneId, agentId){ return sceneId + '|' + agentId; }
+function clampPct(v){ return Math.min(POS_MAX, Math.max(POS_MIN, v)); }
+
+function readLocalPositions(){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(POS_STORE_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  }catch(err){
+    console.warn('saved positions unreadable, starting fresh', err);
+    return {};
+  }
+}
+
+function writeLocalPositions(){
+  try{
+    localStorage.setItem(POS_STORE_KEY, JSON.stringify(localPositions));
+  }catch(err){
+    console.warn('position save failed', err);
+  }
+}
+
+function savedPosition(sceneId, agentId){
+  const p = dbPositions[posKey(sceneId, agentId)] || localPositions[posKey(sceneId, agentId)];
+  if(!p) return null;
+  const x = Number(p.x), y = Number(p.y);
+  return Number.isFinite(x) && Number.isFinite(y) ? { left: clampPct(x), top: clampPct(y) } : null;
+}
+
+// Deterministic fallback layout for a scene nobody has arranged yet: an even
+// grid over the middle of the room. Same cast -> same picture every time, and
+// no coordinate is hardcoded per agent, so a DB-driven layout can replace it
+// wholesale later.
+function fallbackPosition(index, total){
+  const cols = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, total))));
+  const rows = Math.max(1, Math.ceil(total / cols));
+  return {
+    left: 12 + 76 * ((index % cols) + 0.5) / cols,
+    top:  26 + 54 * (Math.floor(index / cols) + 0.5) / rows
+  };
+}
+
+// Where a character stands in a given scene. Saved position wins; the main farm
+// then falls back to the agent's own pos_x / pos_y (unchanged behaviour), and
+// any other room to the deterministic grid.
+function scenePosition(sceneId, agent, index, total){
+  const saved = savedPosition(sceneId, agent.id);
+  if(saved) return saved;
+  if(sceneId === DEFAULT_SCENE) return agentPosition(agent);
+  return fallbackPosition(index, total);
+}
+
+// ---------- The camera: pan and zoom over the scene ----------
+//
+// .stage is fixed at inset:0, so a client coordinate IS a stage coordinate —
+// no getBoundingClientRect needed anywhere below.
+
+const ZOOM_MIN = 1, ZOOM_MAX = 3;
+const WHEEL_STEP = 1.12;
+// The world is drawn a little larger than the smallest size that covers the
+// viewport, so there is always somewhere to pan even at 100% zoom.
+const WORLD_SLACK = 1.12;
+
+let view = { zoom: 1, tx: 0, ty: 0 };
+let world = { w: 0, h: 0 };
+
+function stageSize(){
+  return { w: stage.clientWidth || 0, h: stage.clientHeight || 0 };
+}
+
+// The smallest world that fully covers the viewport at the scene's own aspect
+// ratio, plus the slack. Cover, never contain: the owner must never see a bare
+// gutter beside the farm.
+function worldSize(vw, vh, ratio){
+  let w = vw, h = vw / ratio;
+  if(h < vh){ h = vh; w = vh * ratio; }
+  return { w: w * WORLD_SLACK, h: h * WORLD_SLACK };
+}
+
+// Keep the world covering the viewport: the edge may reach the border, never
+// cross it. A world smaller than the viewport (possible only mid-resize) is
+// centred instead.
+function clampView(v){
+  const s = stageSize();
+  const rw = world.w * v.zoom, rh = world.h * v.zoom;
+  v.tx = rw <= s.w ? (s.w - rw) / 2 : Math.min(0, Math.max(s.w - rw, v.tx));
+  v.ty = rh <= s.h ? (s.h - rh) / 2 : Math.min(0, Math.max(s.h - rh, v.ty));
+  return v;
+}
+
+function applyView(){
+  scene.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.zoom})`;
+  const el = document.getElementById('zoomLevel');
+  if(el) el.textContent = Math.round(view.zoom * 100) + '%';
+}
+
+// Size the world to the viewport and centre it. Called on load, on resize and
+// on every scene change, because each scene carries its own aspect ratio.
+function fitScene(keepView){
+  const s = stageSize();
+  if(!s.w || !s.h) return;   // not laid out yet
+  const bg = sceneById(currentSceneId).background || {};
+  world = worldSize(s.w, s.h, bg.ratio || 16 / 9);
+  scene.style.width = world.w + 'px';
+  scene.style.height = world.h + 'px';
+  if(!keepView){
+    view.zoom = 1;
+    view.tx = (s.w - world.w) / 2;
+    view.ty = (s.h - world.h) / 2;
+  }
+  clampView(view);
+  applyView();
+}
+
+// Zoom around a fixed point: whatever sits under (cx, cy) stays under it.
+function setZoom(target, cx, cy){
+  const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, target));
+  if(z === view.zoom) return;
+  const k = z / view.zoom;
+  view.tx = cx - (cx - view.tx) * k;
+  view.ty = cy - (cy - view.ty) * k;
+  view.zoom = z;
+  clampView(view);
+  applyView();
+}
+
+function zoomFromButton(factor){
+  const s = stageSize();
+  setZoom(view.zoom * factor, s.w / 2, s.h / 2);
+}
+
+// A client point expressed as a percentage of the world — the same unit the
+// agents are positioned in.
+function clientToScenePct(cx, cy){
+  if(!world.w || !world.h) return { x: 50, y: 50 };
+  return {
+    x: ((cx - view.tx) / view.zoom) / world.w * 100,
+    y: ((cy - view.ty) / view.zoom) / world.h * 100
+  };
+}
+
+// ---------- Pointer handling: pan the scene, carry a minion ----------
+//
+// One rule decides which is which: a press that starts ON a character carries
+// that character (its handler stops the event before the stage sees it), a
+// press anywhere else pans the scene. Two fingers pinch-zoom.
+
+const DRAG_THRESHOLD = 4;   // px of travel before a press becomes a drag
+const pointers = new Map(); // live pointers over the stage
+let panFrom = null;
+let pinchFrom = null;
+let agentDrag = null;
+
+function pointerPair(){
+  const pts = Array.from(pointers.values());
+  return pts.length >= 2 ? [pts[0], pts[1]] : null;
+}
+function pinchDistance(){
+  const p = pointerPair();
+  if(!p) return 0;
+  return Math.sqrt(Math.pow(p[0].x - p[1].x, 2) + Math.pow(p[0].y - p[1].y, 2));
+}
+function pinchCentre(){
+  const p = pointerPair();
+  if(!p) return { x: 0, y: 0 };
+  return { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+}
+
+function onStagePointerDown(ev){
+  if(ev.button !== undefined && ev.button !== 0) return;  // right-click is not a pan
+  pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+  if(pointers.size === 1){
+    panFrom = { x: ev.clientX, y: ev.clientY, tx: view.tx, ty: view.ty };
+    stage.classList.add('panning');
+  } else if(pointers.size === 2){
+    panFrom = null;                                        // a pinch is not a pan
+    pinchFrom = { dist: pinchDistance(), zoom: view.zoom };
+  }
+}
+
+function onStagePointerMove(ev){
+  if(agentDrag){ moveAgentDrag(ev); return; }
+  if(!pointers.has(ev.pointerId)) return;
+  pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+
+  if(pinchFrom && pointers.size >= 2){
+    const dist = pinchDistance();
+    if(pinchFrom.dist > 0){
+      const c = pinchCentre();
+      setZoom(pinchFrom.zoom * (dist / pinchFrom.dist), c.x, c.y);
+    }
+    return;
+  }
+  if(!panFrom) return;
+  view.tx = panFrom.tx + (ev.clientX - panFrom.x);
+  view.ty = panFrom.ty + (ev.clientY - panFrom.y);
+  clampView(view);
+  applyView();
+}
+
+function onStagePointerUp(ev){
+  if(agentDrag){ endAgentDrag(ev); return; }
+  pointers.delete(ev.pointerId);
+  if(pointers.size < 2) pinchFrom = null;
+  if(pointers.size === 0){
+    panFrom = null;
+    stage.classList.remove('panning');
+  }
+}
+
+function onStageWheel(ev){
+  ev.preventDefault();
+  setZoom(view.zoom * (ev.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP), ev.clientX, ev.clientY);
+}
+
+// --- carrying one minion ---
+
+function startAgentDrag(ev, el, agent, onTap){
+  if(ev.button !== undefined && ev.button !== 0) return;
+  ev.stopPropagation();   // the scene must not pan while a character is held
+  // Picking someone up cancels any pan or pinch already in flight, so a second
+  // finger on a minion cannot leave the camera half-dragged.
+  pointers.clear();
+  panFrom = null;
+  pinchFrom = null;
+  stage.classList.remove('panning');
+  // Where he stands right now, straight off the element he is drawn with — no
+  // need to recompute a layout that is already on screen.
+  const from = { left: parseFloat(el.style.left), top: parseFloat(el.style.top) };
+  const start = clientToScenePct(ev.clientX, ev.clientY);
+  agentDrag = {
+    el, agent, onTap,
+    pointerId: ev.pointerId,
+    startX: ev.clientX, startY: ev.clientY,
+    // Grab offset, so the character does not jump his centre under the cursor.
+    grabDx: from.left - start.x,
+    grabDy: from.top - start.y,
+    moved: false, at: null
+  };
+}
+
+function moveAgentDrag(ev){
+  if(!world.w || !world.h) return;
+  const dx = ev.clientX - agentDrag.startX;
+  const dy = ev.clientY - agentDrag.startY;
+  if(!agentDrag.moved){
+    if(Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+    agentDrag.moved = true;
+    agentDrag.el.classList.add('dragging');
+    if(stage.setPointerCapture) stage.setPointerCapture(ev.pointerId);
+  }
+  const at = clientToScenePct(ev.clientX, ev.clientY);
+  agentDrag.at = {
+    left: clampPct(at.x + agentDrag.grabDx),
+    top:  clampPct(at.y + agentDrag.grabDy)
+  };
+  agentDrag.el.style.left = agentDrag.at.left + '%';
+  agentDrag.el.style.top = agentDrag.at.top + '%';
+}
+
+function endAgentDrag(ev){
+  const drag = agentDrag;
+  agentDrag = null;
+  if(stage.releasePointerCapture && stage.hasPointerCapture
+     && stage.hasPointerCapture(drag.pointerId)){
+    stage.releasePointerCapture(drag.pointerId);
+  }
+  drag.el.classList.remove('dragging');
+  if(!drag.moved || !drag.at){
+    // A press that never travelled is a tap: open the character, as before.
+    if(drag.onTap) drag.onTap();
+    return;
+  }
+  savePosition(currentSceneId, drag.agent.id, drag.at);
+}
+
+// ---------- Saving a moved character ----------
+
+// Local first (always works, instantly), then the token-gated admin RPC when
+// both a token and the table are present. The label never claims more than what
+// actually happened.
+async function savePosition(sceneId, agentId, pos){
+  localPositions[posKey(sceneId, agentId)] = { x: pos.left, y: pos.top };
+  writeLocalPositions();
+  setSaveNote();
+
+  const token = getAdminToken(false);
+  if(!token || !dbPositionsAvailable) return;
+  try{
+    await sbRpc('admin_set_agent_scene_position', {
+      p_token: token, p_scene_id: sceneId, p_agent_id: agentId,
+      p_pos_x: pos.left, p_pos_y: pos.top
+    });
+    dbPositions[posKey(sceneId, agentId)] = { x: pos.left, y: pos.top };
+    setSaveNote();
+  }catch(err){
+    console.warn('position RPC failed', err);
+    setSaveNote('Datubāzē saglabāt neizdevās — pozīcija palika tikai šajā pārlūkā.');
+  }
+}
+
+function sceneSavedCount(sceneId, store){
+  return Object.keys(store).filter(k => k.indexOf(sceneId + '|') === 0).length;
+}
+
+function setSaveNote(extra){
+  const el = document.getElementById('saveNote');
+  if(!el) return;
+  const inDb = sceneSavedCount(currentSceneId, dbPositions);
+  const local = sceneSavedCount(currentSceneId, localPositions);
+  let text;
+  if(inDb){
+    text = `☁️ ${inDb} pozīcijas datubāzē (redzamas visur)`;
+  } else if(local){
+    text = dbPositionsAvailable
+      ? `💾 ${local} pozīcijas tikai šajā pārlūkā — spied "Saglabāt datubāzē"`
+      : `💾 ${local} pozīcijas tikai šajā pārlūkā (datubāzes tabulas vēl nav)`;
+  } else {
+    text = 'Velc minjonu, lai pārvietotu viņu.';
+  }
+  el.textContent = extra ? text + ' · ' + extra : text;
+}
+
+// Push this scene's moves into the database. Needs the admin token — the same
+// one the approve button asks for. Reports exactly how many rows landed.
+async function pushSceneToDb(){
+  const prefix = currentSceneId + '|';
+  const keys = Object.keys(localPositions).filter(k => k.indexOf(prefix) === 0);
+  if(!keys.length){ setSaveNote('Šajā ainā vēl nav pārvietots neviens minjons.'); return; }
+  const token = getAdminToken(true);
+  if(!token) return;
+
+  let saved = 0;
+  let failure = '';
+  for(const k of keys){
+    const p = localPositions[k];
+    try{
+      await sbRpc('admin_set_agent_scene_position', {
+        p_token: token, p_scene_id: currentSceneId, p_agent_id: k.slice(prefix.length),
+        p_pos_x: p.x, p_pos_y: p.y
+      });
+      dbPositions[k] = { x: p.x, y: p.y };
+      saved++;
+    }catch(err){
+      failure = String(err && err.message ? err.message : err);
+      break;
+    }
+  }
+  setSaveNote(failure
+    ? `Saglabātas ${saved}/${keys.length}. Datubāze atbildēja: ${failure}`
+    : `Saglabātas ${saved}/${keys.length} datubāzē.`);
+}
+
+// Back to the starting layout: forget this scene's saved positions. Local rows
+// always; database rows too when the owner has the token and the table exists.
+async function resetScenePositions(){
+  const prefix = currentSceneId + '|';
+  const keys = Object.keys(localPositions).filter(k => k.indexOf(prefix) === 0)
+    .concat(Object.keys(dbPositions).filter(k => k.indexOf(prefix) === 0));
+  if(!keys.length){ setSaveNote('Šajā ainā nav ko atiestatīt.'); return; }
+
+  const token = dbPositionsAvailable && sceneSavedCount(currentSceneId, dbPositions)
+    ? getAdminToken(true) : '';
+  let dbNote = '';
+  if(token){
+    try{
+      await sbRpc('admin_reset_agent_scene_positions',
+        { p_token: token, p_scene_id: currentSceneId, p_agent_id: null });
+      Object.keys(dbPositions).forEach(k => { if(k.indexOf(prefix) === 0) delete dbPositions[k]; });
+    }catch(err){
+      dbNote = 'Datubāzē dzēst neizdevās: ' + (err && err.message ? err.message : err);
+    }
+  }
+  Object.keys(localPositions).forEach(k => { if(k.indexOf(prefix) === 0) delete localPositions[k]; });
+  writeLocalPositions();
+  renderScene();
+  setSaveNote(dbNote || 'Sākuma vietas atjaunotas.');
+}
+
+// ---------- Scene switching ----------
+
+function applySceneBackground(){
+  const bg = sceneById(currentSceneId).background || {};
+  scene.style.backgroundImage = bg.css || '';
+}
+
+function renderSceneSwitcher(){
+  const host = document.getElementById('sceneSwitcher');
+  if(!host) return;
+  host.innerHTML = SCENES.map(s => {
+    const n = agentsForScene(s.id, lastAgents).length;
+    return `<button class="scene-chip${s.id === currentSceneId ? ' active' : ''}" type="button"
+        data-scene="${escapeHtml(s.id)}" title="${escapeHtml(s.desc)}"
+      >${escapeHtml(s.name)}<span class="scene-count">${n}</span></button>`;
+  }).join('');
+  host.querySelectorAll('.scene-chip').forEach(btn => {
+    btn.addEventListener('click', () => switchScene(btn.dataset.scene));
+  });
+}
+
+// Redraw the field from the rows the last poll produced — no fetch needed.
+function renderScene(){
+  renderAgents(lastAgents, lastTasks, lastStatuses);
+  renderSceneSwitcher();
+}
+
+function switchScene(sceneId){
+  if(!SCENES.some(s => s.id === sceneId) || sceneId === currentSceneId) return;
+  currentSceneId = sceneId;
+  applySceneBackground();
+  fitScene(false);
+  renderScene();
+  setSaveNote();
+}
+
+// ---------- The field ----------
+
+// Letter fallback for a missing picture (field character, platform badge, map
+// logo). Only words that START with a letter or digit count, so
+// "Herme — Galvenais Fermeris" gives "HG" and "Meta (Facebook / Instagram)"
+// gives "M" — a dash or bracket is not an initial.
+function initialsFor(name){
+  const parts = String(name || '?').trim().split(/\s+/)
+    .filter(p => /^[\p{L}\p{N}]/u.test(p));
+  return (parts.slice(0, 2).map(p => p.charAt(0)).join('') || '?').toUpperCase();
+}
+
+function renderAgents(agents, tasks, statuses){
+  rememberRows(agents, tasks, statuses);
   latestTaskByAgent = {};
-  tasks.forEach(t => {
+  (tasks || []).forEach(t => {
     const cur = latestTaskByAgent[t.agent_id];
     if(!cur || new Date(t.created_at) > new Date(cur.created_at)) latestTaskByAgent[t.agent_id] = t;
   });
+  statusByAgent = {};
+  (statuses || []).forEach(s => { statusByAgent[s.agent_id] = s; });
 
   scene.querySelectorAll('.agent').forEach(el => el.remove());
 
-  agents.forEach(a => {
+  // Only the cast of the scene the owner is looking at. The main farm holds
+  // everyone, so its field is exactly what it always was.
+  const cast = agentsForScene(currentSceneId, agents);
+
+  // Room outlines belong to the main farm; the other scenes ARE rooms.
+  if(sceneById(currentSceneId).rooms) renderRooms(agents);
+  else document.getElementById('roomLayer').innerHTML = '';
+
+  cast.forEach((a, index) => {
+    // Everyone stays in the farm permanently. Presence is no longer the signal:
+    // the status dot is. (Before t-0016 an idle minion was removed from the
+    // scene entirely, so the farm looked empty whenever no task was running.)
     const isBoss = a.tier === 'boss';
     const task = latestTaskByAgent[a.id];
-    const isOut = isBoss || !!task; // minions only show up when they have an active/review task
-
-    if(!isOut) return;
-
-    const inReview = task && task.status === 'review';
-    const working = isBoss ? true : (task && task.status === 'active');
+    const inReview = !!task && task.status === 'review';
+    const working = !!task && task.status === 'active';
 
     const el = document.createElement('div');
-    el.className = 'agent' + (isBoss ? ' boss' : '');
-    el.style.left = a.pos_x + '%';
-    el.style.top = a.pos_y + '%';
+    el.className = 'agent' + (isBoss ? ' boss' : '') + (working || inReview ? '' : ' idle');
+    el.dataset.agent = a.id;
+    el.dataset.room = roomForAgent(a).id;
+    const pos = scenePosition(currentSceneId, a, index, cast.length);
+    el.style.left = pos.left + '%';
+    el.style.top = pos.top + '%';
 
     let bubbleHtml;
     if(inReview){
       bubbleHtml = `<div class="bubble review">✅ ${escapeHtml(task.result_summary || 'Darbs pabeigts')}<br>
         <button class="approve-btn" data-task="${task.id}">✔ Pieņemt un sūtīt mājās</button></div>`;
-    } else if(task){
+    } else if(working){
       bubbleHtml = `<div class="bubble">${escapeHtml(task.title || 'Strādā…')}</div>`;
-    } else {
+    } else if(isBoss){
       bubbleHtml = `<div class="bubble">Fermas boss 🤠</div>`;
+    } else {
+      // Idle line: his own quote if the database has one, never an invented
+      // task. current_task is deliberately not used here — it can hold the last
+      // job long after it ended.
+      const st = statusByAgent[a.id];
+      bubbleHtml = `<div class="bubble">${escapeHtml(st && st.quote ? st.quote : '💤 Atpūšas')}</div>`;
     }
+
+    // No cutout art yet -> a lettered stand-in, so a new minion anchors in place
+    // instead of vanishing.
+    const avatarHtml = a.cutout_url
+      ? `<img src="${escapeHtml(a.cutout_url)}" alt="${escapeHtml(a.name)}" loading="lazy">`
+      : `<span class="figure-ph" style="--ph-accent:${agentAccent(a.id)}">${
+          escapeHtml(initialsFor(a.name))}</span>`;
+
+    const dotClass = inReview ? 'review' : (working ? '' : 'resting');
+    const dotTitle = inReview ? 'Gaida apstiprinājumu' : (working ? 'Strādā' : 'Atpūšas');
 
     el.innerHTML = `
       ${bubbleHtml}
       <div class="figure">
-        <img src="${a.cutout_url}" alt="${escapeHtml(a.name)}" loading="lazy">
-        <span class="status-dot ${inReview ? 'review' : (working ? '' : 'resting')}"></span>
+        ${avatarHtml}
+        <span class="status-dot ${dotClass}" title="${dotTitle}"></span>
       </div>
       <div class="agent-name">${escapeHtml(a.name)}</div>
     `;
 
     const approveBtn = el.querySelector('.approve-btn');
     if(approveBtn){
+      // Both events are stopped: the click so it does not reach the character,
+      // and the pointerdown so pressing the button never starts a drag.
+      approveBtn.addEventListener('pointerdown', (ev) => ev.stopPropagation());
       approveBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         approveTask(task.id);
       });
     }
 
-    el.addEventListener('click', () => {
+    // Press = carry this character; a press that never travels is a tap and
+    // opens him, exactly as the old click did.
+    el.addEventListener('pointerdown', (ev) => startAgentDrag(ev, el, a, () => {
       if(isBoss) openHermeMenu();
       else openModal(a, task);
-    });
+    }));
     scene.appendChild(el);
-
-    agentsById[a.id] = a;
   });
 
-  // Boss always cached even if not in loop order issues
-  agents.forEach(a => { agentsById[a.id] = a; });
+  // Cache every agent, platforms included: the profile and platform panels look
+  // agents up by id from here.
+  (agents || []).forEach(a => { agentsById[a.id] = a; });
+
+  const note = document.getElementById('sceneNote');
+  if(note){
+    const s = sceneById(currentSceneId);
+    note.textContent = cast.length
+      ? s.desc
+      : s.desc + ' Šajā ainā vēl nav neviena minjona.';
+  }
 }
 
 function escapeHtml(s){
   const d = document.createElement('div');
   d.textContent = s == null ? '' : s;
-  return d.innerHTML;
+  // Quotes are escaped as well because the result is interpolated into
+  // attributes too (src=, title=, data-*), where a bare " would end the
+  // attribute early and let a database value inject markup. Inside text the
+  // entities render as the plain characters, so this is safe everywhere.
+  return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 async function approveTask(taskId){
@@ -942,6 +2371,207 @@ function taskItemHtml(t){
     </div>`;
 }
 
+// ---------- What one minion finished, on what module, for what money ----------
+//
+// Same honesty rule as the token meter: nothing on screen may be inferred.
+//   * a module is listed only when a row NAMES it (an agent_module_usage row,
+//     or tasks.model_used stamped by the runner). The platform that runs a
+//     minion is not evidence of which model a given work used;
+//   * a cost is printed only when a row carries a real amount. A missing cost
+//     says "izmaksas netiek merītas" - never 0.00, which reads like a measurement.
+
+// Artifact references as they appear inside the text a task carries (the farm
+// writes paths like exchange/results/t-0029.md into result_summary). Extracting
+// them is the only way to show artifacts until a task carries them as a column.
+const ARTIFACT_REF_RE = /[\w.\-]+(?:\/[\w.\-]+)+\.(?:md|json|csv|sql|js|html|txt|png|jpg|jpeg|pdf)\b/gi;
+const ARTIFACT_REF_MAX = 6;
+
+function artifactRefsFrom(t){
+  const text = [t && t.result_summary, t && t.description].filter(Boolean).join(' ');
+  const out = [];
+  const seen = {};
+  let m;
+  ARTIFACT_REF_RE.lastIndex = 0;
+  while(out.length < ARTIFACT_REF_MAX && (m = ARTIFACT_REF_RE.exec(text)) !== null){
+    if(seen[m[0]]) continue;
+    seen[m[0]] = true;
+    out.push(m[0]);
+  }
+  return out;
+}
+
+// A result_url is database data, so it becomes a live link only if it is a
+// plain http(s) address or a same-origin path. `javascript:` and the
+// protocol-relative `//host` form are refused. Quotes and angle brackets are
+// refused too: escapeHtml() escapes < > & but not ", so a quote inside an
+// href="" would be an attribute-injection hole.
+function isSafeHref(u){
+  const s = String(u == null ? '' : u).trim();
+  if(/["'<>\s`]/.test(s)) return false;
+  return /^https?:\/\//i.test(s) || /^\/[^/]/.test(s);
+}
+
+// The finished works of ONE minion, newest first, each with its module and the
+// artifact refs found in its own result text.
+function doneWorksHtml(tasks){
+  const done = (tasks || [])
+    .filter(t => t && t.status === 'done')
+    .sort((a, b) => new Date(b.completed_at || b.created_at || 0) - new Date(a.completed_at || a.created_at || 0));
+  if(!done.length){
+    return '<span class="muted">Vēl nav pabeigtu darbu.</span>';
+  }
+  return done.map(t => {
+    const when = t.completed_at
+      ? 'pabeigts ' + fmtDay(t.completed_at)
+      : 'pabeigšanas datums nav ierakstīts';
+    const moduleTag = t.model_used
+      ? `<span class="status-tag done">🧩 ${escapeHtml(t.model_used)}</span>`
+      : '<span class="status-tag queued">🧩 modulis nav atzīmēts</span>';
+    const summary = t.result_summary
+      ? `<div class="wi-summary">📄 ${escapeHtml(t.result_summary)}</div>`
+      : '<div class="wi-summary muted">Rezultāta kopsavilkums nav ierakstīts.</div>';
+    const link = isSafeHref(t.result_url)
+      ? `<a class="art-chip" href="${escapeHtml(String(t.result_url).trim())}" target="_blank" rel="noopener">🔗 rezultāts</a>`
+      : '';
+    const refs = artifactRefsFrom(t)
+      .map(r => `<span class="art-chip">${escapeHtml(r)}</span>`).join('');
+    const artifacts = (link || refs) ? `<div class="wi-artifacts">${link}${refs}</div>` : '';
+    return `<div class="work-item">
+      <div class="wi-head">
+        <div class="wi-title">${escapeHtml(t.title || 'Bez nosaukuma')}</div>
+        ${moduleTag}
+      </div>
+      <div class="wi-meta">${escapeHtml(when)}</div>
+      ${summary}${artifacts}
+    </div>`;
+  }).join('');
+}
+
+// One entry per (provider, model) this minion really ran on. The two sources
+// count different things and are kept apart on purpose: `works` = finished
+// tasks stamped with the model, `runs` = model calls recorded in
+// agent_module_usage. Adding them together would count the same work twice.
+function modulesForAgent(moduleRows, tasks){
+  const byKey = {};
+  const order = [];
+  function entry(provider, model){
+    const key = (provider || '') + '|' + model;
+    if(!byKey[key]){
+      byKey[key] = {
+        provider: provider || '', model: model,
+        works: 0, runs: 0, tokens: null, cost: null, currency: '', lastUsedAt: null
+      };
+      order.push(key);
+    }
+    return byKey[key];
+  }
+  function markUsed(m, when){
+    if(when && (!m.lastUsedAt || new Date(when) > new Date(m.lastUsedAt))) m.lastUsedAt = when;
+  }
+
+  (moduleRows || []).forEach(r => {
+    if(!r || !r.model) return;
+    const m = entry(r.provider, r.model);
+    m.runs += Number(r.runs || 0);
+    const tok = Number(r.input_tokens || 0) + Number(r.output_tokens || 0);
+    if(tok > 0) m.tokens = Number(m.tokens || 0) + tok;
+    // NULL cost = "not measured". Only a real number moves the total off null
+    // (costNumber() is the same guard the subscriptions block uses).
+    const c = costNumber(r.cost_amount);
+    if(c !== null){
+      m.cost = Number(m.cost || 0) + c;
+      m.currency = r.cost_currency || m.currency;
+    }
+    markUsed(m, r.last_used_at);
+  });
+
+  (tasks || []).forEach(t => {
+    if(!t || !t.model_used) return;
+    const m = entry(t.provider, t.model_used);
+    m.works++;
+    markUsed(m, t.completed_at || t.started_at || t.created_at);
+  });
+
+  return order.map(k => byKey[k]).sort((a, b) =>
+    Number(b.tokens || 0) - Number(a.tokens || 0)
+    || b.works - a.works
+    || a.model.localeCompare(b.model));
+}
+
+function modulesHtml(modules){
+  if(!modules.length){
+    return '<span class="muted">Neviens darbs vēl nav atzīmēts ar moduli — '
+      + 'moduļi šim minjonam netiek reģistrēti.</span>';
+  }
+  return modules.map(m => {
+    const bits = [];
+    if(m.provider) bits.push(m.provider);
+    if(m.works) bits.push(m.works + ' darbi');
+    if(m.runs) bits.push(m.runs + ' izsaukumi');
+    bits.push(m.tokens !== null ? fmtNum(m.tokens) + ' tokeni' : 'tokeni netiek uzskaitīti');
+    const money = m.cost === null ? null : fmtMoney(m.cost, m.currency || 'USD');
+    bits.push(money === null ? 'izmaksas netiek mērītas' : money);
+    if(m.lastUsedAt) bits.push('pēdējoreiz ' + fmtDay(m.lastUsedAt));
+    return `<span class="mod-chip"><b>${escapeHtml(m.model)}</b>${escapeHtml(bits.join(' · '))}</span>`;
+  }).join('');
+}
+
+// Money actually recorded for this minion, grouped by the currency it was
+// stored in. Mixed currencies stay separate — this app holds no exchange rate,
+// so a USD amount is never re-labelled as EUR (same rule as subsTotals()).
+function moneySumsFrom(modules){
+  const byCurrency = {};
+  (modules || []).forEach(m => {
+    const n = costNumber(m.cost);
+    if(n === null) return;
+    const cur = String(m.currency || 'USD').trim().toUpperCase();
+    byCurrency[cur] = (byCurrency[cur] || 0) + n;
+  });
+  return Object.keys(byCurrency).sort().map(cur => ({ currency: cur, amount: byCurrency[cur] }));
+}
+
+// Tokens + money for one minion. Tokens come from its agent_usage row (only if
+// it was really synced), money from the module rows, with the legacy
+// agent_usage.cost_usd honoured when it carries a non-zero number.
+function costAndTokensHtml(usage, modules){
+  const synced = !!(usage && usage.last_synced_at);
+  const tile = (value, label) => `<div><b>${value}</b>${label}</div>`;
+  const tiles = [];
+  if(synced){
+    const inTok = Number(usage.input_tokens || 0);
+    const outTok = Number(usage.output_tokens || 0);
+    tiles.push(tile(fmtNum(inTok), 'ievad. tokeni'));
+    tiles.push(tile(fmtNum(outTok), 'izvad. tokeni'));
+    tiles.push(tile(fmtNum(inTok + outTok), 'tokeni kopā'));
+  } else {
+    tiles.push(tile('—', 'tokeni nav sinhronizēti'));
+  }
+
+  let money = moneySumsFrom(modules);
+  // Legacy fallback: agent_usage.cost_usd predates the module rows. It is only
+  // trusted when it is non-zero — /api/usage/sync never writes a cost, so a 0
+  // there means "not measured", not "free".
+  if(!money.length && usage && Number(usage.cost_usd) > 0){
+    money = [{ currency: 'USD', amount: Number(usage.cost_usd) }];
+  }
+  const moneyTiles = money
+    .map(s => ({ text: fmtMoney(s.amount, s.currency) }))
+    .filter(t => t.text !== null);
+  if(moneyTiles.length){
+    moneyTiles.forEach(t => tiles.push(tile(escapeHtml(t.text), 'izmaksas')));
+  } else {
+    money = [];
+    tiles.push(tile('—', 'izmaksas netiek mērītas'));
+  }
+
+  const parts = [money.length
+    ? 'Izmaksas summētas no ierakstītajām moduļu rindām, tajā valūtā, kādā tās ierakstītas — kursu app nepārrēķina.'
+    : 'Izmaksas netiek mērītas: tokenu sinhronizācija ņem tikai tokenu skaitus, un neviena moduļa rinda nenes summu. Nulli šeit nerādām.'];
+  if(!synced) parts.push('Tokeni vēl nav sinhronizēti (skat. vadības paneli).');
+  return `<div class="usage-row">${tiles.join('')}</div>`
+    + `<div class="meter-note">${escapeHtml(parts.join(' '))}</div>`;
+}
+
 function eventRowsHtml(events, agentNameFor){
   return events.map(e => {
     const who = agentNameFor ? `<b>${escapeHtml(agentNameFor(e.agent_id))}:</b> ` : '';
@@ -957,6 +2587,270 @@ function agentAccent(id){
   let h = 0;
   for(let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) % 360; }
   return `hsl(${h}, 58%, 42%)`;
+}
+
+// ---------- Big AI agents (platforms), the hierarchy, and the token meter ----------
+//
+// Top level = a PLATFORM agent: the AI engine that actually spends the owner's
+// tokens (Claude today; GPT / Gemini later, each as its own row). The small
+// specialist minions hang under one of them via agents.parent_id.
+//
+// The meter's honesty rule: "used" is only ever a real agent_usage row that has
+// been synced. "Left" is budget-minus-used, where the budget is a number the
+// OWNER declared in token_budgets — no API this app can call reports how many
+// tokens remain on a Claude subscription. Never draw a bar from a number that
+// does not exist; say "not synced" instead.
+
+const PLATFORM_TIER = 'platform';
+
+// Shown only while migration 20260816190000 has not been applied, and always
+// tagged as a preview in the UI. It is not a data source: every number under it
+// is still summed from the real rows of the specialists it groups.
+const PLATFORM_PREVIEW = {
+  id: 'claude',
+  name: 'Claude',
+  role: 'Liela AI platforma — dzinējs, kas darbina minjonus',
+  tier: PLATFORM_TIER,
+  cutout_url: ''
+};
+
+let hierarchy = { groups: [], orphans: [], pending: true };
+let usageById = {};
+let budgetById = {};
+
+// Tolerant GET: a table that does not exist yet (migration not applied) must
+// degrade only the feature that needs it, never break the whole page.
+async function sbGetOptional(pathAndQuery){
+  try{
+    return { ok: true, rows: await sbGet(pathAndQuery) };
+  }catch(err){
+    console.warn('optional fetch failed: ' + pathAndQuery, err);
+    return { ok: false, rows: [] };
+  }
+}
+
+function buildHierarchy(agents){
+  const minions = agents.filter(a => a.tier === 'minion');
+  const platforms = agents.filter(a => a.tier === PLATFORM_TIER);
+  if(!platforms.length){
+    return { groups: [{ platform: PLATFORM_PREVIEW, children: minions }], orphans: [], pending: true };
+  }
+  const known = new Set(platforms.map(p => p.id));
+  return {
+    groups: platforms.map(p => ({ platform: p, children: minions.filter(m => m.parent_id === p.id) })),
+    orphans: minions.filter(m => !m.parent_id || !known.has(m.parent_id)),
+    pending: false
+  };
+}
+
+function groupForMinion(agentId){
+  return hierarchy.groups.find(g => g.children.some(c => c.id === agentId)) || null;
+}
+
+function budgetTokensFor(platformId){
+  const b = budgetById[platformId];
+  const n = b && b.budget_tokens != null ? Number(b.budget_tokens) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// Tokens measured for one agent, or null when its row was never synced.
+function usedTokensFor(agentId){
+  const u = usageById[agentId];
+  if(!u || !u.last_synced_at) return null;
+  return Number(u.input_tokens || 0) + Number(u.output_tokens || 0);
+}
+
+// Sum across a set of agents, counting only rows that were really synced.
+function sumUsage(agentIds){
+  let total = 0, synced = 0;
+  agentIds.forEach(id => {
+    const used = usedTokensFor(id);
+    if(used !== null){ total += used; synced++; }
+  });
+  return { total: synced ? total : null, synced, of: agentIds.length };
+}
+
+// The meter. Three honest states, no fourth:
+//   used + budget -> a bar with used / budget / left
+//   used only     -> the number, and "no budget set" instead of a fake bar
+//   nothing       -> "not synced yet", no bar at all
+function meterHtml(used, budget, opts){
+  const o = opts || {};
+  const hasUsed = typeof used === 'number' && Number.isFinite(used);
+  const hasBudget = typeof budget === 'number' && Number.isFinite(budget) && budget > 0;
+
+  if(!hasUsed && !hasBudget){
+    return `<div class="meter-empty">${escapeHtml(o.emptyText
+      || 'Tokeni vēl nav sinhronizēti — izlietojumu nevar parādīt.')}</div>`;
+  }
+  if(!hasUsed){
+    return `<div class="meter">
+      <div class="meter-track"><div class="meter-fill" style="width:0"></div></div>
+      <div class="meter-legend">
+        <span>Budžets <b>${fmtNum(budget)}</b> tokeni</span>
+        <span>izlietojums nav zināms</span>
+      </div>
+      <div class="meter-note">Tokeni vēl nav sinhronizēti, tāpēc atlikumu nerādām.</div>
+    </div>`;
+  }
+  if(!hasBudget){
+    return `<div class="meter">
+      <div class="meter-legend">
+        <span>Izlietoti <b>${fmtNum(used)}</b> tokeni</span>
+        <span>atlikums nezināms</span>
+      </div>
+      <div class="meter-note">Budžets nav uzstādīts — bez tā atlikumu nevar aprēķināt.
+        Uzstādi to vadības panelī.</div>
+    </div>`;
+  }
+
+  const pct = Math.min(100, Math.round(used / budget * 100));
+  const left = Math.max(0, budget - used);
+  const color = pct >= 90 ? '#c0392b' : (pct >= 70 ? '#e8934a' : '#3fae5a');
+  const right = o.rightHtml || `Atlicis <b>${fmtNum(left)}</b> (${100 - pct}%)`;
+  return `<div class="meter">
+    <div class="meter-track"><div class="meter-fill" style="width:${pct}%;--meter-color:${color}"></div></div>
+    <div class="meter-legend">
+      <span>Izlietoti <b>${fmtNum(used)}</b> / ${fmtNum(budget)}</span>
+      <span>${right}</span>
+    </div>
+    ${o.note ? `<div class="meter-note">${escapeHtml(o.note)}</div>` : ''}
+  </div>`;
+}
+
+// Where every number in this feature comes from — shown to the owner verbatim
+// so no figure on screen is ever mistaken for something Anthropic reported.
+const METER_SOURCE_NOTE = [
+  'Izlietotie tokeni nāk no `agent_usage` tabulas, ko papildina vadības paneļa poga',
+  '"Sinhronizēt tokenus". Ja rinda nav sinhronizēta, rādām "nav sinhronizēts", nevis nulli.',
+  'Atlikums = saimnieka uzstādītais budžets mīnus izlietotais. Neviens Anthropic API',
+  'nerāda, cik tokenu palicis abonementā (Claude Max), tāpēc budžetu ievada saimnieks pats.',
+  'Izmaksas netiek uzskaitītas — sinhronizācija ņem tikai tokenu skaitus.',
+  'Svarīgi: nepiesaisti vienu un to pašu Anthropic workspace gan platformai, gan minjoniem —',
+  'tad skaitļi saskaitītos divreiz.'
+].join(' ');
+
+function platformLogoHtml(p){
+  if(p.cutout_url){
+    return `<img src="${escapeHtml(p.cutout_url)}" alt="" loading="lazy">`;
+  }
+  return escapeHtml(String(p.name || '?').trim().charAt(0).toUpperCase() || '?');
+}
+
+function renderPlatformBand(){
+  const band = document.getElementById('platformBand');
+  const cards = hierarchy.groups.map(g => {
+    const p = g.platform;
+    const accent = agentAccent(p.id);
+    const ids = g.children.map(c => c.id).concat([p.id]);
+    const sum = sumUsage(ids);
+    const budget = budgetTokensFor(p.id);
+    const b = budgetById[p.id];
+    const planLabel = b && b.plan_label ? b.plan_label : '';
+    const sub = [
+      `${g.children.length} speciālisti`,
+      planLabel || null,
+      sum.synced ? `mērīts ${sum.synced}/${sum.of}` : null
+    ].filter(Boolean).join(' · ');
+
+    return `<button class="platform-card" data-platform="${escapeHtml(p.id)}"
+              style="--platform-accent:${accent}">
+        <span class="platform-logo">${platformLogoHtml(p)}</span>
+        <span class="platform-main">
+          <span class="platform-name">${escapeHtml(p.name)}${
+            hierarchy.pending ? '<span class="pending-tag">priekšskatījums</span>' : ''}</span>
+          <span class="platform-sub">${escapeHtml(sub)}</span>
+          ${meterHtml(sum.total, budget, {
+            emptyText: 'Tokeni vēl nav sinhronizēti.'
+          })}
+        </span>
+      </button>`;
+  });
+
+  if(hierarchy.orphans.length){
+    cards.push(`<div class="platform-card" style="cursor:default;--platform-accent:#b9a26a">
+        <span class="platform-logo">?</span>
+        <span class="platform-main">
+          <span class="platform-name">Bez platformas</span>
+          <span class="platform-sub">${hierarchy.orphans.length} speciālisti nav piesaistīti nevienai AI platformai</span>
+          <span class="meter-note">Piesaisti tos vadības panelī → Hierarhija.</span>
+        </span>
+      </div>`);
+  }
+
+  band.innerHTML = cards.join('');
+  band.querySelectorAll('.platform-card[data-platform]').forEach(btn => {
+    btn.addEventListener('click', () => openPlatformPanel(btn.dataset.platform));
+  });
+}
+
+const platformOverlay = document.getElementById('platformOverlay');
+document.getElementById('platformClose').addEventListener('click',
+  () => platformOverlay.classList.remove('show'));
+platformOverlay.addEventListener('click', (e) => {
+  if(e.target === platformOverlay) platformOverlay.classList.remove('show');
+});
+
+function openPlatformPanel(platformId){
+  // Read from `hierarchy` rather than a cached map: the boss panel rebuilds the
+  // hierarchy from its own fetch, so a map built at band-render time can be stale.
+  const g = hierarchy.groups.find(x => x.platform.id === platformId);
+  if(!g) return;
+  const p = g.platform;
+  const accent = agentAccent(p.id);
+
+  const logo = document.getElementById('pLogo');
+  logo.style.setProperty('--platform-accent', accent);
+  logo.innerHTML = platformLogoHtml(p);
+  document.getElementById('pName').innerHTML = escapeHtml(p.name)
+    + (hierarchy.pending ? '<span class="pending-tag">priekšskatījums</span>' : '');
+  document.getElementById('pRole').textContent = p.role || '';
+
+  const ids = g.children.map(c => c.id).concat([p.id]);
+  const sum = sumUsage(ids);
+  const budget = budgetTokensFor(p.id);
+  const b = budgetById[p.id];
+  const planParts = [
+    b && b.plan_label ? b.plan_label : null,
+    b && b.window_label ? b.window_label : null,
+    b && b.window_started_at ? 'no ' + fmtDay(b.window_started_at) : null
+  ].filter(Boolean);
+  document.getElementById('pMeter').innerHTML = meterHtml(sum.total, budget, {
+    note: planParts.length ? planParts.join(' · ') : ''
+  }) + `<div class="meter-note">Mērītas ${sum.synced} no ${sum.of} tokenu rindām.</div>`;
+
+  const childrenEl = document.getElementById('pChildren');
+  if(g.children.length){
+    childrenEl.innerHTML = g.children.map(c => {
+      const used = usedTokensFor(c.id);
+      return `<button class="child-line" data-agent="${escapeHtml(c.id)}">
+          ${c.cutout_url ? `<img src="${escapeHtml(c.cutout_url)}" alt="" loading="lazy">` : ''}
+          <span class="cl-main">
+            <span class="cl-name">${escapeHtml(c.name)}</span>
+            <span class="cl-sub">${escapeHtml(c.role || '')}</span>
+          </span>
+          <span class="cl-num">${used === null ? 'nav sinhr.' : fmtNum(used) + ' tok.'}</span>
+        </button>`;
+    }).join('');
+    childrenEl.querySelectorAll('.child-line').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const a = agentsById[btn.dataset.agent];
+        if(!a) return;
+        platformOverlay.classList.remove('show');
+        openModal(a, latestTaskByAgent[a.id]);
+      });
+    });
+  } else {
+    childrenEl.innerHTML = '<span class="muted">Šai platformai vēl nav piesaistīts neviens speciālists.</span>';
+  }
+
+  document.getElementById('pSourceNote').textContent = hierarchy.pending
+    ? 'Hierarhija vēl nav datubāzē — rādām noklusēto skatu (visus minjonus šodien darbina Claude). '
+      + METER_SOURCE_NOTE
+    : METER_SOURCE_NOTE;
+
+  document.getElementById('platformModal').scrollTop = 0;
+  platformOverlay.classList.add('show');
 }
 
 // ---------- Per-minion personal profile (its own work only) ----------
@@ -985,9 +2879,25 @@ async function openModal(a, task){
   pill.textContent = inReview ? '🕓 Gaida apstiprinājumu' : (task ? '🟢 Strādā' : '💤 Atpūšas mājās');
   pill.className = 'status-pill' + (inReview ? ' review' : (task ? '' : ' resting'));
 
-  mVideo.src = a.video_url;
-  const p = mVideo.play();
-  if(p && typeof p.catch === 'function'){ p.catch(()=>{}); }
+  // An agent may have no character video (a new minion often has only a still
+  // avatar). Loading an empty src would fire a broken-media error, so the frame
+  // falls back to the still cutout instead.
+  const videoWrap = document.getElementById('mVideoWrap');
+  if(a.video_url){
+    mVideo.style.display = '';
+    videoWrap.style.backgroundImage = '';
+    mVideo.src = a.video_url;
+    const p = mVideo.play();
+    if(p && typeof p.catch === 'function'){ p.catch(()=>{}); }
+  } else {
+    mVideo.pause();
+    mVideo.removeAttribute('src');
+    mVideo.style.display = 'none';
+    videoWrap.style.backgroundImage = a.cutout_url
+      ? 'url("' + encodeURI(a.cutout_url).replace(/"/g, '%22') + '")' : '';
+    videoWrap.style.backgroundSize = 'cover';
+    videoWrap.style.backgroundPosition = 'center top';
+  }
 
   document.getElementById('mAbout').textContent =
     `${a.role}. Fermā kopš ${fmtDay(a.created_at)} (ID: ${a.id}).`;
@@ -999,6 +2909,9 @@ async function openModal(a, task){
   document.getElementById('mHistory').textContent = 'Ielādē…';
   document.getElementById('mSkills').textContent = 'Ielādē…';
   document.getElementById('mUsage').textContent = 'Ielādē…';
+  document.getElementById('mDoneWorks').textContent = 'Ielādē…';
+  document.getElementById('mModules').textContent = 'Ielādē…';
+  document.getElementById('mCost').textContent = 'Ielādē…';
   setModalTab('work');
   modal.scrollTop = 0;
 
@@ -1006,18 +2919,22 @@ async function openModal(a, task){
   overlay.classList.add('show');
 
   const q = encodeURIComponent(a.id);
-  let skills, usageRows, statusRows, tasks, events;
+  let skills, usageRows, statusRows, tasks, events, moduleUsage;
   try{
-    [skills, usageRows, statusRows, tasks, events] = await Promise.all([
+    [skills, usageRows, statusRows, tasks, events, moduleUsage] = await Promise.all([
       sbGet(`agent_skills?select=level,skills(name)&agent_id=eq.${q}`),
       sbGet(`agent_usage?select=*&agent_id=eq.${q}`),
       sbGet(`agent_status?select=*&agent_id=eq.${q}`),
       sbGet(`tasks?select=*&agent_id=eq.${q}&order=created_at.desc&limit=50`),
-      sbGet(`agent_events?select=*&agent_id=eq.${q}&order=created_at.desc&limit=25`)
+      sbGet(`agent_events?select=*&agent_id=eq.${q}&order=created_at.desc&limit=25`),
+      // agent_module_usage arrives with migration 20260817160000. Until it is
+      // applied this returns no rows, and the profile says modules are not
+      // registered instead of failing.
+      sbGetOptional(`agent_module_usage?select=*&agent_id=eq.${q}`)
     ]);
   }catch(err){
     console.error(err);
-    ['mTasks','mHistory','mSkills','mUsage'].forEach(id => {
+    ['mTasks','mHistory','mSkills','mUsage','mDoneWorks','mModules','mCost'].forEach(id => {
       document.getElementById(id).textContent = 'Neizdevās ielādēt.';
     });
     return;
@@ -1032,8 +2949,15 @@ async function openModal(a, task){
     quoteEl.style.display = '';
   }
   const counts = countByStatus(tasks);
+  const ownGroup = groupForMinion(a.id);
   const badges = [
     `<span class="mini-badge tier">${a.tier === 'boss' ? '🤠 Fermas boss' : '🧑‍🌾 Minjons'}</span>`,
+    // Which big AI agent runs this specialist — the hierarchy, made visible
+    // right where the owner looks at the minion.
+    ownGroup
+      ? `<span class="mini-badge">🧠 Darbina: ${escapeHtml(ownGroup.platform.name)}</span>`
+      : `<span class="mini-badge gate">🧠 Nav piesaistīts AI platformai</span>`,
+    `<span class="mini-badge">🏠 ${escapeHtml(roomForAgent(a).name)}</span>`,
     `<span class="mini-badge gate">✋ Darbu apstiprina saimnieks</span>`,
     `<span class="mini-badge">🗂️ ${tasks.length} uzdevumi</span>`
   ];
@@ -1072,18 +2996,17 @@ async function openModal(a, task){
     skillsEl.innerHTML = '<span class="muted">Vēl nav pievienotu skillu.</span>';
   }
 
-  // --- his own numbers: only tiles that have a real row behind them ---
+  // --- what he finished, on which module, and what it cost ---
   const u = usageRows[0];
+  const modules = modulesForAgent(moduleUsage.rows, tasks);
+  document.getElementById('mDoneWorks').innerHTML = doneWorksHtml(tasks);
+  document.getElementById('mModules').innerHTML = modulesHtml(modules);
+  document.getElementById('mCost').innerHTML = costAndTokensHtml(u, modules);
+
+  // --- his own numbers: only tiles that have a real row behind them.
+  // Tokens and cost live in the "Izmaksas un tokeni" block above, so this row
+  // stays task-derived and nothing is stated twice. ---
   const tiles = [];
-  if(u && u.last_synced_at){
-    tiles.push(`<div><b>${fmtNum(u.input_tokens)}</b>ievad. tokeni</div>`);
-    tiles.push(`<div><b>${fmtNum(u.output_tokens)}</b>izvad. tokeni</div>`);
-    // cost_usd is written by /api/usage/sync, which does not yet read a real
-    // cost report — show it only when it is non-zero instead of faking $0.00.
-    tiles.push(Number(u.cost_usd) > 0
-      ? `<div><b>$${Number(u.cost_usd).toFixed(2)}</b>izmaksas</div>`
-      : `<div><b>—</b>izmaksas netiek uzskaitītas</div>`);
-  }
   tiles.push(`<div><b>${counts.done}</b>pabeigti darbi</div>`);
   if(counts.review) tiles.push(`<div><b>${counts.review}</b>gaida OK</div>`);
   if(counts.rejected) tiles.push(`<div><b>${counts.rejected}</b>atgriezti</div>`);
@@ -1095,12 +3018,25 @@ async function openModal(a, task){
     const avgMin = Math.round(durations.reduce((s, ms) => s + ms, 0) / durations.length / 60000);
     tiles.push(`<div><b>${fmtNum(avgMin)} min</b>vidēji vienam darbam</div>`);
   }
-  const usageEl = document.getElementById('mUsage');
-  usageEl.innerHTML = tiles.join('');
-  if(!(u && u.last_synced_at)){
-    usageEl.insertAdjacentHTML('beforeend',
-      '<div class="muted" style="flex-basis:100%">Tokeni vēl nav sinhronizēti (skat. vadības paneli).</div>');
-  }
+  document.getElementById('mUsage').innerHTML = tiles.join('');
+
+  // --- his own token meter, measured against the budget of the AI platform
+  // that runs him. The remaining balance belongs to the platform, not to one
+  // minion, so his bar shows his SHARE of it rather than a personal "left". ---
+  const used = (u && u.last_synced_at)
+    ? Number(u.input_tokens || 0) + Number(u.output_tokens || 0)
+    : null;
+  const group = groupForMinion(a.id);
+  const budget = group ? budgetTokensFor(group.platform.id) : null;
+  const platformName = group ? group.platform.name : null;
+  document.getElementById('mMeter').innerHTML = meterHtml(used, budget, {
+    rightHtml: platformName
+      ? `aizņem <b>${budget ? Math.min(100, Math.round(used / budget * 100)) : 0}%</b> no ${escapeHtml(platformName)} budžeta`
+      : undefined,
+    note: platformName
+      ? `Atlikums pieder platformai ${platformName}, nevis vienam minjonam.`
+      : ''
+  });
 }
 
 document.getElementById('closeBtn').addEventListener('click', ()=>{
@@ -1146,16 +3082,17 @@ document.getElementById('hermeStatsClose').addEventListener('click', closeHermeS
 hermeStatsOverlay.addEventListener('click', (e)=>{ if(e.target===hermeStatsOverlay) closeHermeStats(); });
 
 async function loadHermeStats(){
-  const ids = ['sCounts','sApprovals','sAgents','sUsage','sEvents','sPlan'];
-  let agents, tasks, statuses, usage, events, planRows;
+  const ids = ['sCounts','sApprovals','sAgents','sMeter','sUsage','sEvents','sPlan'];
+  let agents, tasks, statuses, usage, events, planRows, budgets;
   try{
-    [agents, tasks, statuses, usage, events, planRows] = await Promise.all([
+    [agents, tasks, statuses, usage, events, planRows, budgets] = await Promise.all([
       sbGet('agents?select=*&order=created_at.asc'),
       sbGet(`tasks?select=*&order=created_at.desc&limit=${FARM_TASKS_LIMIT}`),
       sbGet('agent_status?select=*'),
       sbGet('agent_usage?select=*'),
       sbGet('agent_events?select=*&order=created_at.desc&limit=12'),
-      sbGet('farm_plan?select=content,updated_at&id=eq.1')
+      sbGet('farm_plan?select=content,updated_at&id=eq.1'),
+      sbGetOptional('token_budgets?select=*')
     ]);
   }catch(err){
     console.error(err);
@@ -1167,8 +3104,13 @@ async function loadHermeStats(){
   agents.forEach(a => { agentById[a.id] = a; });
   const statusById = {};
   statuses.forEach(s => { statusById[s.agent_id] = s; });
-  const usageById = {};
+  // Refresh the shared caches so the meter helpers below read exactly the rows
+  // this panel just fetched, not the ones the 15s field poll last saw.
+  usageById = {};
   usage.forEach(u => { usageById[u.agent_id] = u; });
+  budgetById = {};
+  budgets.rows.forEach(b => { budgetById[b.agent_id] = b; });
+  hierarchy = buildHierarchy(agents);
   const nameFor = (id) => (agentById[id] ? agentById[id].name : 'Ferma');
 
   // --- totals by task status ---
@@ -1196,11 +3138,12 @@ async function loadHermeStats(){
     apprEl.innerHTML = '<span class="muted">Nekas negaida apstiprinājumu.</span>';
   }
 
-  // --- one line per minion (click -> that minion's personal profile) ---
-  const minions = agents.filter(a => a.tier !== 'boss');
+  // --- one line per minion, grouped under the big AI agent that runs it
+  //     (click -> that minion's personal profile) ---
+  const minions = agents.filter(a => a.tier === 'minion');
   const agentsEl = document.getElementById('sAgents');
   if(minions.length){
-    agentsEl.innerHTML = minions.map(a => {
+    const minionLineHtml = (a) => {
       const own = tasks.filter(t => t.agent_id === a.id);
       const c = countByStatus(own);
       const st = statusById[a.id];
@@ -1218,7 +3161,22 @@ async function loadHermeStats(){
           </span>
           <span class="al-num">${c.active} akt. · ${c.review} OK? · ${c.done} pab.<br>${escapeHtml(tokens)}</span>
         </button>`;
-    }).join('');
+    };
+
+    // One block per big AI agent, then anything not yet attached to one.
+    const blocks = hierarchy.groups.map(g => {
+      const rows = g.children.filter(c => minions.some(m => m.id === c.id));
+      return `<div class="wi-meta" style="margin:8px 0 6px;">🧠 ${escapeHtml(g.platform.name)}${
+          hierarchy.pending ? ' (priekšskatījums)' : ''} — ${rows.length} speciālisti</div>`
+        + (rows.length ? rows.map(minionLineHtml).join('')
+                       : '<span class="muted">Nav piesaistītu speciālistu.</span>');
+    });
+    if(hierarchy.orphans.length){
+      blocks.push('<div class="wi-meta" style="margin:8px 0 6px;">❓ Bez AI platformas</div>'
+        + hierarchy.orphans.map(minionLineHtml).join(''));
+    }
+    agentsEl.innerHTML = blocks.join('');
+
     agentsEl.querySelectorAll('.agent-line').forEach(btn => {
       btn.addEventListener('click', () => {
         const a = agentById[btn.dataset.agent];
@@ -1234,6 +3192,20 @@ async function loadHermeStats(){
   } else {
     agentsEl.innerHTML = '<span class="muted">Reģistrā vēl nav minjonu.</span>';
   }
+
+  // --- farm-wide token meter: one bar per big AI agent, because a budget is
+  //     declared per platform (a Claude budget and a GPT budget are not one
+  //     pool and must never be added together). ---
+  const meterEl = document.getElementById('sMeter');
+  meterEl.innerHTML = hierarchy.groups.map(g => {
+    const gIds = g.children.map(c => c.id).concat([g.platform.id]);
+    const gSum = sumUsage(gIds);
+    return `<div style="margin-bottom:12px;">
+        <div class="wi-meta">🧠 ${escapeHtml(g.platform.name)}${
+          hierarchy.pending ? ' (priekšskatījums)' : ''}</div>
+        ${meterHtml(gSum.total, budgetTokensFor(g.platform.id), {})}
+      </div>`;
+  }).join('') || '<span class="muted">Nav nevienas AI platformas.</span>';
 
   // --- farm-wide usage ---
   const synced = usage.filter(u => u.last_synced_at);
@@ -1347,17 +3319,1191 @@ async function sendChat(){
 chatSendBtn.addEventListener('click', sendChat);
 chatInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChat(); });
 
+// ---------- Subscription register ----------
+//
+// Everything in this block comes from the `subscriptions` table and nowhere
+// else. No provider exposes a trustworthy "list all my subscriptions" read, so
+// these rows are owner-declared; the heading says so, and nothing here guesses
+// a price, a plan or a renewal date that is not in the row.
+
+const SUB_STATUS = {
+  active:    { cls: '',          label: 'Aktīva' },
+  paused:    { cls: 'paused',    label: 'Pauzēta' },
+  cancelled: { cls: 'cancelled', label: 'Atcelta' }
+};
+
+// An unrecognised status is shown as itself in grey, never quietly as "active".
+function subStatus(s){
+  return SUB_STATUS[s] || { cls: 'unknown', label: String(s || 'nezināms') };
+}
+
+const PERIOD_LABEL = { month: '/mēn.', year: '/gadā' };
+
+// A cost the owner has not filled in yet. NULL / '' must NOT become 0 — an
+// unpriced subscription is unknown, not free, and Number(null) is 0.
+function costNumber(v){
+  if(v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+// Guarded currency formatting: a malformed cost_currency must degrade to a
+// plain "12,50 XYZ" line, not throw the whole block away.
+function fmtMoney(amount, currency){
+  const n = costNumber(amount);
+  if(n === null) return null;
+  const cur = String(currency || '').trim().toUpperCase();
+  if(/^[A-Z]{3}$/.test(cur)){
+    try{
+      return new Intl.NumberFormat('lv-LV', {
+        style: 'currency', currency: cur, maximumFractionDigits: 2
+      }).format(n);
+    }catch(err){ /* unknown code — fall through to the plain form */ }
+  }
+  return n.toLocaleString('lv-LV', { maximumFractionDigits: 2 }) + (cur ? ' ' + cur : '');
+}
+
+// Totals, per currency. Currencies are never added together: this app holds no
+// exchange rate, and a converted total would be a number nobody measured.
+// Only `active` rows count — a cancelled subscription is not money going out.
+// Rows without an amount are excluded and counted, so the UI can say how many.
+function subsTotals(rows){
+  const byCurrency = {};
+  let counted = 0, missing = 0, active = 0;
+  rows.forEach(s => {
+    if(s.status !== 'active') return;
+    active++;
+    const n = costNumber(s.cost_amount);
+    const cur = String(s.cost_currency || '').trim().toUpperCase();
+    if(n === null || !cur){ missing++; return; }
+    byCurrency[cur] = (byCurrency[cur] || 0) + (s.cost_period === 'year' ? n / 12 : n);
+    counted++;
+  });
+  return {
+    currencies: Object.keys(byCurrency).sort().map(cur => ({
+      currency: cur,
+      monthly: byCurrency[cur],
+      yearly: byCurrency[cur] * 12
+    })),
+    counted, missing, active
+  };
+}
+
+function subRowHtml(s){
+  const st = subStatus(s.status);
+  const money = fmtMoney(s.cost_amount, s.cost_currency);
+  const cost = money === null
+    ? '<span class="sub-cost unknown">cena nav norādīta</span>'
+    : `<span class="sub-cost">${escapeHtml(money + (PERIOD_LABEL[s.cost_period] || ''))}</span>`;
+  // The note is what carries "TBD" for an unpriced row, so it is surfaced
+  // exactly there; on a priced row it would only add noise.
+  const what = [
+    s.what_for || '',
+    st.cls ? st.label : '',
+    money === null && s.notes ? s.notes : ''
+  ].filter(Boolean).join(' · ');
+
+  return `<div class="sub-row">
+      <span class="${('sub-dot ' + st.cls).trim()}" title="${escapeHtml(st.label)}"></span>
+      <span class="sub-main">
+        <span class="sub-name">${escapeHtml(s.name || '?')}</span>${
+          s.plan ? `<span class="sub-plan">${escapeHtml(s.plan)}</span>` : ''}
+        <span class="sub-what">${escapeHtml(what)}</span>
+      </span>
+      <span class="sub-right">
+        ${cost}
+        ${s.renewal_date ? `<span class="sub-renew">atjaunojas ${escapeHtml(fmtDay(s.renewal_date))}</span>` : ''}
+      </span>
+    </div>`;
+}
+
+function renderSubscriptions(result){
+  const body = document.getElementById('subsBody');
+  if(!result.ok){
+    body.innerHTML = '<div class="muted">Tabula "subscriptions" vēl nav datubāzē — '
+      + 'kad migrācija ir palaista, saraksts parādīsies šeit.</div>';
+    return;
+  }
+  const rows = result.rows.slice().sort((a, b) => (a.owner_sort || 0) - (b.owner_sort || 0));
+  if(!rows.length){
+    body.innerHTML = '<div class="muted">Subskripciju vēl nav.</div>';
+    return;
+  }
+
+  const t = subsTotals(rows);
+  const tiles = t.currencies.length
+    ? t.currencies.reduce((acc, c) => acc.concat([
+        `<div class="total-tile"><span class="tt-label">Kopā mēnesī (${escapeHtml(c.currency)})</span>
+           <span class="tt-value">${escapeHtml(fmtMoney(c.monthly, c.currency))}</span></div>`,
+        `<div class="total-tile"><span class="tt-label">Kopā gadā (${escapeHtml(c.currency)})</span>
+           <span class="tt-value">${escapeHtml(fmtMoney(c.yearly, c.currency))}</span></div>`
+      ]), [])
+    : ['<div class="total-tile"><span class="tt-label">Kopā mēnesī</span>'
+       + '<span class="tt-value">—</span></div>'];
+
+  const notes = ['Kopsummā ieskaitītas tikai aktīvās subskripcijas.'];
+  if(t.missing){
+    notes.push(`${t.missing} no ${t.active} aktīvajām vēl ir bez cenas — tās nav ieskaitītas.`);
+  }
+  if(t.currencies.length > 1){
+    notes.push('Valūtas rādām atsevišķi — kursu šī lapa nezina, tāpēc tās nesaskaitām kopā.');
+  }
+
+  body.innerHTML = `<div class="subs-totals">${tiles.join('')}</div>
+    <div class="subs-note">${escapeHtml(notes.join(' '))}</div>
+    <div class="subs-list">${rows.map(subRowHtml).join('')}</div>`;
+}
+
+// ---------- System map: the whole ecosystem on one screen ----------
+//
+// What this answers for the owner: who does what, what is wired to what, and
+// which way the data actually moves. Two sources, deliberately kept apart:
+//
+//   * SYSTEM_MAP below — curated facts about the people, AI platforms,
+//     connectors and stores. No provider exposes a "describe my ecosystem"
+//     read, so these rows are written by hand; every one carries an `evidence`
+//     line naming where its status was measured (mostly the read-only connector
+//     test in exchange/results/t-0002.md, 2026-08-16). A node nobody has
+//     verified is drawn as "gaida savienojumu", never green.
+//   * the live `agents` table — the specialists shown under an AI platform come
+//     from the parent_id hierarchy (t-0015), not from this file.
+//
+// Extending the map later is one entry in SYSTEM_MAP; nothing else changes.
+
+// kind -> the word printed under a node name. 'person' is part of the
+// vocabulary on purpose: the owner is a real node in the flow, not decoration.
+const MAP_KIND = {
+  person:    'cilvēks',
+  system:    'sistēma',
+  ai:        'AI platforma',
+  connector: 'konektors',
+  store:     'veikals / kanāls'
+};
+
+const MAP_STATUS = {
+  active:  { pill: '',       dot: '',        label: 'Savienots' },
+  pending: { pill: 'review', dot: 'pending', label: 'Gaida savienojumu' },
+  blocked: { pill: 'blocked', dot: 'blocked', label: 'Bloķēts' }
+};
+
+// An unknown status is shown as itself in grey — never quietly as "connected".
+function mapStatus(s){
+  return MAP_STATUS[s] || { pill: 'resting', dot: 'unknown', label: String(s || 'nezināms') };
+}
+
+// Top to bottom: where work is decided -> who does it -> what stores it ->
+// what reaches outside -> the outside world itself.
+const MAP_LANES = [
+  { id: 'people',     title: 'Saimnieks un vadība', sub: 'kur rodas uzdevumi' },
+  { id: 'ai',         title: 'Lielie AI un rūķi',   sub: 'kas izpilda darbu' },
+  { id: 'core',       title: 'Fermas kodols',       sub: 'datubāze, lietotne, mitināšana' },
+  { id: 'connectors', title: 'Konektori',           sub: 'caur ko ferma sasniedz veikalus' },
+  { id: 'stores',     title: 'Veikali un kanāli',   sub: 'kur notiek pārdošana' }
+];
+
+// One arrow row per gap between two lanes. `down` = commands going out to the
+// world, `up` = data coming back in. state 'planned' draws a dashed chip: that
+// flow is designed but NOT built, and the owner must be able to see which is
+// which at a glance.
+const MAP_FLOWS = [
+  { from: 'people', to: 'ai',
+    down: 'uzdevumi (exchange/tasks)', up: 'rezultāti un atskaites', state: 'live' },
+  { from: 'ai', to: 'core',
+    down: 'ieraksti: uzdevumi, notikumi, tokenu skaits',
+    up: 'lietotne lasa datus no Supabase', state: 'live' },
+  { from: 'core', to: 'connectors',
+    down: 'apstiprinātas darbības', up: 'ievāktie dati', state: 'planned' },
+  { from: 'connectors', to: 'stores',
+    down: 'izmaiņas veikalos — tikai ar saimnieka OK',
+    up: 'pasūtījumi, reklāmu skaitļi, atslēgvārdi', state: 'live' }
+];
+
+// Every node. logo_url points at the brand's OWN favicon (never a third-party
+// logo proxy), and every box also carries a monogram underneath, so a logo that
+// does not load leaves a tidy letter instead of a broken image.
+const SYSTEM_MAP = [
+  // --- people ---
+  { id: 'owner', lane: 'people', kind: 'person', name: 'Saimnieks', logo_url: '',
+    status: 'active',
+    what_it_is: 'Ewart — fermas īpašnieks. Vienīgais, kas drīkst atļaut naudas un publiskas darbības.',
+    what_it_does: 'Dod idejas WhatsApp, apstiprina visu, kas maksā vai maina veikalus, un saņem īsas atskaites latviski.',
+    flow_in: 'atskaites, jautājumi, apstiprināšanas pieprasījumi',
+    flow_out: 'idejas, prioritātes, "OK" naudas un publiskām darbībām',
+    connects_to: ['hermes'],
+    evidence: 'Fermas protokols: CLAUDE.md standing rules — bez saimnieka OK neviena neatgriezeniska darbība nenotiek.' },
+  { id: 'hermes', lane: 'people', kind: 'system', name: 'Hermes', logo_url: '',
+    status: 'active',
+    what_it_is: 'Fermas uzraugs (supervizors), kas strādā uz attālinātā servera.',
+    what_it_does: 'Sadala saimnieka idejas uzdevumos, ieliek tos exchange/tasks, pārbauda rezultātus un ziņo saimniekam.',
+    flow_in: 'idejas no saimnieka, rezultātu faili no rūķiem',
+    flow_out: 'uzdevumu faili (exchange/tasks/NNNN-*.md)',
+    connects_to: ['owner', 'exchange', 'claude'],
+    evidence: 'Uzdevumu un rezultātu faili repozitorijā: exchange/tasks + exchange/results.' },
+
+  // --- AI platforms ---
+  { id: 'claude', lane: 'ai', kind: 'ai', name: 'Claude', logo_url: 'https://www.anthropic.com/favicon.ico',
+    status: 'active',
+    what_it_is: 'Anthropic AI platforma. Šodien tā ir vienīgā, kas reāli darbina fermas rūķus.',
+    what_it_does: 'KODERIS raksta lietotnes kodu, autopilots izpilda uzdevumus uz Mac, Herme čats atbild apmeklētājiem.',
+    flow_in: 'uzdevumu faili no Hermes, dati no Supabase',
+    flow_out: 'kods, rezultātu faili, ieraksti datubāzē',
+    connects_to: ['hermes', 'mac', 'supabase', 'app'],
+    evidence: 'agents rinda ar tier=platform (migrācija 20260816190000) un tokenu mērītājs lapas augšā.' },
+  { id: 'openai', lane: 'ai', kind: 'ai', name: 'GPT (OpenAI)', logo_url: 'https://openai.com/favicon.ico',
+    status: 'pending',
+    what_it_is: 'OpenAI modeļi (GPT-4o / 4o-mini).',
+    what_it_does: 'Paredzēts ideju uztveršanai un saturam. Fermā vēl nav ieslēgts.',
+    flow_in: '—', flow_out: '—',
+    connects_to: ['openrouter'],
+    evidence: 'knowledge/ai-platforms.md: "Pending key / routing" — atslēga nav ieslēgta (nauda = saimnieka OK).' },
+  { id: 'gemini', lane: 'ai', kind: 'ai', name: 'Gemini (Google)', logo_url: 'https://www.google.com/favicon.ico',
+    status: 'active',
+    what_it_is: 'Google modelis google/gemini-2.5-flash — lēts un ātrs teksta darbam.',
+    what_it_does: 'SEO teksti un sarakstu apraksti Etsy/Shopify vajadzībām.',
+    flow_in: 'atslēgvārdi un produktu dati',
+    flow_out: 'sarakstu teksti, SEO ieteikumi (publicēšana = saimnieka OK)',
+    connects_to: ['etsy', 'shopify'],
+    evidence: 'knowledge/ai-platforms.md: SEO aģents ar atslēgu (DB agents rinda "seo"). Fermas lietotnē vēl nav savas platformas rindas.' },
+  { id: 'grok', lane: 'ai', kind: 'ai', name: 'Grok (xAI)', logo_url: 'https://x.ai/favicon.ico',
+    status: 'pending',
+    what_it_is: 'xAI modelis ar piekļuvi X/aktualitātēm.',
+    what_it_does: 'Paredzēts tirgus un konkurentu izpētei. Vēl nav ieslēgts.',
+    flow_in: '—', flow_out: '—',
+    connects_to: ['openrouter'],
+    evidence: 'knowledge/agent-model-map.md: "Market trends / competitor — Grok, pending key".' },
+  { id: 'elevenlabs', lane: 'ai', kind: 'ai', name: 'ElevenLabs', logo_url: 'https://elevenlabs.io/favicon.ico',
+    status: 'pending',
+    what_it_is: 'Balss ģenerēšanas serviss.',
+    what_it_does: 'Paredzēts balsij video un reklāmām. Fermā konektora nav.',
+    flow_in: '—', flow_out: '—',
+    connects_to: [],
+    evidence: 'Ir rinda subskripciju reģistrā, bet neviens fermas kods to nesauc.' },
+  { id: 'openrouter', lane: 'ai', kind: 'system', name: 'OpenRouter', logo_url: 'https://openrouter.ai/favicon.ico',
+    status: 'pending',
+    what_it_is: 'Maršrutētājs: viena atslēga, caur kuru var sasniegt GPT, Grok, Gemini un Claude.',
+    what_it_does: 'Kods jau ir uzrakstīts (scripts/provider-router.js, scripts/openrouter-client.js), bet atslēga nav ieslēgta.',
+    flow_in: 'modeļa pieprasījumi no autopilota',
+    flow_out: 'atbildes no izvēlētā modeļa',
+    connects_to: ['openai', 'grok', 'gemini', 'claude', 'mac'],
+    evidence: 'Kods repozitorijā: scripts/provider-router.js. Atslēga = maksas darbība, tāpēc gaida saimnieka OK.' },
+
+  // --- farm core ---
+  { id: 'app', lane: 'core', kind: 'system', name: 'Aģentu Ferma (lietotne)', logo_url: '',
+    status: 'active',
+    what_it_is: 'Šī pati lapa — Express serveris (app/src/server.js) ar fermas skatu un vadības paneli.',
+    what_it_does: 'Rāda minjonus, tokenu mērītāju, subskripcijas un šo karti; ļauj apstiprināt uzdevumus un runāt ar Hermi.',
+    flow_in: 'rindas no Supabase (aģenti, uzdevumi, notikumi, tokeni)',
+    flow_out: 'apstiprinājumi un komandas caur admin RPC',
+    connects_to: ['supabase', 'railway', 'claude'],
+    evidence: 'Kods repozitorijā: app/src/server.js + app/src/public/index.html.' },
+  { id: 'supabase', lane: 'core', kind: 'system', name: 'Supabase', logo_url: 'https://supabase.com/favicon.ico',
+    status: 'active',
+    what_it_is: 'Postgres datubāze (projekts ewart-ai, eu-west-1, Postgres 17) — fermas atmiņa.',
+    what_it_does: 'Glabā aģentus, uzdevumus, notikumus, tokenu skaitus un subskripcijas. Publiska rakstīšana ir aizliegta: pārlūks drīkst tikai lasīt.',
+    flow_in: 'ieraksti no rūķiem un no vadības paneļa (tikai caur admin RPC)',
+    flow_out: 'visi skaitļi, ko rāda šī lapa',
+    connects_to: ['app', 'claude', 'mac'],
+    evidence: 't-0002 savienojuma tests: projekts ACTIVE_HEALTHY. RLS: tikai lasīšanas politikas.' },
+  { id: 'railway', lane: 'core', kind: 'system', name: 'Railway', logo_url: 'https://railway.app/favicon.ico',
+    status: 'active',
+    what_it_is: 'Mitinātājs, uz kura darbojas fermas lietotne.',
+    what_it_does: 'Automātiski izliek lietotni no GitHub repozitorija ewart-agentu-ferma (zars main).',
+    flow_in: 'kods no GitHub',
+    flow_out: 'publiskā fermas adrese',
+    connects_to: ['app'],
+    evidence: 't-0002: konts ewartwoods-code atbild. Uzmanību: šis repozitorijs NAV tas, no kā notiek deploy.' },
+  { id: 'exchange', lane: 'core', kind: 'system', name: 'Exchange mape', logo_url: '',
+    status: 'active',
+    what_it_is: 'Failu apmaiņa starp Hermi un rūķiem: exchange/tasks iekšā, exchange/results ārā.',
+    what_it_does: 'Viens uzdevums iekšā = viens rezultāta fails ārā. Tā ir vienīgā oficiālā saziņas vieta.',
+    flow_in: 'uzdevumu faili no Hermes',
+    flow_out: 'rezultātu faili ar pierādījumiem',
+    connects_to: ['hermes', 'mac'],
+    evidence: 'Mapes repozitorijā: exchange/tasks, exchange/results.' },
+  { id: 'mac', lane: 'core', kind: 'system', name: 'Mac mezgls (autopilots)', logo_url: '',
+    status: 'active',
+    what_it_is: 'Claude Code uz saimnieka Mac — rokas, kas dara darbu.',
+    what_it_does: 'Paņem uzdevumu no exchange/tasks, izpilda to, uzraksta rezultātu. scripts/autopilot.sh palaiž to pats.',
+    flow_in: 'uzdevumu faili',
+    flow_out: 'rezultāti, kods, ieraksti datubāzē',
+    connects_to: ['exchange', 'claude', 'supabase'],
+    evidence: 'Kods repozitorijā: scripts/autopilot.sh, scripts/farm-workers.sh.' },
+
+  // --- connectors ---
+  { id: 'mcp-shopify', lane: 'connectors', kind: 'connector', name: 'Shopify konektors',
+    logo_url: 'https://www.shopify.com/favicon.ico', status: 'active',
+    what_it_is: 'Tiešs savienojums ar Shopify veikalu.',
+    what_it_does: 'Lasa produktus, kolekcijas, pasūtījumus un ieņēmumus. Izmaiņas veikalā = saimnieka OK.',
+    flow_in: 'pieprasījumi no rūķiem',
+    flow_out: 'veikala dati',
+    connects_to: ['shopify', 'mac'],
+    evidence: 't-0002: atbildēja ar reāliem datiem — EWART WOODS Design, ewartwoods.com, Basic plāns.' },
+  { id: 'mcp-sellerlabs', lane: 'connectors', kind: 'connector', name: 'Seller Labs (Amazon Ads)',
+    logo_url: 'https://www.sellerlabs.com/favicon.ico', status: 'active',
+    what_it_is: 'Amazon reklāmu konektors — kampaņas, atslēgvārdi, likmes, ACoS.',
+    what_it_does: 'Lasa 12 Amazon tirgu reklāmu datus. Likmju un budžetu maiņa = saimnieka OK.',
+    flow_in: 'pieprasījumi no rūķiem',
+    flow_out: 'kampaņu un atslēgvārdu skaitļi',
+    connects_to: ['amazon', 'mac'],
+    evidence: 't-0002: 12 tirgi atbildēja; Amazon.de statuss "Connected", tokenValid=true.' },
+  { id: 'mcp-google', lane: 'connectors', kind: 'connector', name: 'Google Workspace',
+    logo_url: 'https://www.google.com/favicon.ico', status: 'active',
+    what_it_is: 'Drive, Gmail un Kalendārs.',
+    what_it_does: 'Tur atrodas ideju tabula "Fermas idejas", no kuras Hermes katru rītu ņem jaunas idejas.',
+    flow_in: 'saimnieka ieraksti ideju tabulā',
+    flow_out: 'idejas Hermem, faili un vēstules rūķiem',
+    connects_to: ['hermes', 'google-ads'],
+    evidence: 't-0002: Drive, Gmail un Kalendārs atbildēja ar reāliem datiem (konts ewartwoods@gmail.com).' },
+  { id: 'mcp-higgsfield', lane: 'connectors', kind: 'connector', name: 'Higgsfield',
+    logo_url: 'https://higgsfield.ai/favicon.ico', status: 'active',
+    what_it_is: 'Attēlu un video ģenerēšana ar AI.',
+    what_it_does: 'Taisa produktu bildes reālos interjeros. Katra ģenerēšana tērē kredītus, tāpēc vajag saimnieka OK.',
+    flow_in: 'attēla apraksts (prompts)',
+    flow_out: 'bildes un video veikaliem un reklāmām',
+    connects_to: ['mac'],
+    evidence: 't-0002: konts atbildēja — 836,65 kredīti, plāns "plus". Fermas tēlu bildes joprojām nāk no šī CDN.' },
+  { id: 'mcp-klaviyo', lane: 'connectors', kind: 'connector', name: 'Klaviyo',
+    logo_url: 'https://www.klaviyo.com/favicon.ico', status: 'pending',
+    what_it_is: 'E-pasta mārketinga sistēma.',
+    what_it_does: 'Paredzēta vēstuļu kampaņām pircējiem. Fermā vēl nav pārbaudīta.',
+    flow_in: '—', flow_out: '—',
+    connects_to: ['shopify'],
+    evidence: 'Nav pārbaudīta t-0002 testā. Subskripciju reģistrā rinda ir, bet savienojums nav apstiprināts.' },
+  { id: 'mcp-paypal', lane: 'connectors', kind: 'connector', name: 'PayPal / rēķini',
+    logo_url: 'https://www.paypal.com/favicon.ico', status: 'blocked',
+    what_it_is: 'Maksājumu un rēķinu konektors.',
+    what_it_does: 'Būtu vajadzīgs rēķinu pārskatiem. Šobrīd nedarbojas — jāpieslēdz no jauna.',
+    flow_in: '—', flow_out: '—',
+    connects_to: [],
+    evidence: 't-0002: "Failed to retrieve invoices: Unauthorized." Vienīgais konektors, kas atbildēja ar kļūdu.' },
+  { id: 'etsy-connector', lane: 'connectors', kind: 'connector', name: 'Etsy / eRank konektors',
+    logo_url: '', status: 'pending',
+    what_it_is: 'Tas savienojums, kura fermā VĒL NAV.',
+    what_it_does: 'Kad būs, tas nesīs Etsy sarakstus, atslēgvārdus un pircēju ziņas. Šodien Etsy darbs iet caur tabulu etsy-datu-analize vai pārlūku ar rokām.',
+    flow_in: '—', flow_out: '—',
+    connects_to: ['etsy'],
+    evidence: 't-0001 un t-0002: Etsy konektora nav — vienīgais tests, ko nevarēja izpildīt.' },
+
+  // --- stores ---
+  { id: 'etsy', lane: 'stores', kind: 'store', name: 'Etsy', logo_url: 'https://www.etsy.com/favicon.ico',
+    status: 'pending',
+    what_it_is: 'Galvenais rokdarbu tirgus laukums.',
+    what_it_does: 'Saraksti, SEO, atslēgvārdi, pircēju ziņas. Ferma to pagaidām nevar nolasīt automātiski.',
+    flow_in: 'sarakstu izmaiņas ar rokām',
+    flow_out: 'pagaidām nekas — trūkst konektora',
+    connects_to: ['etsy-connector', 'gemini'],
+    evidence: 't-0002: nav Etsy konektora. Šī ir lielākā roba fermas datu plūsmā.' },
+  { id: 'amazon', lane: 'stores', kind: 'store', name: 'Amazon', logo_url: 'https://www.amazon.com/favicon.ico',
+    status: 'active',
+    what_it_is: 'Amazon tirdzniecība un PPC reklāmas 12 tirgos (DE, FR, IT, ES, UK un citi).',
+    what_it_does: 'Dod reklāmu skaitļus un pārdošanas datus; likmju maiņa notiek tikai ar saimnieka OK.',
+    flow_in: 'kampaņu izmaiņas pēc apstiprinājuma',
+    flow_out: 'kampaņas, atslēgvārdi, ACoS',
+    connects_to: ['mcp-sellerlabs'],
+    evidence: 't-0002: 12 tirgi. Atvērts jautājums — visi konti saucas "SecretIngredient - Amazon.xx", nevis EWART WOODS.' },
+  { id: 'shopify', lane: 'stores', kind: 'store', name: 'Shopify', logo_url: 'https://www.shopify.com/favicon.ico',
+    status: 'active',
+    what_it_is: 'Savs veikals ewartwoods.com (EWART WOODS Design, Basic plāns).',
+    what_it_does: 'Produkti, kolekcijas, pasūtījumi un ieņēmumi. Uzskatāms par produktu patiesības avotu.',
+    flow_in: 'produktu un SEO izmaiņas pēc apstiprinājuma',
+    flow_out: 'produkti, pasūtījumi, ieņēmumi',
+    connects_to: ['mcp-shopify', 'mcp-klaviyo', 'gemini'],
+    evidence: 't-0002: veikals atbildēja ar reāliem datiem (valūta USD, Latvija).' },
+  { id: 'google-ads', lane: 'stores', kind: 'store', name: 'Google Shopping / Ads',
+    logo_url: 'https://www.google.com/favicon.ico', status: 'pending',
+    what_it_is: 'Preču sludinājumi un meklēšanas reklāmas.',
+    what_it_does: 'Paredzēts preču plūsmai un reklāmām. Reklāmu konts fermā vēl nav pārbaudīts.',
+    flow_in: '—', flow_out: '—',
+    connects_to: ['mcp-google'],
+    evidence: 't-0002 pārbaudīja tikai Drive, Gmail un Kalendāru — reklāmu kontu ne.' },
+  { id: 'pinterest', lane: 'stores', kind: 'store', name: 'Pinterest',
+    logo_url: 'https://www.pinterest.com/favicon.ico', status: 'pending',
+    what_it_is: 'Vizuālās atklāšanas kanāls.',
+    what_it_does: 'Paredzēts produktu bilžu izplatīšanai. Konektora fermā nav.',
+    flow_in: '—', flow_out: '—',
+    connects_to: [],
+    evidence: 'knowledge/brand-principles.md min to kā kanālu; savienojums nav izveidots.' },
+  { id: 'meta', lane: 'stores', kind: 'store', name: 'Meta (Facebook / Instagram)',
+    logo_url: 'https://www.meta.com/favicon.ico', status: 'pending',
+    what_it_is: 'Sociālie kanāli un reklāmas.',
+    what_it_does: 'Paredzēts saturam un reklāmām. Konektora fermā nav.',
+    flow_in: '—', flow_out: '—',
+    connects_to: [],
+    evidence: 'Nav pārbaudīts nevienā uzdevumā — tāpēc rādām kā negatavu.' }
+];
+
+const mapNodeById = {};
+SYSTEM_MAP.forEach(n => { mapNodeById[n.id] = n; });
+
+// The logo box: monogram in the background, brand favicon on top. Both are
+// always emitted, so a URL that 404s degrades to the letter instead of the
+// browser's broken-image icon (the error handler hides the <img>).
+function nodeLogoHtml(node){
+  const mono = escapeHtml(initialsFor(node.name));
+  const img = node.logo_url
+    ? `<img class="node-logo-img" src="${escapeHtml(node.logo_url)}" alt="" loading="lazy">`
+    : '';
+  return `<span class="node-logo" data-monogram="${mono}">${img}</span>`;
+}
+
+// Attach the fallback after the markup is in the DOM. An <img> that errors is
+// hidden, which uncovers the monogram drawn behind it.
+function attachLogoFallbacks(root){
+  if(!root || !root.querySelectorAll) return;
+  root.querySelectorAll('img.node-logo-img').forEach(img => {
+    img.addEventListener('error', () => { img.className = 'node-logo-img failed'; }, { once: true });
+  });
+}
+
+// The specialists to show inside an AI platform node. Live rows only: this
+// comes from agents.parent_id, so an unapplied hierarchy migration shows the
+// preview grouping rather than inventing names.
+function mapAgentChips(nodeId){
+  const g = hierarchy.groups.find(x => x.platform.id === nodeId);
+  if(!g || !g.children.length) return '';
+  const chips = g.children.map(c =>
+    `<button class="agent-chip" data-agent="${escapeHtml(c.id)}" title="${escapeHtml(c.role || '')}"
+       >${escapeHtml(c.name)}</button>`);
+  if(hierarchy.pending){
+    chips.push('<span class="agent-chip plain">priekšskatījums — hierarhija vēl nav datubāzē</span>');
+  }
+  return `<div class="node-agents">${chips.join('')}</div>`;
+}
+
+function mapNodeHtml(node){
+  const st = mapStatus(node.status);
+  const chips = node.kind === 'ai' ? mapAgentChips(node.id) : '';
+  return `<div class="map-node">
+      <button class="node-open" data-node="${escapeHtml(node.id)}">
+        ${nodeLogoHtml(node)}
+        <span class="node-main">
+          <span class="node-name">${escapeHtml(node.name)}</span>
+          <span class="node-kind">${escapeHtml(MAP_KIND[node.kind] || node.kind)}</span>
+        </span>
+      </button>
+      <span class="node-side">
+        <span class="${('node-dot ' + st.dot).trim()}" title="${escapeHtml(st.label)}"></span>
+        <button class="node-info" data-node="${escapeHtml(node.id)}"
+          title="Kas tas ir un ko tas dara?" aria-label="Informācija par ${escapeHtml(node.name)}">i</button>
+      </span>
+      ${chips}
+    </div>`;
+}
+
+function mapArrowHtml(flow){
+  const cls = flow.state === 'planned' ? 'flow-chip planned' : 'flow-chip';
+  const planned = flow.state === 'planned' ? ' (plāns)' : '';
+  return `<div class="map-arrow">
+      <span class="${cls}">↓ ${escapeHtml(flow.down + planned)}</span>
+      <span class="${cls}">↑ ${escapeHtml(flow.up + planned)}</span>
+    </div>`;
+}
+
+function renderSystemMap(){
+  const host = document.getElementById('mapFlow');
+  if(!host) return;
+
+  const parts = [];
+  MAP_LANES.forEach((lane, i) => {
+    const nodes = SYSTEM_MAP.filter(n => n.lane === lane.id);
+    parts.push(`<div class="map-lane" data-lane="${escapeHtml(lane.id)}">
+        <div class="lane-head">
+          <span class="lane-title">${escapeHtml(lane.title)}</span>
+          <span class="lane-sub">${escapeHtml(lane.sub)}</span>
+        </div>
+        <div class="lane-nodes">${nodes.map(mapNodeHtml).join('')}</div>
+      </div>`);
+    const flow = MAP_FLOWS.find(f => f.from === lane.id && f.to === (MAP_LANES[i + 1] || {}).id);
+    if(flow) parts.push(mapArrowHtml(flow));
+  });
+  host.innerHTML = parts.join('');
+
+  attachLogoFallbacks(host);
+  host.querySelectorAll('.node-open, .node-info').forEach(btn => {
+    btn.addEventListener('click', () => openNodeInfo(btn.dataset.node));
+  });
+  host.querySelectorAll('.agent-chip[data-agent]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const a = agentsById[btn.dataset.agent];
+      if(a) openModal(a, latestTaskByAgent[a.id]);
+    });
+  });
+
+  // Counted, never claimed: the note states how much of the map is actually
+  // wired up, so "beautiful diagram" can never read as "everything works".
+  const counts = { active: 0, pending: 0, blocked: 0, other: 0 };
+  SYSTEM_MAP.forEach(n => {
+    if(counts[n.status] === undefined) counts.other++; else counts[n.status]++;
+  });
+  const planned = MAP_FLOWS.filter(f => f.state === 'planned').length;
+  const note = document.getElementById('mapNote');
+  if(note){
+    // Label form ("savienoti: 15") on purpose — a Latvian numeral would have to
+    // decline with the count, and a wrong ending is the kind of sloppiness the
+    // owner reads every day.
+    note.textContent = `${SYSTEM_MAP.length} punkti — savienoti: ${counts.active}, `
+      + `gaida savienojumu: ${counts.pending}, bloķēti: ${counts.blocked}`
+      + (counts.other ? `, ar nezināmu statusu: ${counts.other}` : '') + '. '
+      + (planned ? 'Punktētā bultiņa = plāns, nevis fakts: veikalu datu automātiska ievākšana '
+        + `datubāzē vēl nav uzbūvēta (${planned} no ${MAP_FLOWS.length} plūsmām). ` : '')
+      + 'Statusi nāk no reāliem savienojuma testiem — spied ⓘ, lai redzētu, no kurienes.';
+  }
+}
+
+const mapInfoOverlay = document.getElementById('mapInfoOverlay');
+document.getElementById('mapInfoClose').addEventListener('click',
+  () => mapInfoOverlay.classList.remove('show'));
+mapInfoOverlay.addEventListener('click', (e) => {
+  if(e.target === mapInfoOverlay) mapInfoOverlay.classList.remove('show');
+});
+
+function openNodeInfo(nodeId){
+  const node = mapNodeById[nodeId];
+  if(!node) return;
+  const st = mapStatus(node.status);
+
+  const logo = document.getElementById('miLogo');
+  logo.innerHTML = nodeLogoHtml(node);
+  attachLogoFallbacks(logo);
+
+  document.getElementById('miName').textContent = node.name;
+  document.getElementById('miKind').textContent = MAP_KIND[node.kind] || node.kind;
+  const pill = document.getElementById('miStatus');
+  pill.className = ('status-pill ' + st.pill).trim();
+  pill.textContent = st.label;
+  document.getElementById('miWhat').textContent = node.what_it_is;
+  document.getElementById('miDoes').textContent = node.what_it_does;
+  document.getElementById('miFlow').innerHTML =
+    `<span class="flow-line"><b>Iekšā:</b> ${escapeHtml(node.flow_in || '—')}</span>
+     <span class="flow-line"><b>Ārā:</b> ${escapeHtml(node.flow_out || '—')}</span>`;
+
+  const connects = document.getElementById('miConnects');
+  const linked = (node.connects_to || []).map(id => mapNodeById[id]).filter(Boolean);
+  connects.innerHTML = linked.length
+    ? linked.map(n => `<button class="info-chip" data-node="${escapeHtml(n.id)}">${escapeHtml(n.name)}</button>`).join('')
+    : '<span class="muted">Vēl nav savienots ne ar ko.</span>';
+  connects.querySelectorAll('.info-chip').forEach(btn => {
+    btn.addEventListener('click', () => openNodeInfo(btn.dataset.node));
+  });
+
+  document.getElementById('miEvidence').textContent = node.evidence;
+  document.getElementById('mapInfoModal').scrollTop = 0;
+  mapInfoOverlay.classList.add('show');
+}
+
+// ---------- Target audience: the person we sell to, and her home ----------
+//
+// WHERE EVERY FIELD COMES FROM. All of it is lifted from
+// knowledge/audience/target-persona.md (task t-0031), which tags each claim:
+// [DATA] = measured in our own sales/catalog database, [PRIOR] = market
+// knowledge that is a hypothesis until verified. The split matters on screen:
+//   - markets, money, product categories -> [DATA], quoted with real numbers;
+//   - face, home, pet, hobbies           -> [PRIOR], the illustrative layer.
+// Each persona carries its own `evidence` line saying which is which, and the
+// band prints a standing note that the faces are drawings, not customer photos.
+// Rank 1 (Katharina) is the primary persona: she is the person the measured
+// German Amazon revenue actually describes.
+//
+// A HOME IS DATA, NOT MARKUP. `room.props` is a list of simple typed shapes
+// (shelf | block | pot | rug) drawn into one SVG, and `room.spots` is the
+// labelled overlay on top of it. Adding a persona is one entry in PERSONAS -
+// nothing else in the page has to change. The same shape can also arrive from
+// the `personas` table once migration 20260817180000 is applied; until then the
+// fetch fails, this config is used, and the source line says so.
+
+const PERSONAS = [
+  {
+    id: 'katharina',
+    rank: 1,
+    name: 'Katharina',
+    title: 'Skulpturālo plauktu stiliste',
+    market: '🇩🇪 Vācija · galvenā persona',
+    line: '38 gadi. Interjers ir viņas hobijs — katru māju stūri viņa skata kā fotogrāfiju.',
+    face: { style: 'bob', hair: '#6b4327', skin: '#f0d2b6', cloth: '#cdd6c8',
+            bg: '#efe1c8', jewel: '#d8ac52' },
+    facts: [
+      { icon: '🎂', text: '38 gadi, domā kā arhitekte' },
+      { icon: '🏡', text: '70 m² dzīvoklis, ozola grīda, viena siena tumši zaļa' },
+      { icon: '🐱', text: 'Divi kaķi — plaukts tehniski pieder viņiem' },
+      { icon: '🎨', text: 'Pinterest dēļi «walnut shelves», galeriju sienas' },
+      { icon: '💶', text: '45–130 € par priekšmetu, ap 2 pirkumiem mēnesī' },
+      { icon: '📱', text: 'Instagram reels, dizaina vēstules, Pinterest' }
+    ],
+    why: 'Skulpturāla, ģeometriska unikalitāte par ap 100 €, 5 koku izvēle, «roku darbs Eiropā», '
+      + 'īstas interjera bildes ar precīziem izmēriem un komplekti, kas nostilizē sienu uzreiz.',
+    wants: 'Izliekti un ģeometriski plaukti, augu podesti, misiņa naktsskapīšu komplekts, '
+      + 'drēbju statīvi ar raksturu.',
+    evidence: 'Izmērīts: Amazon = 2 351 pasūtījums, 175 314 €, vidējais grozs 74,57 €; pārdošanas '
+      + 'līderi ir vācu valodā nosaukti vannas un sienas glabāšanas priekšmeti; Etsy 206 aktīvajos '
+      + 'sludinājumos 117 ir plaukti. Pieņēmums (nav izmērīts): vecums, dzīvoklis, kaķi, hobiji — '
+      + 't-0031 §5 tos atzīmē kā [PRIOR] 4–6/10.',
+    room: {
+      wall: '#efe4d2', accent: '#3f5c47', accentX: 18, accentW: 44,
+      floor: '#c99b62', sky: '#dbe9f2',
+      window: { x: 66, y: 9, w: 15, h: 24 },
+      props: [
+        { t: 'rug',   x: 42, y: 55, w: 52, h: 7,  fill: '#e3d7bb' },
+        { t: 'block', x: 22, y: 36, w: 38, h: 11, fill: '#b7a98d' },
+        { t: 'shelf', x: 26, y: 14, w: 28 },
+        { t: 'shelf', x: 32, y: 21, w: 20 },
+        { t: 'shelf', x: 28, y: 28, w: 24 },
+        { t: 'block', x: 86, y: 14, w: 12, h: 33, fill: '#a9793f' },
+        { t: 'pot',   x: 8,  y: 46, s: 1.2 },
+        { t: 'pot',   x: 63, y: 46, s: 0.9 }
+      ],
+      spots: [
+        { x: 40, y: 22, icon: '🪵', label: 'Riekstkoka plauktu siena',
+          note: 'Trīs peldoši plaukti komplektā — viņa pērk komplektu, nevis vienu dēli, jo tad '
+              + 'siena ir gatava uzreiz. Mūsu Etsy katalogā plaukti ir 117 no 206 aktīvajiem sludinājumiem.' },
+        { x: 11, y: 66, icon: '🪴', label: 'Monstera un epipremnums',
+          note: 'Augi uz plaukta un uz podesta pie loga — tieši šo kadru viņa fotografē. '
+              + 'Katalogā ir 25 augu podesti un statīvi.' },
+        { x: 76, y: 72, icon: '🐱', label: 'Divi kaķi, nevis suns',
+          note: 'Katharina ir kaķu cilvēks. Koka suņu bļodu līnija ir Ingrīdas stāsts, ne viņas — '
+              + 'nejauc tās vienā reklāmā.' },
+        { x: 62, y: 30, icon: '🪟', label: 'Ozola grīda, viena siena tumši zaļa',
+          note: 'Dienas gaisma un zeltainā stunda. Viņa fotografē paša izstilizēto plauktu, tāpēc '
+              + 'mūsu bildēm jābūt tikpat labām kā viņas.' },
+        { x: 30, y: 84, icon: '📐', label: 'Mērlente pie rokas',
+          note: '«Vai der 30 cm?» Viņa izmēra pirms pirkuma un salīdzina 2–3 preces. Precīzi izmēri '
+              + 'sludinājumā pārdod, un atgriešanu ir maz.' },
+        { x: 90, y: 44, icon: '🛁', label: 'Vannas istaba aiz durvīm',
+          note: 'Maza un kārtīga: pelnu koka tualetes papīra turētājs, dvieļu statīvs. Vannas istabas '
+              + 'glabāšana ir mūsu izmērītais pārdošanas līderis Amazon Vācijā.' }
+      ]
+    }
+  },
+  {
+    id: 'maia',
+    rank: 2,
+    name: 'Maïa',
+    title: 'Montessori mamma',
+    market: '🇫🇷 Francija · 🇪🇸 Spānija · 🇺🇸 ASV',
+    line: '34 gadi, divi bērni (3 g. un 1 g.). Bērnistaba pie viņas ir gandrīz mūsu katalogs.',
+    face: { style: 'bun', hair: '#3a2a1e', skin: '#e6bb92', cloth: '#d9c7b0',
+            bg: '#e8ddc9', jewel: '#c9a227' },
+    facts: [
+      { icon: '🎂', text: '34 gadi, divi bērni — 3 gadi un 1 gads' },
+      { icon: '🏠', text: '3 istabu māja priekšpilsētā, liela kopīga dzīvojamā telpa' },
+      { icon: '🐕', text: 'Zelta rečīvers, kas guļ zem bērnu galda' },
+      { icon: '🧸', text: 'Meklē «Montessori mēbeles», koka rotaļlietas, drošību' },
+      { icon: '📦', text: 'Pērk Amazon ar nākamās dienas piegādi, bieži komplektus' },
+      { icon: '🎁', text: 'Pieliek klāt dāvanu draudzenei' }
+    ],
+    why: 'Nav MDF, noapaļotas malas, dabīga apdare un ieguvuma teksts («attīsta kustību prasmes — '
+      + 'gatavs rotaļai»), plus īstas ģimenes istabas bildes. Komplekts pabeidz istabu vienā reizē.',
+    wants: 'Bērnu skapji, mākoņa plaukts, Montessori konstrukcijas, glabāšanas autobuss, '
+      + 'līdzsvara baļķi, kāpnītes, bērnu krēsls un galds.',
+    evidence: 'Izmērīts: Etsy katalogā 35 bērnistabas preces (skapji, kāpelēšanas rāmji, mākoņa '
+      + 'plaukti, Montessori); franču valodā nosaukti sludinājumi ir starp Amazon pārdošanas līderiem; '
+      + 'komplekti (2/3/6 gab.) ceļ grozu. Pieņēmums (nav izmērīts): vecums, bērnu skaits, suns, māja.',
+    room: {
+      wall: '#f4ede1', accent: '#cfdfe4', accentX: 0, accentW: 40,
+      floor: '#d9b884', sky: '#dbe9f2',
+      window: { x: 70, y: 8, w: 18, h: 22 },
+      props: [
+        { t: 'rug',   x: 46, y: 56, w: 50, h: 7,  fill: '#e9dcc4' },
+        { t: 'block', x: 4,  y: 26, w: 22, h: 21, fill: '#c79a63' },
+        { t: 'shelf', x: 30, y: 20, w: 22 },
+        { t: 'block', x: 30, y: 34, w: 24, h: 13, fill: '#d8c39c' },
+        { t: 'block', x: 58, y: 40, w: 14, h: 7,  fill: '#b98d57' },
+        { t: 'block', x: 74, y: 45, w: 22, h: 2.6, fill: '#a9793f' },
+        { t: 'pot',   x: 92, y: 46, s: 0.85 }
+      ],
+      spots: [
+        { x: 42, y: 30, icon: '☁️', label: 'Mākoņa plaukts',
+          note: 'Virs bērnu stūra. Etsy katalogā bērnistabas preces ir 35 aktīvi sludinājumi — '
+              + 'tā ir mūsu trešā lielākā kategorija pēc plauktiem un vannas istabas.' },
+        { x: 14, y: 52, icon: '🚪', label: 'Skapja komplekts bērnam',
+          note: 'Zems, lai bērns pats sasniedz drēbes. Viņa pērk komplektu, lai istaba būtu pabeigta '
+              + 'vienā pasūtījumā — tas ir grozs, ko mēs redzam datos.' },
+        { x: 44, y: 68, icon: '🪵', label: 'Montessori zemais plaukts',
+          note: 'Rotaļlietu rotācija: maz mantu, visas redzamas. Noapaļotas malas un dabīga apdare '
+              + 'ir pirkuma nosacījums, nevis papildu vēlme.' },
+        { x: 85, y: 78, icon: '🤸', label: 'Līdzsvara baļķis gaitenī',
+          note: 'Rīts sākas ar baļķi pirms brokastīm. Reklāmas teksts par kustību prasmēm strādā '
+              + 'labāk nekā materiāla apraksts.' },
+        { x: 60, y: 88, icon: '🪜', label: 'Kāpnītes pie izlietnes',
+          note: 'Vannas istabas palīgs. Amazon Vācijā koka taburete ir izmērīts pārdošanas līderis '
+              + '(~90 € cenas līmenī).' },
+        { x: 90, y: 60, icon: '🐕', label: 'Zelta rečīvers zem galda',
+          note: 'Ģimenes suns. Viņa pērk suņa lietas retāk nekā Ingrīda, bet paaugstinātā bļoda '
+              + 'ir loģisks papildpārdevums.' }
+      ]
+    }
+  },
+  {
+    id: 'ingrid',
+    rank: 3,
+    name: 'Ingrid',
+    title: 'Ziemeļu «koselig» detaļu pircēja',
+    market: '🇳🇴 Norvēģija · 🇩🇪 Vācija · 🇬🇧 Lielbritānija',
+    line: '29 gadi, glābts suns Bolle, pirmais paša dzīvoklis. Pērk mazas ikdienas greznības — un dāvanas.',
+    face: { style: 'long', hair: '#a85f2c', skin: '#f2dcc4', cloth: '#e2d7c6',
+            bg: '#e6e2d6', jewel: '#b9873f' },
+    facts: [
+      { icon: '🎂', text: '29–33 gadi, bēšs garderobes tonis, grafiskie T-krekli' },
+      { icon: '🏢', text: 'Pirmais savs 2 istabu dzīvoklis: gaišs bērzs, melns tērauds, sveces' },
+      { icon: '🐶', text: 'Glābts suns Bolle — viņas visa personība' },
+      { icon: '🎁', text: 'Pērk dāvanām: kāzas, iedzīvošanās, jaundzimušais' },
+      { icon: '💶', text: 'Impulss zem 50 €, bieži «viena tev, viena man»' },
+      { icon: '🔎', text: 'Etsy, Amazon, Google «wooden gift»' }
+    ],
+    why: '5 koku izvēle, der mazā gaitenī (1,5 m), nav jāskrūvē kopā, dāvanai gatava kaste, '
+      + 'reta un skaista koka suņu bļodu līnija un Rīgas darbnīcas stāsts.',
+    wants: 'Tualetes papīra turētāji, āķi un pakaramie, paaugstinātas suņu bļodas, krūžu koki, '
+      + 'brokastu paplātes, paliktņi, mazi podesti.',
+    evidence: 'Izmērīts: Etsy vidējais grozs 131,34 € (28 pasūtījumi — maza izlase); katalogā 58 '
+      + 'vannas istabas, 16 pakaramo, 13 paliktņu un 3 suņu bļodu sludinājumi; Q4 (nov.–dec.) ir '
+      + 'izmērīts dāvanu pīķis. Pieņēmums (nav izmērīts): vecums, suns, dzīvoklis, «koselig» gaume.',
+    room: {
+      wall: '#f2eee4', accent: '#e3dccb', accentX: 56, accentW: 44,
+      floor: '#e0cba8', sky: '#dfeaf0',
+      window: { x: 8, y: 8, w: 18, h: 24 },
+      props: [
+        { t: 'rug',   x: 50, y: 56, w: 46, h: 6,  fill: '#eae0cb' },
+        { t: 'block', x: 60, y: 33, w: 30, h: 14, fill: '#cbbda2' },
+        { t: 'shelf', x: 60, y: 18, w: 26, fill: '#7d5330' },
+        { t: 'shelf', x: 36, y: 24, w: 16, fill: '#7d5330' },
+        { t: 'block', x: 34, y: 43, w: 9,  h: 4,  fill: '#a9793f' },
+        { t: 'pot',   x: 22, y: 46, s: 1.35 },
+        { t: 'pot',   x: 94, y: 46, s: 0.7 }
+      ],
+      spots: [
+        { x: 34, y: 74, icon: '🥣', label: 'Paaugstinātā koka suņa bļoda',
+          note: 'Bolle ēd stāvot — «labāka poza, tā teica veterinārs». Katalogā ir tikai 3 suņu bļodu '
+              + 'sludinājumi: reta prece, ko viņa fotografē un rāda draugiem.' },
+        { x: 52, y: 82, icon: '🐶', label: 'Bolle, glābtais suns',
+          note: 'Suns ir iemesls, kāpēc viņa vispār atrada mūs. Suņu līnija ir mazākā kategorija, '
+              + 'bet stiprākais stāsts sociālajos tīklos.' },
+        { x: 18, y: 62, icon: '🌿', label: 'Fikuss pie loga',
+          note: 'Gaišs bērzs, melns tērauds, viens liels augs. Podests pie loga ir viņas nākamais pirkums.' },
+        { x: 72, y: 26, icon: '🕯', label: 'Sveces un brokastu paplāte',
+          note: '«Koselig»: mazas ikdienas greznības zem 50 €. Tieši šo cenu joslu Etsy dati rāda kā '
+              + 'impulsa pirkumu.' },
+        { x: 88, y: 52, icon: '🎁', label: 'Dāvanai gatava kaste',
+          note: 'Kāzas, iedzīvošanās, jaundzimušais. Q4 (nov.–dec.) ir izmērīts pīķis — dāvanu '
+              + 'iepakojums nav papildu iespēja, tas ir pirkuma iemesls.' },
+        { x: 44, y: 44, icon: '🪝', label: 'Āķi mazajā gaitenī',
+          note: 'Gaitenis ir 1,5 m. Mūsu noteikums «ne garāks par 120 cm» tieši viņai der — pasaki to '
+              + 'sludinājumā ar centimetriem.' }
+      ]
+    }
+  },
+  {
+    id: 'eva',
+    rank: 4,
+    side: true,
+    name: 'Eva',
+    title: 'Vietējā pircēja Rīgā',
+    market: '🇱🇻 Latvija · blakus profils',
+    line: '48 gadi, Rīga. Pērk mūsu pašu veikalā koka dāvanas radiem — mājas tirgus, mazi apjomi.',
+    face: { style: 'short', hair: '#4a4038', skin: '#eed3b8', cloth: '#c2ccc0',
+            bg: '#e4dfd0', jewel: '#c0c0c0', glasses: true },
+    facts: [
+      { icon: '🎂', text: '48 gadi, Rīga' },
+      { icon: '🛒', text: 'Pērk Shopify veikalā, nevis Amazon vai Etsy' },
+      { icon: '🎁', text: 'Koka dāvanas radiem — tradīcija, meistarība, dāvana' },
+      { icon: '🇱🇻', text: 'Sarunājas latviski, grib zināt, ka darbnīca ir Latvijā' }
+    ],
+    why: 'Vietējā darbnīca, latviešu valoda un stāsts par meistarību. Cena viņai nav galvenais '
+      + 'arguments — izcelsme ir.',
+    wants: 'Dāvanu priekšmeti: paliktņi, paplātes, krūžu koki, mazi plaukti.',
+    evidence: 'Izmērīts: Shopify ir 3 pasūtījumi, 327 € (ļoti maza izlase — nepietiek secinājumiem). '
+      + 'Pieņēmums (nav izmērīts): viss pārējais. t-0031 viņu sauc par blakus profilu, nevis par '
+      + 'galveno personu — nebūvē kampaņu tikai uz viņas.',
+    room: {
+      wall: '#f0e8da', accent: '#c8b79a', accentX: 30, accentW: 34,
+      floor: '#c99b62', sky: '#dbe9f2',
+      window: { x: 78, y: 10, w: 16, h: 22 },
+      props: [
+        { t: 'rug',   x: 44, y: 56, w: 44, h: 6,  fill: '#e3d7bb' },
+        { t: 'block', x: 24, y: 34, w: 30, h: 13, fill: '#b08a5c' },
+        { t: 'shelf', x: 30, y: 22, w: 22 },
+        { t: 'pot',   x: 66, y: 46, s: 1 }
+      ],
+      spots: [
+        { x: 40, y: 34, icon: '🪵', label: 'Mazs plaukts virs kumodes',
+          note: 'Mājas tirgus pirkums: viena prece, nevis komplekts.' },
+        { x: 40, y: 66, icon: '🎁', label: 'Dāvana radiem',
+          note: 'Pirkuma iemesls ir dāvana, nevis pašas interjers.' },
+        { x: 80, y: 60, icon: '🇱🇻', label: 'Latvijas darbnīcas stāsts',
+          note: 'Viņai svarīgi, ka to taisa Latvijā. Shopify izlase ir tikai 3 pasūtījumi — pārāk maza, '
+              + 'lai uz tās būvētu kampaņu.' }
+      ]
+    }
+  }
+];
+
+// Config values are ours, but a `personas` row would not be: everything that
+// reaches an SVG attribute goes through these two, so a hostile colour or
+// coordinate can never close the attribute and inject markup.
+function safeColor(v, fallback){
+  return typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v) ? v : fallback;
+}
+// null, '' and true all coerce to a number in javascript. A NULL column or a
+// blank field means "use the default", never "0" — coercing it would silently
+// pin an item to the corner of the room instead of where it belongs.
+function numOr(v, fallback){
+  if(typeof v !== 'number' && typeof v !== 'string') return fallback;
+  if(typeof v === 'string' && v.trim() === '') return fallback;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+function clampTo(v, lo, hi){ return Math.min(hi, Math.max(lo, v)); }
+
+let personas = PERSONAS.slice().sort((a, b) => numOr(a.rank, 99) - numOr(b.rank, 99));
+let personaSourceKind = 'config';
+let currentPersonaId = '';
+
+function personaById(id){ return personas.find(p => p.id === id) || null; }
+
+// The face is drawn, never photographed. Hair sits behind the head so a bob or
+// long hair frames it; the whole figure is clipped to the circle so nothing
+// spills outside the avatar.
+let personaFaceSeq = 0;
+function personaFaceSvg(p){
+  const f = (p && p.face) || {};
+  const skin = safeColor(f.skin, '#f0d2b6');
+  const hair = safeColor(f.hair, '#5b3b23');
+  const cloth = safeColor(f.cloth, '#c9d4c5');
+  const bg = safeColor(f.bg, '#f5eeda');
+  const jewel = safeColor(f.jewel, '#d8ac52');
+  const style = ['bob', 'bun', 'long', 'short'].indexOf(f.style) >= 0 ? f.style : 'bob';
+  const len = style === 'long' ? 23 : (style === 'bob' ? 12 : 0);
+  const cid = 'pface' + (++personaFaceSeq);
+  return `<svg viewBox="0 0 64 64" role="img" aria-label="${escapeHtml((p && p.name) || 'persona')}">
+    <defs><clipPath id="${cid}"><circle cx="32" cy="32" r="32"/></clipPath></defs>
+    <g clip-path="url(#${cid})">
+      <circle cx="32" cy="32" r="32" fill="${bg}"/>
+      ${style === 'bun' ? `<circle cx="32" cy="10" r="6" fill="${hair}"/>` : ''}
+      <ellipse cx="32" cy="26" rx="14.5" ry="15" fill="${hair}"/>
+      ${len ? `<rect x="17.5" y="26" width="29" height="${len}" rx="6" fill="${hair}"/>` : ''}
+      <rect x="28" y="36" width="8" height="10" rx="3" fill="${skin}"/>
+      <path d="M11 64c0-11.5 9.4-18 21-18s21 6.5 21 18z" fill="${cloth}"/>
+      <ellipse cx="32" cy="29" rx="11.5" ry="13" fill="${skin}"/>
+      <path d="M20.6 22.5c3.3-5.2 19.5-5.2 22.8 0-3-2.6-6.1-3.7-11.4-3.7s-8.4 1.1-11.4 3.7z" fill="${hair}"/>
+      <circle cx="27.2" cy="29.5" r="1.15" fill="#3b2a1c"/>
+      <circle cx="36.8" cy="29.5" r="1.15" fill="#3b2a1c"/>
+      <path d="M29 35.4c1.9 1.6 4.1 1.6 6 0" fill="none" stroke="#a9614d"
+        stroke-width="1.2" stroke-linecap="round"/>
+      ${f.glasses ? `<g fill="none" stroke="#5a4a34" stroke-width="1"><circle cx="27.2" cy="29.5" r="4.3"/>
+        <circle cx="36.8" cy="29.5" r="4.3"/><path d="M31.5 29.5h1"/></g>` : ''}
+      <circle cx="43.2" cy="31.5" r="1.1" fill="${jewel}"/>
+    </g>
+  </svg>`;
+}
+
+// One prop = one primitive. An unknown type draws nothing rather than guessing
+// a shape, which keeps a future `personas` row from painting garbage.
+function personaPropSvg(pr){
+  if(!pr) return '';
+  const x = numOr(pr.x, 0), y = numOr(pr.y, 0);
+  if(pr.t === 'shelf'){
+    const w = clampTo(numOr(pr.w, 20), 1, 100);
+    const c = safeColor(pr.fill, '#8a5a2b');
+    return `<rect x="${x}" y="${y}" width="${w}" height="1.6" rx="0.7" fill="${c}"/>`
+      + `<rect x="${x + 0.8}" y="${y + 1.6}" width="${Math.max(0, w - 1.6)}" height="0.9"`
+      + ` rx="0.4" fill="#241a10" opacity="0.13"/>`;
+  }
+  if(pr.t === 'block'){
+    const w = clampTo(numOr(pr.w, 10), 1, 100);
+    const h = clampTo(numOr(pr.h, 10), 1, 62);
+    const c = safeColor(pr.fill, '#b7a98d');
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.4" fill="${c}"/>`
+      + `<rect x="${x}" y="${y}" width="${w}" height="${Math.min(2.2, h * 0.3)}"`
+      + ` rx="1.1" fill="#ffffff" opacity="0.18"/>`;
+  }
+  if(pr.t === 'pot'){
+    const s = clampTo(numOr(pr.s, 1), 0.3, 3);
+    const c = safeColor(pr.fill, '#b5763f');
+    const g = safeColor(pr.leaf, '#5f8a54');
+    return `<path d="M${x - 3 * s} ${y - 6 * s}L${x + 3 * s} ${y - 6 * s}`
+      + `L${x + 2.2 * s} ${y}L${x - 2.2 * s} ${y}Z" fill="${c}"/>`
+      + `<ellipse cx="${x}" cy="${y - 10.5 * s}" rx="${4.4 * s}" ry="${4.8 * s}" fill="${g}"/>`
+      + `<ellipse cx="${x - 3.2 * s}" cy="${y - 7.6 * s}" rx="${2.6 * s}" ry="${2.2 * s}"`
+      + ` fill="${g}" opacity="0.8"/>`
+      + `<ellipse cx="${x + 3.2 * s}" cy="${y - 8 * s}" rx="${2.4 * s}" ry="${2.1 * s}"`
+      + ` fill="${g}" opacity="0.65"/>`;
+  }
+  if(pr.t === 'rug'){
+    const w = clampTo(numOr(pr.w, 40), 1, 200);
+    const h = clampTo(numOr(pr.h, 6), 1, 30);
+    return `<ellipse cx="${x}" cy="${y}" rx="${w / 2}" ry="${h / 2}"`
+      + ` fill="${safeColor(pr.fill, '#e3d7bb')}"/>`;
+  }
+  return '';
+}
+
+function personaRoomSvg(p){
+  const r = (p && p.room) || {};
+  const wall = safeColor(r.wall, '#efe4d2');
+  const accent = safeColor(r.accent, '#c9b48c');
+  const floor = safeColor(r.floor, '#c99b62');
+  const sky = safeColor(r.sky, '#dbe9f2');
+  const ax = clampTo(numOr(r.accentX, 20), 0, 100);
+  const aw = clampTo(numOr(r.accentW, 40), 0, 100 - ax);
+  const win = r.window || {};
+  const wx = clampTo(numOr(win.x, 68), 0, 96);
+  const wy = clampTo(numOr(win.y, 8), 0, 40);
+  const ww = clampTo(numOr(win.w, 16), 2, 100 - wx);
+  const wh = clampTo(numOr(win.h, 24), 2, 46 - wy);
+  const planks = [];
+  for(let i = 1; i < 8; i++){
+    planks.push(`<path d="M${i * 12.5} 48L${i * 13.4 - 3.6} 62" stroke="#4a3113"`
+      + ` stroke-width="0.35" opacity="0.16"/>`);
+  }
+  const props = (Array.isArray(r.props) ? r.props : []).map(personaPropSvg).join('');
+  return `<svg viewBox="0 0 100 62" role="img"
+      aria-label="${escapeHtml(((p && p.name) || '') + ' mājas skats')}">
+    <rect x="0" y="0" width="100" height="48" fill="${wall}"/>
+    <rect x="${ax}" y="0" width="${aw}" height="48" fill="${accent}"/>
+    <rect x="0" y="48" width="100" height="14" fill="${floor}"/>
+    ${planks.join('')}
+    <rect x="0" y="46.2" width="100" height="1.9" fill="#fdf8ea"/>
+    <path d="M${wx} ${wy}L${wx + ww} ${wy}L${wx + ww + 11} 48L${wx - 15} 48Z"
+      fill="#ffffff" opacity="0.14"/>
+    <rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="0.8" fill="${sky}"
+      stroke="#fdf8ea" stroke-width="1.4"/>
+    <path d="M${wx + ww / 2} ${wy}V${wy + wh}M${wx} ${wy + wh / 2}H${wx + ww}"
+      stroke="#fdf8ea" stroke-width="1"/>
+    ${props}
+  </svg>`;
+}
+
+function personaSpotsHtml(p){
+  const spots = Array.isArray(p && p.room && p.room.spots) ? p.room.spots : [];
+  return spots.map((s, i) => `<button class="spot" type="button" data-spot="${i}"
+      style="left:${clampTo(numOr(s.x, 50), 3, 97)}%; top:${clampTo(numOr(s.y, 50), 5, 95)}%;"
+      title="${escapeHtml(s.label)}">
+      <span class="spot-icon">${escapeHtml(s.icon || '•')}</span>
+      <span class="spot-text">${escapeHtml(s.label)}</span>
+    </button>`).join('');
+}
+
+function personaPickHtml(p, extraClass){
+  return `<button class="persona-pick${extraClass ? ' ' + extraClass : ''}" type="button"
+      data-persona="${escapeHtml(p.id)}" title="${escapeHtml(p.name + ' — ' + p.title)}">
+      <span class="pp-face">${personaFaceSvg(p)}</span>${escapeHtml(p.name)}
+    </button>`;
+}
+
+function wirePersonaPicks(host){
+  if(!host) return;
+  host.querySelectorAll('.persona-pick, .persona-card').forEach(btn => {
+    btn.addEventListener('click', () => openPersonaHome(btn.dataset.persona));
+  });
+}
+
+function renderPersonaHud(){
+  const host = document.getElementById('personaHud');
+  if(!host) return;
+  if(!personas.length){ host.innerHTML = ''; return; }
+  host.innerHTML = '<span class="ph-label">🎯 Mērķauditorija</span>'
+    + personas.map(p => personaPickHtml(p)).join('');
+  wirePersonaPicks(host);
+}
+
+function renderPersonaBand(){
+  const grid = document.getElementById('personaGrid');
+  if(!grid) return;
+  if(!personas.length){
+    grid.innerHTML = '<span class="muted">Nav nevienas personas.</span>';
+  }else{
+    grid.innerHTML = personas.map(p => `<button class="persona-card" type="button"
+        data-persona="${escapeHtml(p.id)}">
+        <span class="pc-face">${personaFaceSvg(p)}</span>
+        <span class="pc-main">
+          <span class="pc-name">${escapeHtml(p.name)}<span class="pc-rank">${
+            p.side ? 'blakus profils' : (numOr(p.rank, 0) === 1 ? 'galvenā persona' : 'persona ' + numOr(p.rank, 0))
+          }</span></span>
+          <span class="pc-title">${escapeHtml(p.title)}</span>
+          <span class="pc-line">${escapeHtml(p.line)}</span>
+          <span class="pc-open">🏠 Spied, lai ieietu viņas mājās →</span>
+        </span>
+      </button>`).join('');
+    wirePersonaPicks(grid);
+  }
+
+  const src = document.getElementById('personaSource');
+  if(src){
+    src.textContent = personaSourceKind === 'db'
+      ? `no datubāzes tabulas personas — ${personas.length} ieraksti`
+      : (personaSourceKind === 'db-empty'
+        ? 'tabula personas ir tukša — rāda personu analīzi t-0031'
+        : 'no personu analīzes t-0031 — tabula personas vēl nav izveidota');
+  }
+  const note = document.getElementById('personaNote');
+  if(note){
+    // The single most important line on this card: it stops a drawn face from
+    // being mistaken for a photographed customer, and a hypothesis from being
+    // mistaken for a measurement.
+    note.textContent = 'Sejas un istabas ir zīmētas ilustrācijas, nevis īstu pircēju foto. '
+      + 'Tirgi, cenas un preču kategorijas nāk no izmērītiem pārdošanas datiem; vecums, mājoklis, '
+      + 'mājdzīvnieks un hobiji ir pieņēmumi no analīzes t-0031. Katrā mājā sadaļa '
+      + '«No kurienes šie dati» pasaka, kurš ir kurš.';
+  }
+}
+
+const homeOverlay = document.getElementById('homeOverlay');
+document.getElementById('homeClose').addEventListener('click',
+  () => homeOverlay.classList.remove('show'));
+homeOverlay.addEventListener('click', (e) => {
+  if(e.target === homeOverlay) homeOverlay.classList.remove('show');
+});
+
+function showPersonaSpot(p, index){
+  const spots = Array.isArray(p && p.room && p.room.spots) ? p.room.spots : [];
+  const box = document.getElementById('hSpot');
+  const room = document.getElementById('hRoom');
+  if(room){
+    room.querySelectorAll('.spot').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.spot) === index);
+    });
+  }
+  if(!box) return;
+  const s = spots[index];
+  if(!s){
+    box.innerHTML = '<span class="hs-note">Šai mājai vēl nav atzīmētu lietu.</span>';
+    return;
+  }
+  box.innerHTML = `<span class="hs-title">${escapeHtml((s.icon || '') + ' ' + s.label)}</span>`
+    + `<span class="hs-note">${escapeHtml(s.note || '')}</span>`;
+}
+
+function openPersonaHome(id){
+  const p = personaById(id) || personas[0];
+  if(!p) return;
+  currentPersonaId = p.id;
+
+  document.getElementById('hFace').innerHTML = personaFaceSvg(p);
+  document.getElementById('hName').textContent = p.name;
+  document.getElementById('hTitle').textContent = p.title || '';
+  const pill = document.getElementById('hMarket');
+  pill.className = 'status-pill';
+  pill.textContent = p.market || '';
+  document.getElementById('hLine').textContent = p.line || '';
+
+  const room = document.getElementById('hRoom');
+  room.innerHTML = personaRoomSvg(p) + personaSpotsHtml(p);
+  room.querySelectorAll('.spot').forEach(btn => {
+    btn.addEventListener('click', () => showPersonaSpot(p, Number(btn.dataset.spot)));
+  });
+  // The first item is opened straight away, so the explanation box is never an
+  // empty rectangle waiting for a click nobody knows to make.
+  showPersonaSpot(p, 0);
+
+  const facts = Array.isArray(p.facts) ? p.facts : [];
+  document.getElementById('hFacts').innerHTML = facts.length
+    ? facts.map(f => `<span class="fact"><span>${escapeHtml(f.icon || '•')}</span>`
+      + `<span>${escapeHtml(f.text || '')}</span></span>`).join('')
+    : '<span class="muted">Par šo personu vēl nav pierakstītu faktu.</span>';
+  document.getElementById('hWhy').textContent = p.why || '';
+  document.getElementById('hWants').textContent = p.wants || '';
+  document.getElementById('hEvidence').textContent = p.evidence || '';
+
+  const sw = document.getElementById('hSwitch');
+  sw.innerHTML = personas.map(o => personaPickHtml(o, o.id === p.id ? 'active' : '')).join('');
+  wirePersonaPicks(sw);
+
+  document.getElementById('homeModal').scrollTop = 0;
+  homeOverlay.classList.add('show');
+}
+
+// A `personas` row wins over the built-in config only where it actually carries
+// a value; anything it leaves out falls back to the config entry with the same
+// id, so a half-filled row can never blank a persona out.
+function personasFromRows(rows){
+  const out = [];
+  (Array.isArray(rows) ? rows : []).forEach(r => {
+    if(!r || !r.id || !r.name) return;
+    const base = PERSONAS.find(c => c.id === r.id) || {};
+    out.push({
+      id: String(r.id),
+      rank: numOr(r.rank, numOr(base.rank, 99)),
+      side: r.side === undefined || r.side === null ? !!base.side : !!r.side,
+      name: r.name,
+      title: r.title || base.title || '',
+      market: r.market || base.market || '',
+      line: r.line || base.line || '',
+      why: r.why || base.why || '',
+      wants: r.wants || base.wants || '',
+      evidence: r.evidence || base.evidence || '',
+      facts: Array.isArray(r.facts) && r.facts.length ? r.facts : (base.facts || []),
+      face: r.face && typeof r.face === 'object' ? r.face : base.face,
+      room: r.room && typeof r.room === 'object' ? r.room : base.room
+    });
+  });
+  return out.sort((a, b) => a.rank - b.rank);
+}
+
+function applyPersonas(res){
+  const rows = res && res.ok ? personasFromRows(res.rows) : [];
+  if(rows.length){
+    personas = rows;
+    personaSourceKind = 'db';
+  }else{
+    personas = PERSONAS.slice().sort((a, b) => numOr(a.rank, 99) - numOr(b.rank, 99));
+    personaSourceKind = res && res.ok ? 'db-empty' : 'config';
+  }
+  renderPersonaHud();
+  renderPersonaBand();
+}
+
 // ---------- Main polling loop ----------
 
 async function loadAndRender(){
   try{
-    const [agents, tasks, events] = await Promise.all([
+    // token_budgets arrives with migration 20260816190000 — until it is applied
+    // the fetch is allowed to fail and the meter degrades to "no budget set".
+    const [agents, tasks, events, usage, budgets, statuses, subs, positions, personaRows] = await Promise.all([
       sbGet('agents?select=*&order=created_at.asc'),
       sbGet('tasks?select=*&status=in.(active,review)&order=created_at.desc'),
-      sbGet('agent_events?select=*&order=created_at.desc&limit=1')
+      sbGet('agent_events?select=*&order=created_at.desc&limit=1'),
+      sbGet('agent_usage?select=*'),
+      sbGetOptional('token_budgets?select=*'),
+      // Quotes for the idle characters: with everyone permanently on the field,
+      // a resting minion still has something of its own to say.
+      sbGet('agent_status?select=*'),
+      // subscriptions arrives with migration 20260816170000 — until it is
+      // applied the fetch is allowed to fail and only that block says so.
+      sbGetOptional('subscriptions?select=*&order=owner_sort.asc'),
+      // agent_scene_positions arrives with migration 20260817120000. Until it is
+      // applied this fails, the HUD says positions are browser-only, and nothing
+      // else on the page notices.
+      sbGetOptional('agent_scene_positions?select=*'),
+      // personas arrives with migration 20260817180000. Until it is applied this
+      // fails, the target-audience band falls back to the PERSONAS config, and
+      // its source line says which of the two is on screen.
+      sbGetOptional('personas?select=*&order=rank.asc')
     ]);
-    renderAgents(agents, tasks);
+
+    usageById = {};
+    usage.forEach(u => { usageById[u.agent_id] = u; });
+    budgetById = {};
+    budgets.rows.forEach(b => { budgetById[b.agent_id] = b; });
+    hierarchy = buildHierarchy(agents);
+
+    dbPositionsAvailable = positions.ok;
+    dbPositions = {};
+    positions.rows.forEach(p => {
+      dbPositions[posKey(p.scene_id, p.agent_id)] = { x: p.pos_x, y: p.pos_y };
+    });
+
+    // A poll must never yank a character out of the owner's hand. The rows are
+    // still remembered, so the next redraw uses them.
+    if(agentDrag) rememberRows(agents, tasks, statuses);
+    else renderAgents(agents, tasks, statuses);
+    renderSceneSwitcher();
+    setSaveNote();
+    renderPlatformBand();
     renderTicker(events);
+    renderSubscriptions(subs);
+    applyPersonas(personaRows);
+    // Re-drawn on every poll so the specialists nested under an AI platform
+    // follow the live hierarchy. The map itself does not need the database:
+    // it is already on screen from the first paint below.
+    renderSystemMap();
     liveBadge.className = 'live-badge';
     liveBadge.innerHTML = '<span class="live-dot"></span> Live — dati no Supabase';
   }catch(err){
@@ -1366,6 +4512,45 @@ async function loadAndRender(){
     liveBadge.textContent = '⚠️ Neizdevās ielādēt datus no datubāzes — pārbaudi savienojumu';
   }
 }
+
+// ---------- Wiring the stage and the HUD ----------
+
+stage.addEventListener('pointerdown', onStagePointerDown);
+stage.addEventListener('pointermove', onStagePointerMove);
+stage.addEventListener('pointerup', onStagePointerUp);
+stage.addEventListener('pointercancel', onStagePointerUp);
+// passive:false — the wheel must zoom the farm instead of scrolling the page.
+stage.addEventListener('wheel', onStageWheel, { passive: false });
+
+document.getElementById('zoomInBtn').addEventListener('click', () => zoomFromButton(WHEEL_STEP));
+document.getElementById('zoomOutBtn').addEventListener('click', () => zoomFromButton(1 / WHEEL_STEP));
+document.getElementById('zoomResetBtn').addEventListener('click', () => fitScene(false));
+document.getElementById('pushPosBtn').addEventListener('click', pushSceneToDb);
+document.getElementById('resetPosBtn').addEventListener('click', resetScenePositions);
+
+const sidePanel = document.getElementById('sidePanel');
+document.getElementById('panelBtn').addEventListener('click',
+  () => sidePanel.classList.toggle('open'));
+document.getElementById('panelClose').addEventListener('click',
+  () => sidePanel.classList.remove('open'));
+
+// A resize changes how much world it takes to cover the screen, so the world is
+// re-measured; the zoom level the owner chose is kept.
+window.addEventListener('resize', () => fitScene(true));
+
+applySceneBackground();
+fitScene(false);
+renderSceneSwitcher();
+setSaveNote();
+
+// The map is drawn from curated facts, so it paints immediately — even if
+// Supabase is unreachable the owner still sees the ecosystem.
+renderSystemMap();
+
+// Same for the target audience: the personas are curated facts, so the faces
+// are on screen before the first database answer arrives.
+renderPersonaHud();
+renderPersonaBand();
 
 loadAndRender();
 setInterval(loadAndRender, REFRESH_MS);

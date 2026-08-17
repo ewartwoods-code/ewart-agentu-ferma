@@ -162,9 +162,12 @@
         <button class="btn btn-ghost" id="usageSyncBtn">🔄 Sinhronizēt tokenus (Anthropic Console)</button>
       </div>
       <div class="row-msg" id="usageSyncMsg"></div>
+      <p class="sub" style="margin-top:0;">Sinhronizācija ņem <b>tikai tokenu skaitus</b>.
+        Izmaksas netiek uzskaitītas — Anthropic izlietojuma atskaitē to nav, un izdomāts $0.00
+        būtu sliktāk nekā tukšs lauks.</p>
       <table>
-        <thead><tr><th>Aģents</th><th>Skilli</th><th>Tokeni (in / out)</th><th>Izmaksas</th><th>Anthropic workspace / key id</th></tr></thead>
-        <tbody id="agentsDataBody"><tr><td colspan="5" class="empty-hint">Ielādē…</td></tr></tbody>
+        <thead><tr><th>Aģents</th><th>Platforma</th><th>Skilli</th><th>Tokeni (in / out)</th><th>Avots</th><th>Anthropic workspace / key id</th></tr></thead>
+        <tbody id="agentsDataBody"><tr><td colspan="6" class="empty-hint">Ielādē…</td></tr></tbody>
       </table>
     </div>
 
@@ -196,6 +199,73 @@
       </div>
       <button class="btn btn-primary" id="skillSave">Saglabāt skilu</button>
       <div class="row-msg" id="skillMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>🧠 Hierarhija — lielās AI platformas un to speciālisti</h2>
+      <p class="sub" style="margin-top:-6px;">Lielais aģents (Claude, vēlāk GPT / Gemini) ir virsotnē;
+        mazie speciālisti tiek piesaistīti tam, kas viņus darbina.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>Jauna / esoša AI platforma — ID (piem., claude, gpt)</label>
+          <input type="text" id="platformId" placeholder="claude">
+        </div>
+        <div class="field">
+          <label>Nosaukums</label>
+          <input type="text" id="platformName" placeholder="Claude">
+        </div>
+      </div>
+      <div class="field">
+        <label>Apraksts (nav obligāts)</label>
+        <input type="text" id="platformRole" placeholder="Liela AI platforma">
+      </div>
+      <button class="btn btn-primary" id="platformSave">Saglabāt AI platformu</button>
+      <div class="row-msg" id="platformMsg"></div>
+
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="field">
+          <label>Speciālists</label>
+          <select id="parentChild"></select>
+        </div>
+        <div class="field">
+          <label>Darbina platforma</label>
+          <select id="parentPlatform"></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="parentSave">Piesaistīt speciālistu platformai</button>
+      <div class="row-msg" id="parentMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔋 Tokenu budžets (cik tokenu drīkst iztērēt)</h2>
+      <p class="sub" style="margin-top:-6px;">Neviens Anthropic API nerāda, cik tokenu palicis abonementā.
+        Tāpēc budžetu ievadi tu, un ferma rāda: izlietots / budžets / atlicis.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>AI platforma</label>
+          <select id="budgetAgent"></select>
+        </div>
+        <div class="field">
+          <label>Plāna nosaukums (piem., Claude Max)</label>
+          <input type="text" id="budgetPlan" placeholder="Claude Max">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Budžets tokenos (tukšs = nav budžeta)</label>
+          <input type="number" id="budgetTokens" min="0" step="1000" placeholder="piem., 50000000">
+        </div>
+        <div class="field">
+          <label>Perioda nosaukums (piem., menesis)</label>
+          <input type="text" id="budgetWindow" placeholder="mēnesis">
+        </div>
+      </div>
+      <div class="field">
+        <label>Perioda sākums (nav obligāts)</label>
+        <input type="text" id="budgetStart" placeholder="2026-08-01">
+      </div>
+      <button class="btn btn-primary" id="budgetSave">Saglabāt budžetu</button>
+      <div class="row-msg" id="budgetMsg"></div>
     </div>
 
     <div class="card">
@@ -269,6 +339,12 @@ async function sbRpc(fn, body){
   });
   if(!res.ok){
     const t = await res.text().catch(()=> '');
+    // A missing function (PGRST202 / 404) means the migration that creates it
+    // has not been applied yet — say that instead of a bare status code.
+    if(res.status === 404 || t.includes('PGRST202')){
+      throw new Error('Datubāze vēl nav migrēta — šī funkcija (' + fn + ') tajā vēl neeksistē. '
+        + 'Jāpalaiž migrācija 20260816190000_agent_hierarchy_and_token_budgets.sql.');
+    }
     throw new Error(res.status === 400 || t.includes('invalid token') ? 'Nepareizs admin marķieris.' : ('RPC kļūda: ' + res.status + ' ' + t));
   }
   return res.json().catch(()=>null);
@@ -285,9 +361,18 @@ function requireToken(msgEl){
 
 async function loadAgents(){
   agentsCache = await sbGet('agents?select=*&order=created_at.asc');
-  const minions = agentsCache.filter(a => a.tier !== 'boss');
+  // 'minion' explicitly, not "everything that is not the boss": platform rows
+  // (big AI agents) are agents too and must never land in a minion picker.
+  const minions = agentsCache.filter(a => a.tier === 'minion');
   const opts = minions.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
-  ['newTaskAgent','skillAgent','mapAgent'].forEach(id => { document.getElementById(id).innerHTML = opts; });
+  ['newTaskAgent','skillAgent','mapAgent','parentChild'].forEach(id => { document.getElementById(id).innerHTML = opts; });
+
+  const platforms = agentsCache.filter(a => a.tier === 'platform');
+  const platformOpts = platforms.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('budgetAgent').innerHTML = platformOpts
+    || '<option value="">— nav nevienas AI platformas —</option>';
+  document.getElementById('parentPlatform').innerHTML = platformOpts
+    + '<option value="">— noņemt piesaisti —</option>';
 }
 
 // ---------- Tasks ----------
@@ -391,17 +476,60 @@ async function loadDataBrowser(){
   usageRows.forEach(u => { usageByAgent[u.agent_id] = u; });
   mapRows.forEach(m => { mapByAgent[m.agent_id] = m; });
 
-  const minions = agentsCache.filter(a => a.tier !== 'boss');
+  // Platforms first, then their specialists — the same hierarchy the farm shows.
+  const nameById = {};
+  agentsCache.forEach(a => { nameById[a.id] = a.name; });
+  const rows = agentsCache.filter(a => a.tier === 'platform')
+    .concat(agentsCache.filter(a => a.tier === 'minion'));
+
   const body = document.getElementById('agentsDataBody');
-  body.innerHTML = minions.map(a => {
+  body.innerHTML = rows.map(a => {
     const skills = (skillsByAgent[a.id] || []).map(s => escapeHtml((s.skills ? s.skills.name : '') + ' (' + (s.level||'') + ')')).join(', ') || '—';
     const u = usageByAgent[a.id];
-    const tokens = u ? `${(u.input_tokens||0).toLocaleString('lv-LV')} / ${(u.output_tokens||0).toLocaleString('lv-LV')}` : '—';
-    const cost = u ? '$' + (u.cost_usd||0).toFixed(2) : '—';
+    // Only a row that was really synced carries numbers; an unsynced row shows
+    // a dash, never a 0 that reads like a measurement.
+    const tokens = (u && u.last_synced_at)
+      ? `${(u.input_tokens||0).toLocaleString('lv-LV')} / ${(u.output_tokens||0).toLocaleString('lv-LV')}`
+      : 'nav sinhronizēts';
+    const source = (u && u.last_synced_at) ? (u.source || 'nezināms') : '—';
     const m = mapByAgent[a.id];
     const mapText = m ? [m.anthropic_workspace_id, m.anthropic_api_key_id].filter(Boolean).join(' / ') || '—' : '—';
-    return `<tr><td><b>${escapeHtml(a.name)}</b></td><td>${skills}</td><td>${tokens}</td><td>${cost}</td><td style="font-family:monospace;font-size:.76rem;">${escapeHtml(mapText)}</td></tr>`;
-  }).join('') || '<tr><td colspan="5" class="empty-hint">Nav minjonu.</td></tr>';
+    const platform = a.tier === 'platform'
+      ? '—'
+      : (a.parent_id ? (nameById[a.parent_id] || a.parent_id) : 'nav piesaistīts');
+    return `<tr>
+      <td><b>${escapeHtml(a.name)}</b>${a.tier === 'platform' ? ' <span class="status-tag done">platforma</span>' : ''}</td>
+      <td>${escapeHtml(platform)}</td>
+      <td>${skills}</td>
+      <td>${escapeHtml(tokens)}</td>
+      <td style="font-size:.76rem;">${escapeHtml(source)}</td>
+      <td style="font-family:monospace;font-size:.76rem;">${escapeHtml(mapText)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty-hint">Nav aģentu.</td></tr>';
+
+  await loadBudgets();
+}
+
+// Fills the budget form from token_budgets. The table arrives with migration
+// 20260816190000; until then the card explains itself instead of erroring.
+async function loadBudgets(){
+  const msg = document.getElementById('budgetMsg');
+  const sel = document.getElementById('budgetAgent');
+  let budgets;
+  try{
+    budgets = await sbGet('token_budgets?select=*');
+  }catch(err){
+    msg.textContent = 'Budžetu tabula vēl neeksistē — jāpalaiž migrācija '
+      + '20260816190000_agent_hierarchy_and_token_budgets.sql.';
+    msg.className = 'row-msg bad';
+    return;
+  }
+  const b = budgets.find(x => x.agent_id === sel.value);
+  document.getElementById('budgetPlan').value = (b && b.plan_label) || '';
+  document.getElementById('budgetTokens').value = (b && b.budget_tokens != null) ? b.budget_tokens : '';
+  document.getElementById('budgetWindow').value = (b && b.window_label) || '';
+  document.getElementById('budgetStart').value = (b && b.window_started_at)
+    ? String(b.window_started_at).slice(0, 10) : '';
 }
 
 document.getElementById('skillSave').addEventListener('click', async () => {
@@ -436,6 +564,83 @@ document.getElementById('mapSave').addEventListener('click', async () => {
   }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
 });
 
+// ---------- Hierarchy: big AI agents + who runs whom ----------
+
+document.getElementById('platformSave').addEventListener('click', async () => {
+  const msg = document.getElementById('platformMsg');
+  if(!requireToken(msg)) return;
+  const id = document.getElementById('platformId').value.trim();
+  const name = document.getElementById('platformName').value.trim();
+  const role = document.getElementById('platformRole').value.trim();
+  if(!id || !name){ msg.textContent = 'Vajag ID un nosaukumu.'; msg.className = 'row-msg bad'; return; }
+  try{
+    await sbRpc('admin_upsert_platform_agent', {
+      p_token: adminToken, p_id: id, p_name: name, p_role: role
+    });
+    msg.textContent = '✔ AI platforma saglabāta'; msg.className = 'row-msg ok';
+    document.getElementById('platformId').value = '';
+    document.getElementById('platformName').value = '';
+    document.getElementById('platformRole').value = '';
+    await loadAgents();
+    loadDataBrowser();
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+document.getElementById('parentSave').addEventListener('click', async () => {
+  const msg = document.getElementById('parentMsg');
+  if(!requireToken(msg)) return;
+  const child = document.getElementById('parentChild').value;
+  const parent = document.getElementById('parentPlatform').value;
+  if(!child){ msg.textContent = 'Izvēlies speciālistu.'; msg.className = 'row-msg bad'; return; }
+  try{
+    await sbRpc('admin_set_agent_parent', {
+      p_token: adminToken, p_agent_id: child, p_parent_id: parent || null
+    });
+    msg.textContent = parent ? '✔ Piesaistīts' : '✔ Piesaiste noņemta';
+    msg.className = 'row-msg ok';
+    await loadAgents();
+    loadDataBrowser();
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
+// ---------- Token budget (owner-declared; no API reports a subscription balance) ----------
+
+document.getElementById('budgetAgent').addEventListener('change', loadBudgets);
+
+document.getElementById('budgetSave').addEventListener('click', async () => {
+  const msg = document.getElementById('budgetMsg');
+  if(!requireToken(msg)) return;
+  const agentId = document.getElementById('budgetAgent').value;
+  if(!agentId){
+    msg.textContent = 'Vispirms izveido AI platformu augšā.'; msg.className = 'row-msg bad'; return;
+  }
+  const raw = document.getElementById('budgetTokens').value.trim();
+  let budgetTokens = null;
+  if(raw !== ''){
+    budgetTokens = Number(raw);
+    if(!Number.isFinite(budgetTokens) || budgetTokens < 0){
+      msg.textContent = 'Budžetam jābūt skaitlim (vai atstāj tukšu).'; msg.className = 'row-msg bad'; return;
+    }
+  }
+  const startRaw = document.getElementById('budgetStart').value.trim();
+  if(startRaw && Number.isNaN(Date.parse(startRaw))){
+    msg.textContent = 'Perioda sākums nav derīgs datums (piem., 2026-08-01).';
+    msg.className = 'row-msg bad'; return;
+  }
+  try{
+    await sbRpc('admin_set_token_budget', {
+      p_token: adminToken,
+      p_agent_id: agentId,
+      p_plan_label: document.getElementById('budgetPlan').value.trim(),
+      p_budget_tokens: budgetTokens,
+      p_window_label: document.getElementById('budgetWindow').value.trim(),
+      p_window_started_at: startRaw ? new Date(startRaw).toISOString() : null
+    });
+    msg.textContent = '✔ Budžets saglabāts — ferma tagad rāda atlikumu';
+    msg.className = 'row-msg ok';
+  }catch(err){ msg.textContent = '✖ ' + err.message; msg.className = 'row-msg bad'; }
+});
+
 document.getElementById('usageSyncBtn').addEventListener('click', async () => {
   const msg = document.getElementById('usageSyncMsg');
   if(!requireToken(msg)) return;
@@ -448,8 +653,13 @@ document.getElementById('usageSyncBtn').addEventListener('click', async () => {
     });
     const data = await res.json().catch(()=>({}));
     if(!res.ok){ msg.textContent = '✖ ' + (data.error || res.status); msg.className = 'row-msg bad'; return; }
-    const okCount = (data.synced || []).filter(r => r.ok).length;
-    msg.textContent = `✔ Sinhronizēti ${okCount} / ${(data.synced||[]).length} minjoni.`;
+    const synced = data.synced || [];
+    const okCount = synced.filter(r => r.ok).length;
+    // Echo the field names the Anthropic API really returned. This code has
+    // never run against a real Admin key, so the first run is the check.
+    const fields = (synced.find(r => r.ok && (r.fields_seen || []).length) || {}).fields_seen;
+    msg.textContent = `✔ Sinhronizēti ${okCount} / ${synced.length} aģenti (tikai tokeni, bez izmaksām).`
+      + (fields ? ` API lauki: ${fields.join(', ')}` : ' API neatgrieza nevienu rindu.');
     msg.className = 'row-msg ok';
     loadDataBrowser();
   }catch(err){ msg.textContent = '✖ Kļūda: ' + err.message; msg.className = 'row-msg bad'; }

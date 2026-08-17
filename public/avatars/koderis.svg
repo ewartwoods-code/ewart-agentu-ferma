@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  KODERIS - the farm's coding minion.
+
+  Self-hosted on purpose: every other character on the farm is hot-linked to a
+  third-party CDN (see "Known risks" in app/README.md), so a new character does
+  not add another external dependency. Drawn as flat vector shapes, no fonts and
+  no external references, so it renders identically everywhere and costs nothing
+  to serve.
+
+  Sized 200x400 to match how the field renders a cutout: .figure img is
+  height:100% / width:auto, so the tall viewBox keeps him in scale with the
+  photographic minions.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="400" viewBox="0 0 200 400"
+     role="img" aria-label="KODERIS - the coding minion">
+  <title>KODERIS</title>
+
+  <!-- ground shadow -->
+  <ellipse cx="100" cy="384" rx="60" ry="12" fill="#140e06" opacity="0.28"/>
+
+  <!-- legs -->
+  <rect x="74" y="268" width="22" height="104" rx="11" fill="#3b4b63"/>
+  <rect x="104" y="268" width="22" height="104" rx="11" fill="#33425a"/>
+  <!-- boots -->
+  <path d="M66 366h30v10a6 6 0 0 1-6 6H72a6 6 0 0 1-6-6z" fill="#2b2118"/>
+  <path d="M104 366h30v10a6 6 0 0 1-6 6h-18a6 6 0 0 1-6-6z" fill="#241b13"/>
+
+  <!-- hood resting behind the shoulders -->
+  <ellipse cx="100" cy="178" rx="44" ry="22" fill="#264035"/>
+
+  <!-- hoodie -->
+  <path d="M100 168c-26 0-46 12-50 34l-6 62c-1 10 5 16 15 16h82c10 0 16-6 15-16l-6-62c-4-22-24-34-50-34z"
+        fill="#35594f"/>
+  <!-- zip + pocket, so the body reads as a hoodie and not a blob -->
+  <rect x="97" y="176" width="6" height="96" rx="3" fill="#2a473f"/>
+  <path d="M70 244h60v14H70z" fill="#2f4f46"/>
+
+  <!-- arms reaching forward to the keyboard -->
+  <path d="M56 196c-10 8-14 22-12 36l4 26c1 8 8 12 15 10 7-2 10-9 9-17l-4-26 12-16z" fill="#3d6357"/>
+  <path d="M144 196c10 8 14 22 12 36l-4 26c-1 8-8 12-15 10-7-2-10-9-9-17l4-26-12-16z" fill="#3d6357"/>
+  <!-- hands -->
+  <ellipse cx="60" cy="262" rx="11" ry="9" fill="#f0c6a0"/>
+  <ellipse cx="140" cy="262" rx="11" ry="9" fill="#f0c6a0"/>
+
+  <!-- neck -->
+  <rect x="90" y="150" width="20" height="26" rx="8" fill="#e0b189"/>
+
+  <!-- head -->
+  <ellipse cx="100" cy="118" rx="35" ry="38" fill="#f0c6a0"/>
+  <!-- hair -->
+  <path d="M65 112c0-24 16-40 35-40s35 16 35 40c0-12-12-18-35-18-14 0-24 5-27 12-4 8-8 6-8 6z"
+        fill="#3b2c18"/>
+  <!-- short beard -->
+  <path d="M72 124c2 20 13 32 28 32s26-12 28-32c-6 14-16 20-28 20s-22-6-28-20z" fill="#4a3722"
+        opacity="0.55"/>
+  <!-- glasses: the coder tell -->
+  <g fill="#ffffff" fill-opacity="0.30" stroke="#2b2118" stroke-width="3">
+    <circle cx="85" cy="118" r="12"/>
+    <circle cx="115" cy="118" r="12"/>
+    <path d="M97 118h6" fill="none"/>
+    <path d="M73 114l-9-3" fill="none"/>
+    <path d="M127 114l9-3" fill="none"/>
+  </g>
+  <!-- eyes behind the lenses -->
+  <circle cx="85" cy="118" r="3.2" fill="#2b2118"/>
+  <circle cx="115" cy="118" r="3.2" fill="#2b2118"/>
+  <!-- headphones -->
+  <path d="M62 116a38 38 0 0 1 76 0" fill="none" stroke="#2b2118" stroke-width="7"
+        stroke-linecap="round"/>
+  <rect x="52" y="110" width="16" height="30" rx="8" fill="#2b2118"/>
+  <rect x="132" y="110" width="16" height="30" rx="8" fill="#2b2118"/>
+
+  <!-- laptop, held in front: the green terminal is the status-at-a-glance cue -->
+  <path d="M50 258h100l14 16H36z" fill="#9aa4ae"/>
+  <rect x="36" y="272" width="128" height="8" rx="4" fill="#7d868f"/>
+  <rect x="54" y="196" width="92" height="64" rx="6" fill="#2b3238"/>
+  <rect x="60" y="202" width="80" height="52" rx="3" fill="#101619"/>
+  <g fill="#3fae5a">
+    <rect x="66" y="209" width="34" height="4" rx="2"/>
+    <rect x="66" y="219" width="52" height="4" rx="2"/>
+    <rect x="74" y="229" width="40" height="4" rx="2" opacity="0.75"/>
+    <rect x="74" y="239" width="26" height="4" rx="2" opacity="0.55"/>
+    <rect x="106" y="239" width="8" height="5" rx="1"/>
+  </g>
+
+  <!-- name tag on the hoodie -->
+  <rect x="112" y="196" width="34" height="14" rx="7" fill="#fffdf6" opacity="0.9"/>
+  <rect x="118" y="201" width="22" height="4" rx="2" fill="#8a5a2b"/>
+</svg>
