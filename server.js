@@ -415,6 +415,14 @@ app.post('/api/gatis/result', (req, res) => {
   } catch (err) { res.status(500).json({ ok:false, error:String(err.message||err) }); }
 });
 
+// GET /api/gatis/outbox  -> results Gatis has posted (for Hermes to verify)
+app.get('/api/gatis/outbox', (req, res) => {
+  try {
+    const out = gatisRead('outbox.ndjson').map(l=>{try{return JSON.parse(l);}catch(_){return null;}}).filter(Boolean);
+    res.json({ ok:true, items: out.map(o => ({ id:o.id, status:o.status, at:o.at, summary:(o.summary||'').slice(0,200) })) });
+  } catch (err) { res.status(500).json({ ok:false, error:String(err.message||err) }); }
+});
+
 // GET /api/gatis/context  -> the shared knowledge (skill) Gatis should keep
 app.get('/api/gatis/context', (req, res) => {
   try { res.type('text').send(require('fs').readFileSync(gatisPath('context.md'),'utf8')); }
