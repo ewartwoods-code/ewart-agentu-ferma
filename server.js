@@ -59,6 +59,17 @@ app.get('/control', (req, res) => renderTemplate('control.html', res));
 
 app.get('/healthz', (req, res) => res.status(200).send('ok'));
 
+// EWART BRAIN — the generated report journal (static, section-coded).
+app.get('/brain', (req, res) => renderTemplate(path.join('brain','index.html'), res));
+app.get('/brain/*', (req, res) => {
+  const rel = decodeURIComponent(req.params[0] || '');
+  const candidate = path.join(__dirname, 'public', 'brain', rel);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    return res.type(path.extname(candidate) || 'html').send(fs.readFileSync(candidate));
+  }
+  res.status(404).send('not found');
+});
+
 // ---------- Supabase REST helpers (server-side; service role bypasses RLS) ----------
 
 async function sbServiceFetch(pathAndQuery, options = {}) {
@@ -183,12 +194,45 @@ app.post('/api/herme-chat', async (req, res) => {
   }
 });
 
-// ---------- Usage sync (Anthropic Console usage/cost -> agent_usage cache) ----------
-// POST { token } — admin-token gated. Pulls usage for every agent that has a
-// row in agent_workspace_map with a workspace/api-key id, and upserts
-// agent_usage. Best-effort scaffolding: Anthropic's Admin usage/cost report
-// endpoints are still evolving, so this may need adjusting against a real
-// Admin API key before it's fully reliable.
+// ---------- Usage sync (Anthropic Console usage report -> agent_usage cache) ----------
+// POST { token } — admin-token gated. Pulls token counts for every agent that
+// has a row in agent_workspace_map with a workspace / api-key id and updates
+// agent_usage.
+//
+// HONESTY CONTRACT — read before changing anything here:
+//
+//  * TOKENS ONLY. This endpoint never writes cost_usd. Anthropic's usage report
+//    does not carry cost, and the previous version wrote a hardcoded 0, which
+//    the UI then rendered as "$0.00" as if it had been measured. Cost stays
+//    "not tracked" until somebody adds a verified cost-report call against a
+//    real Admin key. An empty field beats a confident wrong number.
+//
+//  * PROVENANCE. Every row written records agent_usage.source = the constant
+//    below, so the UI can label the number instead of implying it was always
+//    measured.
+//
+//  * SELF-VERIFYING FIRST RUN. This code has never run against a real Admin API
+//    key (no key is configured, and enabling one is an owner decision). So the
+//    response echoes `fields_seen` — the numeric keys the API actually returned
+//    in the first result row. If those names differ from the ones summed below,
+//    the very first real run says so instead of silently producing a wrong
+//    total. Treat the numbers as unverified until that check has been made.
+//
+//  * SUBSCRIPTION USAGE IS NOT HERE. This reports a Console API organization's
+//    usage. Tokens the Mac autopilot spends through a Claude subscription are a
+//    different billing surface and no API exposes them — that is why the meter
+//    shows "left" against an owner-declared budget, never a fetched balance.
+
+const USAGE_SOURCE = 'anthropic_admin_api';
+
+// Field names summed into input_tokens. `input_tokens` and
+// `uncached_input_tokens` name the SAME quantity in different revisions of the
+// report, so at most one of them is counted — summing both would double it.
+// The cache fields are separate quantities and are added on top, because they
+// are input tokens the account really spent.
+const INPUT_FIELDS_EXCLUSIVE = ['input_tokens', 'uncached_input_tokens'];
+const INPUT_FIELDS_ADDITIVE = ['cache_creation_input_tokens', 'cache_read_input_tokens'];
+const OUTPUT_FIELDS_EXCLUSIVE = ['output_tokens'];
 
 app.post('/api/usage/sync', async (req, res) => {
   const token = (req.body && req.body.token) || '';
@@ -200,6 +244,15 @@ app.post('/api/usage/sync', async (req, res) => {
   }
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(503).json({ error: 'SUPABASE_SERVICE_ROLE_KEY nav iestatīts serverī.' });
+  }
+  // agent_usage.source arrives with migration 20260816190000. Without it the
+  // PATCH below would fail per agent with an opaque PostgREST error, so say it
+  // once, up front.
+  if (!(await hasUsageSourceColumn())) {
+    return res.status(503).json({
+      error: 'Datubaze vel nav migreta: truukst agent_usage.source '
+        + '(migration 20260816190000_agent_hierarchy_and_token_budgets.sql).',
+    });
   }
 
   try {
@@ -218,7 +271,7 @@ app.post('/api/usage/sync', async (req, res) => {
           body: JSON.stringify({
             input_tokens: usage.inputTokens,
             output_tokens: usage.outputTokens,
-            cost_usd: usage.costUsd,
+            source: USAGE_SOURCE,
             last_synced_at: new Date().toISOString(),
           }),
         });
@@ -228,18 +281,46 @@ app.post('/api/usage/sync', async (req, res) => {
         results.push({ agent_id: m.agent_id, ok: false, error: String(err.message || err) });
       }
     }
-    res.json({ synced: results });
+    res.json({
+      synced: results,
+      cost_tracked: false,
+      note: 'Token counts only. Cost is not tracked by this endpoint; '
+        + 'check fields_seen against the summed fields on the first real run.',
+    });
   } catch (err) {
     console.error('usage sync failed', err);
     res.status(500).json({ error: String(err.message || err) });
   }
 });
 
-// Best-effort call against Anthropic's Admin usage/cost report API, filtered
-// by workspace or API key id. The exact request/response shape of this API
-// has changed over time — treat this as a starting point to verify once a
-// real ANTHROPIC_ADMIN_API_KEY + workspace/key id are available, rather than
-// as a guaranteed-correct integration.
+// True when migration 20260816190000 has been applied. A failure to read the
+// column (missing column, or Supabase unreachable) is reported as "not ready"
+// rather than thrown, so the caller gets one clear message.
+async function hasUsageSourceColumn() {
+  try {
+    await sbServiceFetch('agent_usage?select=source&limit=1');
+    return true;
+  } catch (err) {
+    console.error('agent_usage.source probe failed', err);
+    return false;
+  }
+}
+
+// Sum one exclusive group (first field present wins) plus any additive fields.
+function sumTokenFields(rows, exclusive, additive) {
+  return rows.reduce((sum, r) => {
+    const key = exclusive.find(k => typeof r[k] === 'number');
+    let n = key ? r[key] : 0;
+    for (const k of additive) {
+      if (typeof r[k] === 'number') n += r[k];
+    }
+    return sum + n;
+  }, 0);
+}
+
+// Call Anthropic's Admin usage report, filtered by workspace or API key id.
+// Returns token counts plus the numeric field names actually present, so the
+// first run against a real key proves (or disproves) the field mapping above.
 async function fetchAnthropicUsageFor(mapping) {
   const params = new URLSearchParams();
   params.set('limit', '1');
@@ -258,11 +339,38 @@ async function fetchAnthropicUsageFor(mapping) {
   }
   const data = await res.json();
   const rows = (data.data || []).flatMap(bucket => bucket.results || []);
-  const inputTokens = rows.reduce((sum, r) => sum + (r.uncached_input_tokens || 0) + (r.input_tokens || 0), 0);
-  const outputTokens = rows.reduce((sum, r) => sum + (r.output_tokens || 0), 0);
-  // Cost isn't part of the usage report; leave at 0 unless a cost report call is added later.
-  return { inputTokens, outputTokens, costUsd: 0 };
+
+  return {
+    inputTokens: sumTokenFields(rows, INPUT_FIELDS_EXCLUSIVE, INPUT_FIELDS_ADDITIVE),
+    outputTokens: sumTokenFields(rows, OUTPUT_FIELDS_EXCLUSIVE, []),
+    rowCount: rows.length,
+    fields_seen: rows.length
+      ? Object.keys(rows[0]).filter(k => typeof rows[0][k] === 'number')
+      : [],
+  };
 }
+
+// ---------- EWART BRAIN task inbox ----------
+// POST { code?, msg } -> appends a task request to a local inbox file the
+// farm's Hermes sync reads, then writes a task file + picks it up.
+// Read-only-safe: this only records a *request*; actually creating the task
+// and its execution is the farm's job. No Supabase needed.
+const INBOX = path.join(__dirname, 'state', 'task-inbox.ndjson');
+
+app.post('/api/task-inbox', (req, res) => {
+  const code = String(req.body && req.body.code || '').slice(0, 40);
+  const msg = String(req.body && req.body.msg || '').trim().slice(0, 4000);
+  if (!msg) return res.status(400).json({ ok: false, error: 'Uzdevuma apraksts ir obligāts.' });
+  try {
+    fs.mkdirSync(path.dirname(INBOX), { recursive: true });
+    const rec = { at: new Date().toISOString(), code: code || null, msg, from: 'brain' };
+    fs.appendFileSync(INBOX, JSON.stringify(rec) + '\n', 'utf8');
+    res.json({ ok: true, message: 'Iesniegts u uzdevuma virkni.', id: rec.at });
+  } catch (err) {
+    console.error('task-inbox failed', err);
+    res.status(500).json({ ok: false, error: String(err.message || err) });
+  }
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 

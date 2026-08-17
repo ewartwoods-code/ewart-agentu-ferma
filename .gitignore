@@ -1,0 +1,7 @@
+node_modules/
+state/task-inbox.ndjson
+state/task-inbox.tmp
+public/brain/
+state/autopilot.out.log
+state/autopilot.err.log
+.DS_Store
