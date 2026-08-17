@@ -27,7 +27,7 @@
   .cat.so{background:#3f1d5e;color:#d8b4fe}.cat.re{background:#78350f;color:#fcd34d}.cat.pl{background:#164e63;color:#67e8f9}
   .cat.wa{background:#7f1d1d;color:#fca5a5}.cat.bl{background:#4c0519;color:#fecdd3}.cat.tp{background:#064e3b;color:#6ee7b7}
   .cat.ag{background:#3f3f46;color:#d4d4d8}
-  /* comment UI */
+  .edited-badge{display:inline-flex;align-items:center;gap:4px;background:#065f46;color:#6ee7b7;font-size:11px;font-weight:700;border-radius:10px;padding:2px 8px;margin-left:6px}
   .comment-box{margin-top:8px;border-top:1px dashed #1e293b;padding-top:8px;display:flex;gap:8px;flex-wrap:wrap}
   .comment-box input{flex:1;min-width:200px;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px}
   .comment-box button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
@@ -38,9 +38,8 @@
 <body>
 <div class="wrap">
 <h1>📇 EWART WOODS — Aktivitāšu un lēmumu žurnāls</h1>
-<div class="sub">Kronoloģija (jaunākais augšā) · komentē katru ierakstu un Hermione izlabos pēc tā</div>
+<div class="sub">Kronoloģija (jaunākais augšā) · komentē → Hermione izlabo → publicē izlaboto + ✏️ zīme</div>
 
-<!-- LEGEND (kvadrāts, augšā labajā) -->
 <div class="legend">
   <div class="legend-title">🧭 Apzīmējumi</div>
   <div class="legend-grid">
@@ -54,19 +53,18 @@
     <div class="lg"><span class="ico">🛑</span><div><span class="nm">Blocker / atļauja</span><br><span class="ds">Vajag īpašnieka OK</span></div></div>
     <div class="lg"><span class="ico">🏆</span><div><span class="nm">Sasniegums</span><br><span class="ds">Mērķa atzīme</span></div></div>
     <div class="lg"><span class="ico">🤝</span><div><span class="nm">Komandas</span><br><span class="ds">Uzdevums cilvēks/komanda</span></div></div>
+    <div class="lg"><span class="ico">✏️</span><div><span class="nm">Labots</span><br><span class="ds">Ieraksts publicēts izlabotajā versijā</span></div></div>
   </div>
 </div>
 
 <div class="feed" id="feed">
-  <!-- Entry 1 -->
   <div class="entry" data-entry="strategy-index">
     <div class="head">2026-08-17</div>
-    <div class="title">📖 STRATEGY-INDEX <span class="cat so">📖 SOP</span></div>
-    <div class="body">Visa karte — stratēģijas, noteikumi, skili, atmiņa. Turpmāk atjaunoju arī šo kategoriju ar simbolu sistēmu.</div>
+    <div class="title">📖 STRATEGY-INDEX <span class="cat so">📖 SOP</span><span class="edited-badge">✏️ labots</span></div>
+    <div class="body">Visa karte — stratēģijas, noteikumi, skili, atmiņa. <span style="color:#6ee7b7">(izlabots: pievienota komentāru/✏️ kategorija)</span></div>
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="strategy-index"><button data-cb="strategy-index">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="strategy-index"></div>
   </div>
-  <!-- Entry 2 -->
   <div class="entry" data-entry="marketplace-research">
     <div class="head">2026-08-17</div>
     <div class="title">🎯 Marketplace-research + Helium10 <span class="cat sk">🎯 Prasme</span></div>
@@ -74,7 +72,6 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="marketplace-research"><button data-cb="marketplace-research">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="marketplace-research"></div>
   </div>
-  <!-- Entry 3 -->
   <div class="entry" data-entry="t0062">
     <div class="head">2026-08-17</div>
     <div class="title">🪓 t-0062 migrācija → H10 Diamond MCP <span class="cat ta">🪓 Uzdevums</span></div>
@@ -82,7 +79,6 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="t0062"><button data-cb="t0062">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="t0062"></div>
   </div>
-  <!-- Entry 4 -->
   <div class="entry" data-entry="daily-feed">
     <div class="head">2026-08-17</div>
     <div class="title">📖 Daily-ads-feed spec <span class="cat so">📖 SOP</span></div>
@@ -90,15 +86,6 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="daily-feed"><button data-cb="daily-feed">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="daily-feed"></div>
   </div>
-  <!-- Entry 5 -->
-  <div class="entry" data-entry="firecrawl">
-    <div class="head">2026-08-17</div>
-    <div class="title">🔌 Firecrawl key <span class="cat pl">🔌 Pieslēgums</span></div>
-    <div class="body">Web search/scrape pieejams.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="firecrawl"><button data-cb="firecrawl">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="firecrawl"></div>
-  </div>
-  <!-- Entry 6 -->
   <div class="entry" data-entry="w0001">
     <div class="head">2026-08-17</div>
     <div class="title">⚠️ w-0001 bid izmaiņas <span class="cat wa">⚠️ Izmaiņa</span></div>
@@ -106,7 +93,6 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0001"><button data-cb="w0001">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="w0001"></div>
   </div>
-  <!-- Entry 7 -->
   <div class="entry" data-entry="w0008">
     <div class="head">2026-08-17</div>
     <div class="title">🧪 w-0008 Amazon attēlu izpēte <span class="cat re">🧪 Tests</span></div>
@@ -114,15 +100,13 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0008"><button data-cb="w0008">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="w0008"></div>
   </div>
-  <!-- Entry 8 -->
   <div class="entry" data-entry="rank-tracking">
     <div class="head">2026-08-17</div>
     <div class="title">📖 keyword-rank-tracking <span class="cat so">📖 SOP</span></div>
-    <div class="body">Iksdienas ranga momentāni + tendences → w-0005.</div>
+    <div class="body">Ikdienas ranga momenti + tendences → w-0005.</div>
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="rank-tracking"><button data-cb="rank-tracking">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="rank-tracking"></div>
   </div>
-  <!-- Entry 9 -->
   <div class="entry" data-entry="h10-vs-sl">
     <div class="head">2026-08-17</div>
     <div class="title">🚀 H10 Diamond vs Seller Labs <span class="cat ag">🚀 Stratēģija</span></div>
@@ -130,20 +114,11 @@
     <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="h10-vs-sl"><button data-cb="h10-vs-sl">💬 Saglabāt</button></div>
     <div class="comment-note" data-n="h10-vs-sl"></div>
   </div>
-  <!-- Entry 10 -->
-  <div class="entry" data-entry="team">
-    <div class="head">2026-08-17</div>
-    <div class="title">🤝 Komanda: Sabine/Signie/Dana/Raivie <span class="cat ag">🤝 Komanda</span></div>
-    <div class="body">Uzdevumi pa lomām (team.md, s-500).</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="team"><button data-cb="team">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="team"></div>
-  </div>
 </div>
 
-<div class="sub" style="margin-top:16px">Hermione · atjaunots 2026-08-17 · punkti no jaunākā uz vecāko · komentāri → tiks apstrādāti un piemēroti (labojums pēc komentāra)</div>
+<div class="sub" style="margin-top:16px">Hermione · atjaunots 2026-08-17 · ✏️ = publicēts izlabotā versijā pēc komentāra</div>
 
 <script>
-// Komentāru saglabāšana: atstāj ziņojumu Hermionei (lokāli saglabā + atzīmē)
 document.querySelectorAll('[data-cb]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const key=btn.dataset.cb;
@@ -154,11 +129,10 @@ document.querySelectorAll('[data-cb]').forEach(btn=>{
     let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
     store[key]=txt;
     localStorage.setItem('ewart_activity_comments', JSON.stringify(store));
-    note.textContent='✅ Komentārs saglabāts: "'+txt+'" — Hermione to piemēros (labojums).';
+    note.textContent='✅ Komentārs saglabāts — tiks izlabots, publicēts un atzīmēts ar ✏️.';
     input.value='';
   });
 });
-// Ielādē esošos komentārus
 document.querySelectorAll('[data-n]').forEach(n=>{
   const key=n.dataset.n;
   let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
