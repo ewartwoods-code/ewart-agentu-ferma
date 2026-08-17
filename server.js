@@ -378,13 +378,14 @@ app.post('/api/task-inbox', (req, res) => {
 // result back. Files live in exchange/gatis/ (inbox.ndjson / outbox.ndjson).
 const GATIS_DIR = process.env.GATIS_DIR || (() => {
   // The app ships its own synced copy of the gatis channel at <app>/exchange/gatis
-  // (kept in sync with the farm repo by Hermes). Fallbacks for local dev:
-  //  - farm repo app/src → ../.. /exchange/gatis
-  //  - app repo root     → ./exchange/gatis
-  const inApp = path.join(__dirname, '..', 'exchange', 'gatis');          // app/exchange/gatis
+  // (kept in sync with the farm repo by Hermes). On Railway the repo root IS
+  // __dirname (server.js at root), so check __dirname/exchange first.
+  const here = path.join(__dirname, 'exchange', 'gatis');                 // Railway: /app/exchange/gatis
+  if (fs.existsSync(here)) return here;
+  const inApp = path.join(__dirname, '..', 'exchange', 'gatis');          // live repo ~/.../exchange/gatis
   if (fs.existsSync(inApp)) return inApp;
-  const inFarm = path.join(__dirname, '..', '..', 'exchange', 'gatis');   // farm repo
-  return fs.existsSync(inFarm) ? inFarm : inApp;
+  const inFarm = path.join(__dirname, '..', '..', 'exchange', 'gatis');   // farm repo app/src
+  return fs.existsSync(inFarm) ? inFarm : here;
 })();
 const gatisPath = (f) => path.join(GATIS_DIR, f);
 function gatisRead(f){ try { return require('fs').readFileSync(gatisPath(f),'utf8').trim().split('\n').filter(Boolean); } catch(_){ return []; } }
