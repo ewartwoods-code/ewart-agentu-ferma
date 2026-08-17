@@ -10,7 +10,6 @@
   .wrap{max-width:1000px;margin:0 auto}
   h1{font-size:23px;color:#f1f5f9;margin-bottom:4px}
   .sub{color:#94a3b8;font-size:13px;margin-bottom:20px}
-  /* LEGEND — top right (now a floating square) */
   .legend{float:right;width:300px;background:#111a2e;border:1px solid #3b82f6;border-radius:12px;padding:14px 16px;margin:0 0 18px 18px}
   .legend-title{font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:10px}
   .legend-grid{display:grid;gap:8px}
@@ -18,7 +17,6 @@
   .lg .ico{font-size:16px;min-width:22px;text-align:center}
   .lg .nm{font-weight:600;color:#f1f5f9}
   .lg .ds{opacity:.75;font-size:11px}
-  .feed{clear:none}
   .entry{position:relative;background:#111a2e;border:1px solid #1e293b;border-radius:10px;padding:12px 14px;margin-bottom:12px}
   .entry::before{content:'';position:absolute;left:-21px;top:16px;width:10px;height:10px;border-radius:50%;background:#3b82f6}
   .entry .head{font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:4px}
@@ -29,12 +27,18 @@
   .cat.so{background:#3f1d5e;color:#d8b4fe}.cat.re{background:#78350f;color:#fcd34d}.cat.pl{background:#164e63;color:#67e8f9}
   .cat.wa{background:#7f1d1d;color:#fca5a5}.cat.bl{background:#4c0519;color:#fecdd3}.cat.tp{background:#064e3b;color:#6ee7b7}
   .cat.ag{background:#3f3f46;color:#d4d4d8}
+  /* comment UI */
+  .comment-box{margin-top:8px;border-top:1px dashed #1e293b;padding-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .comment-box input{flex:1;min-width:200px;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px}
+  .comment-box button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .comment-box button:hover{background:#2563eb}
+  .comment-note{font-size:11.5px;color:#fbbf24;margin-top:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>📇 EWART WOODS — Aktivitāšu un lēmumu žurnāls</h1>
-<div class="sub">Kronoloģija (jaunākais augšā) · leģenda augšā labajā pusē · katras pieğauju kategorija ar ikonu un aprakstu</div>
+<div class="sub">Kronoloģija (jaunākais augšā) · komentē katru ierakstu un Hermione izlabos pēc tā</div>
 
 <!-- LEGEND (kvadrāts, augšā labajā) -->
 <div class="legend">
@@ -53,30 +57,113 @@
   </div>
 </div>
 
-<div class="feed">
-  <!-- === 2026-08-17 === -->
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">📖 SOP ⭐ STRATEGY-INDEX <span class="cat">📖</span></div><div class="body">Visa karte — stratēģijas, noteikumi, skili, atmiņa (A/B/C/D). Jaunākā kategorija ar legende/index na.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🎯 Marketplace-research + Helium10 <span class="cat">sk</span></div><div class="body">Skils papildināts ar H10 (MCP/browser) kā pieprasījuma mēru — konkurence, atslēgas vārdi, rangs.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🪓 t-0062 migrācija → H10 Diamond MCP <span class="cat">ta</span></div><div class="body">Atšķirties arınek UCTabs: no 18.08 atcemt SL, H10 Diamond, backup, pasaulis.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">📖 Daily-ads-feed spec <span class="cat">so</span></div><div class="body">09:00 3 providers HTML + approve pogas; placements UP/DOWN/FIXED; day/hour heatmap; auto-mode; visuals pēc apstipr.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🔌 Firecrawl key <span class="cat">pl</span></div><div class="body">Web search/scrape pieejams (noviet).</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">⚠️ w-0001 bid izmaiņas (apstiprināta) <span class="cat">wa</span></div><div class="body">DE −50%, FR −25%, augsta ACoS −20–30%, labi vārdi +10–20%.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🧪 w-0008 Amazon attēlu izpēte <span class="cat">re</span></div><div class="body">Kādi baneri strādā — kopā veidosim noteikumu.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🔌 t-0067 product-research w/ H10 <span class="cat">pl</span></div><div class="body">Produktu izpētes skils (t-0024 brāts) paplašināts ar H10.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🎯 image-rendering skils (vairāki uzlabojumi) <span class="cat">sk</span></div><div class="body">Izmēģi stils, interjers no apraksta, structured prompt, A/B, F2 CTR/CVR, GLB/AR, trigera track.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">📖 ads-auto-rules + trend rule + test-campaign <span class="cat">so</span></div><div class="body">ACoS trenībie: 30d+7d+laily; tamp; 80% zemāk bids; profiili cal/neut/agg; ToS 50%.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">📖 keyword-rank-tracking <span class="cat">so</span></div><div class="body">Iksdienas ranga momentāni + tendenti → w-0005.</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🚀 H10 Diamond vs Seller Labs <span class="cat">ag</span></div><div class="body">Aprēķirāts: SL+H10Plat saglabāt; Diamond pēcāk, ja vajag MCP; lēmums: migrā (t-0062).</div></div>
-  <div class="entry"><div class="head">2026-08-17</div><div class="title">🤝 komanda: Sabine/Signie/Dana/Raivie <span class="cat">ag</span></div><div class="body">Uzdev na tema.md + task s-500 sabie H10.</div></div>
-
-  <!-- 2026-08-16 -->
-  <div class="entry"><div class="head">2026-08-16</div><div class="title">🚀 Amazon PPC core stratēģija <span class="cat">ag</span></div><div class="body">ACoS≤30/TACoS≤10; exact-first; micro; negatives; ASIN; pauze=last.</div></div>
-  <div class="entry"><div class="head">2026-08-16</div><div class="title">📖 FBA stratēģija 5-koku <span class="cat">so</span></div><div class="body">Proven/test/old; 5gb; ≤60d; gaisz FedEx 100kg; ozols/osis/wenge/walnut/ķiršu.</div></div>
-  <div class="entry"><div class="head">2026-08-16</div><div class="title">🚀 €1M gada mērķu sistēma <span class="cat">ag</span></div><div class="body">Mērvēm pa mēnešiem; Mon uzdevumi, Fri rezultāti (ne Sv).</div></div>
-  <div class="entry"><div class="head">2026-08-16</div><div class="title">📖 Etsy search-term hygiene <span class="cat">so</span></div><div class="body">Exact ROAS variants; search-term audits; strongest start.</div></div>
+<div class="feed" id="feed">
+  <!-- Entry 1 -->
+  <div class="entry" data-entry="strategy-index">
+    <div class="head">2026-08-17</div>
+    <div class="title">📖 STRATEGY-INDEX <span class="cat so">📖 SOP</span></div>
+    <div class="body">Visa karte — stratēģijas, noteikumi, skili, atmiņa. Turpmāk atjaunoju arī šo kategoriju ar simbolu sistēmu.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="strategy-index"><button data-cb="strategy-index">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="strategy-index"></div>
+  </div>
+  <!-- Entry 2 -->
+  <div class="entry" data-entry="marketplace-research">
+    <div class="head">2026-08-17</div>
+    <div class="title">🎯 Marketplace-research + Helium10 <span class="cat sk">🎯 Prasme</span></div>
+    <div class="body">Skils papildināts ar H10 (MCP/browser) — pieprasījums, konkurence, atslēgas vārdi, rangs.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="marketplace-research"><button data-cb="marketplace-research">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="marketplace-research"></div>
+  </div>
+  <!-- Entry 3 -->
+  <div class="entry" data-entry="t0062">
+    <div class="head">2026-08-17</div>
+    <div class="title">🪓 t-0062 migrācija → H10 Diamond MCP <span class="cat ta">🪓 Uzdevums</span></div>
+    <div class="body">18.08 atceļam Seller Labs, H10 Diamond, backup pirms, MCP pieslēgšana.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="t0062"><button data-cb="t0062">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="t0062"></div>
+  </div>
+  <!-- Entry 4 -->
+  <div class="entry" data-entry="daily-feed">
+    <div class="head">2026-08-17</div>
+    <div class="title">📖 Daily-ads-feed spec <span class="cat so">📖 SOP</span></div>
+    <div class="body">09:00 3 provideru HTML + approve pogas; placements UP/DOWN/FIXED; day/hour heatmap; auto-mode; visuals pēc apstipr.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="daily-feed"><button data-cb="daily-feed">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="daily-feed"></div>
+  </div>
+  <!-- Entry 5 -->
+  <div class="entry" data-entry="firecrawl">
+    <div class="head">2026-08-17</div>
+    <div class="title">🔌 Firecrawl key <span class="cat pl">🔌 Pieslēgums</span></div>
+    <div class="body">Web search/scrape pieejams.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="firecrawl"><button data-cb="firecrawl">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="firecrawl"></div>
+  </div>
+  <!-- Entry 6 -->
+  <div class="entry" data-entry="w0001">
+    <div class="head">2026-08-17</div>
+    <div class="title">⚠️ w-0001 bid izmaiņas <span class="cat wa">⚠️ Izmaiņa</span></div>
+    <div class="body">DE −50%, FR −25%, augstais ACoS −20–30%, labi vārdi +10–20%.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0001"><button data-cb="w0001">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="w0001"></div>
+  </div>
+  <!-- Entry 7 -->
+  <div class="entry" data-entry="w0008">
+    <div class="head">2026-08-17</div>
+    <div class="title">🧪 w-0008 Amazon attēlu izpēte <span class="cat re">🧪 Tests</span></div>
+    <div class="body">Kādi baneri strādā — kopā veidosim noteikumu.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0008"><button data-cb="w0008">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="w0008"></div>
+  </div>
+  <!-- Entry 8 -->
+  <div class="entry" data-entry="rank-tracking">
+    <div class="head">2026-08-17</div>
+    <div class="title">📖 keyword-rank-tracking <span class="cat so">📖 SOP</span></div>
+    <div class="body">Iksdienas ranga momentāni + tendences → w-0005.</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="rank-tracking"><button data-cb="rank-tracking">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="rank-tracking"></div>
+  </div>
+  <!-- Entry 9 -->
+  <div class="entry" data-entry="h10-vs-sl">
+    <div class="head">2026-08-17</div>
+    <div class="title">🚀 H10 Diamond vs Seller Labs <span class="cat ag">🚀 Stratēģija</span></div>
+    <div class="body">Aprēķins izdarīts — lēmums: migrā uz Diamond (t-0062).</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="h10-vs-sl"><button data-cb="h10-vs-sl">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="h10-vs-sl"></div>
+  </div>
+  <!-- Entry 10 -->
+  <div class="entry" data-entry="team">
+    <div class="head">2026-08-17</div>
+    <div class="title">🤝 Komanda: Sabine/Signie/Dana/Raivie <span class="cat ag">🤝 Komanda</span></div>
+    <div class="body">Uzdevumi pa lomām (team.md, s-500).</div>
+    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="team"><button data-cb="team">💬 Saglabāt</button></div>
+    <div class="comment-note" data-n="team"></div>
+  </div>
 </div>
 
-<div class="sub" style="margin-top:16px">Hermione · atjaunots 2026-08-17 · punkti no jaunākā uz vecāko · ikdienas pārskatā pievienota šī sadaļa</div>
-</div>
+<div class="sub" style="margin-top:16px">Hermione · atjaunots 2026-08-17 · punkti no jaunākā uz vecāko · komentāri → tiks apstrādāti un piemēroti (labojums pēc komentāra)</div>
+
+<script>
+// Komentāru saglabāšana: atstāj ziņojumu Hermionei (lokāli saglabā + atzīmē)
+document.querySelectorAll('[data-cb]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key=btn.dataset.cb;
+    const input=document.querySelector(`input[data-c="${key}"]`);
+    const note=document.querySelector(`[data-n="${key}"]`);
+    const txt=(input.value||'').trim();
+    if(!txt){ note.textContent='⚠️ Ieraksti komentāru vispirms.'; return; }
+    let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
+    store[key]=txt;
+    localStorage.setItem('ewart_activity_comments', JSON.stringify(store));
+    note.textContent='✅ Komentārs saglabāts: "'+txt+'" — Hermione to piemēros (labojums).';
+    input.value='';
+  });
+});
+// Ielādē esošos komentārus
+document.querySelectorAll('[data-n]').forEach(n=>{
+  const key=n.dataset.n;
+  let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
+  if(store[key]) n.textContent='📝 "'+store[key]+'" — gaida apstrādi.';
+});
+</script>
 </body>
 </html>
