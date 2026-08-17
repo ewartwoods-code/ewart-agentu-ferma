@@ -1,143 +1,363 @@
 <!DOCTYPE html>
-<html lang="lv">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EWART WOODS — Aktivitāšu žurnāls</title>
+<html lang="lv"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EWART WOODS — Pilns pierakstu žurnāls</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:22px;line-height:1.55}
-  .wrap{max-width:1000px;margin:0 auto}
-  h1{font-size:23px;color:#f1f5f9;margin-bottom:4px}
-  .sub{color:#94a3b8;font-size:13px;margin-bottom:20px}
-  .legend{float:right;width:300px;background:#111a2e;border:1px solid #3b82f6;border-radius:12px;padding:14px 16px;margin:0 0 18px 18px}
-  .legend-title{font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:10px}
-  .legend-grid{display:grid;gap:8px}
-  .lg{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#cbd5e1}
-  .lg .ico{font-size:16px;min-width:22px;text-align:center}
-  .lg .nm{font-weight:600;color:#f1f5f9}
-  .lg .ds{opacity:.75;font-size:11px}
-  .entry{position:relative;background:#111a2e;border:1px solid #1e293b;border-radius:10px;padding:12px 14px;margin-bottom:12px}
-  .entry::before{content:'';position:absolute;left:-21px;top:16px;width:10px;height:10px;border-radius:50%;background:#3b82f6}
-  .entry .head{font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:4px}
-  .entry .title{font-size:14px;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-  .entry .body{font-size:13px;color:#cbd5e1}
-  .entry .cat{font-size:10.5px;background:#1e293b;border-radius:10px;padding:2px 8px;color:#94a3b8;white-space:nowrap}
-  .cat.st{background:#7c2d12;color:#fdba74}.cat.sk{background:#1e3a5f;color:#93c5fd}.cat.ta{background:#14532d;color:#86efac}
-  .cat.so{background:#3f1d5e;color:#d8b4fe}.cat.re{background:#78350f;color:#fcd34d}.cat.pl{background:#164e63;color:#67e8f9}
-  .cat.wa{background:#7f1d1d;color:#fca5a5}.cat.bl{background:#4c0519;color:#fecdd3}.cat.tp{background:#064e3b;color:#6ee7b7}
-  .cat.ag{background:#3f3f46;color:#d4d4d8}
-  .edited-badge{display:inline-flex;align-items:center;gap:4px;background:#065f46;color:#6ee7b7;font-size:11px;font-weight:700;border-radius:10px;padding:2px 8px;margin-left:6px}
-  .comment-box{margin-top:8px;border-top:1px dashed #1e293b;padding-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-  .comment-box input{flex:1;min-width:200px;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px}
-  .comment-box button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
-  .comment-box button:hover{background:#2563eb}
-  .comment-note{font-size:11.5px;color:#fbbf24;margin-top:6px}
-</style>
-</head>
-<body>
-<div class="wrap">
-<h1>📇 EWART WOODS — Aktivitāšu un lēmumu žurnāls</h1>
-<div class="sub">Kronoloģija (jaunākais augšā) · komentē → Hermione izlabo → publicē izlaboto + ✏️ zīme</div>
-
-<div class="legend">
-  <div class="legend-title">🧭 Apzīmējumi</div>
-  <div class="legend-grid">
-    <div class="lg"><span class="ico">🎯</span><div><span class="nm">Jaunā prasme (skill)</span><br><span class="ds">Skila uzlabošana/jauns skils</span></div></div>
-    <div class="lg"><span class="ico">🪓</span><div><span class="nm">Darba uzdevums</span><br><span class="ds">Konkrēts uzdevums aģentam</span></div></div>
-    <div class="lg"><span class="ico">📖</span><div><span class="nm">SOP / noteikums</span><br><span class="ds">Noteikums, pēc kā vadāmies</span></div></div>
-    <div class="lg"><span class="ico">🚀</span><div><span class="nm">Stratēģija</span><br><span class="ds">Kopēja mērķa taktika</span></div></div>
-    <div class="lg"><span class="ico">🧪</span><div><span class="nm">Tests / pētījums</span><br><span class="ds">Izpēte, A/B, izmērīšana</span></div></div>
-    <div class="lg"><span class="ico">🔌</span><div><span class="nm">Pieslēgums</span><br><span class="ds">Integrācija, MCP, rīks</span></div></div>
-    <div class="lg"><span class="ico">⚠️</span><div><span class="nm">Izmaiņa / paziņojums</span><br><span class="ds">Fiksēta izmaiņa, brīdinājums</span></div></div>
-    <div class="lg"><span class="ico">🛑</span><div><span class="nm">Blocker / atļauja</span><br><span class="ds">Vajag īpašnieka OK</span></div></div>
-    <div class="lg"><span class="ico">🏆</span><div><span class="nm">Sasniegums</span><br><span class="ds">Mērķa atzīme</span></div></div>
-    <div class="lg"><span class="ico">🤝</span><div><span class="nm">Komandas</span><br><span class="ds">Uzdevums cilvēks/komanda</span></div></div>
-    <div class="lg"><span class="ico">✏️</span><div><span class="nm">Labots</span><br><span class="ds">Ieraksts publicēts izlabotajā versijā</span></div></div>
-  </div>
-</div>
-
-<div class="feed" id="feed">
-  <div class="entry" data-entry="strategy-index">
-    <div class="head">2026-08-17</div>
-    <div class="title">📖 STRATEGY-INDEX <span class="cat so">📖 SOP</span><span class="edited-badge">✏️ labots</span></div>
-    <div class="body">Visa karte — stratēģijas, noteikumi, skili, atmiņa. <span style="color:#6ee7b7">(izlabots: pievienota komentāru/✏️ kategorija)</span></div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="strategy-index"><button data-cb="strategy-index">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="strategy-index"></div>
-  </div>
-  <div class="entry" data-entry="marketplace-research">
-    <div class="head">2026-08-17</div>
-    <div class="title">🎯 Marketplace-research + Helium10 <span class="cat sk">🎯 Prasme</span></div>
-    <div class="body">Skils papildināts ar H10 (MCP/browser) — pieprasījums, konkurence, atslēgas vārdi, rangs.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="marketplace-research"><button data-cb="marketplace-research">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="marketplace-research"></div>
-  </div>
-  <div class="entry" data-entry="t0062">
-    <div class="head">2026-08-17</div>
-    <div class="title">🪓 t-0062 migrācija → H10 Diamond MCP <span class="cat ta">🪓 Uzdevums</span></div>
-    <div class="body">18.08 atceļam Seller Labs, H10 Diamond, backup pirms, MCP pieslēgšana.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="t0062"><button data-cb="t0062">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="t0062"></div>
-  </div>
-  <div class="entry" data-entry="daily-feed">
-    <div class="head">2026-08-17</div>
-    <div class="title">📖 Daily-ads-feed spec <span class="cat so">📖 SOP</span></div>
-    <div class="body">09:00 3 provideru HTML + approve pogas; placements UP/DOWN/FIXED; day/hour heatmap; auto-mode; visuals pēc apstipr.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="daily-feed"><button data-cb="daily-feed">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="daily-feed"></div>
-  </div>
-  <div class="entry" data-entry="w0001">
-    <div class="head">2026-08-17</div>
-    <div class="title">⚠️ w-0001 bid izmaiņas <span class="cat wa">⚠️ Izmaiņa</span></div>
-    <div class="body">DE −50%, FR −25%, augstais ACoS −20–30%, labi vārdi +10–20%.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0001"><button data-cb="w0001">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="w0001"></div>
-  </div>
-  <div class="entry" data-entry="w0008">
-    <div class="head">2026-08-17</div>
-    <div class="title">🧪 w-0008 Amazon attēlu izpēte <span class="cat re">🧪 Tests</span></div>
-    <div class="body">Kādi baneri strādā — kopā veidosim noteikumu.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="w0008"><button data-cb="w0008">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="w0008"></div>
-  </div>
-  <div class="entry" data-entry="rank-tracking">
-    <div class="head">2026-08-17</div>
-    <div class="title">📖 keyword-rank-tracking <span class="cat so">📖 SOP</span></div>
-    <div class="body">Ikdienas ranga momenti + tendences → w-0005.</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="rank-tracking"><button data-cb="rank-tracking">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="rank-tracking"></div>
-  </div>
-  <div class="entry" data-entry="h10-vs-sl">
-    <div class="head">2026-08-17</div>
-    <div class="title">🚀 H10 Diamond vs Seller Labs <span class="cat ag">🚀 Stratēģija</span></div>
-    <div class="body">Aprēķins izdarīts — lēmums: migrā uz Diamond (t-0062).</div>
-    <div class="comment-box"><input placeholder="Pievieno komentāru/labojumu…" data-c="h10-vs-sl"><button data-cb="h10-vs-sl">💬 Saglabāt</button></div>
-    <div class="comment-note" data-n="h10-vs-sl"></div>
-  </div>
-</div>
-
-<div class="sub" style="margin-top:16px">Hermione · atjaunots 2026-08-17 · ✏️ = publicēts izlabotā versijā pēc komentāra</div>
-
-<script>
-document.querySelectorAll('[data-cb]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const key=btn.dataset.cb;
-    const input=document.querySelector(`input[data-c="${key}"]`);
-    const note=document.querySelector(`[data-n="${key}"]`);
-    const txt=(input.value||'').trim();
-    if(!txt){ note.textContent='⚠️ Ieraksti komentāru vispirms.'; return; }
-    let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
-    store[key]=txt;
-    localStorage.setItem('ewart_activity_comments', JSON.stringify(store));
-    note.textContent='✅ Komentārs saglabāts — tiks izlabots, publicēts un atzīmēts ar ✏️.';
-    input.value='';
-  });
-});
-document.querySelectorAll('[data-n]').forEach(n=>{
-  const key=n.dataset.n;
-  let store={}; try{ store=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}'); }catch(e){}
-  if(store[key]) n.textContent='📝 "'+store[key]+'" — gaida apstrādi.';
-});
-</script>
-</body>
-</html>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:22px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:22px;color:#f1f5f9;margin-bottom:4px}
+.sub{color:#94a3b8;font-size:13px;margin-bottom:18px}
+.legend{background:#111a2e;border:1px solid #3b82f6;border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.lg{display:flex;gap:8px;font-size:12px;color:#cbd5e1}
+.lg .ico{font-size:16px}.lg .nm{font-weight:600;color:#f1f5f9}
+.entry{background:#111a2e;border:1px solid #1e293b;border-radius:10px;padding:10px 14px;margin-bottom:10px}
+.entry .head{font-size:11.5px;color:#94a3b8;font-weight:600;margin-bottom:3px}
+.entry .title{font-size:13.5px;font-weight:700;color:#e2e8f0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.entry .body{font-size:12.5px;color:#cbd5e1;margin-top:4px}
+.cat{font-size:10.5px;background:#1e293b;border-radius:10px;padding:2px 8px;color:#94a3b8}
+</style></head><body><div class="wrap">
+<h1>📇 EWART WOODS — Pilns pierakstu žurnāls</h1>
+<div class="sub">Visi ieraksti (stratēģijas, noteikumi, uzdevumi, skili) — no repozitorija, jaunākais augšā · 110 ieraksti</div>
+<div class="legend"><div style="font-weight:700;color:#60a5fa;margin-bottom:8px">🧭 Apzīmējumi</div><div class="legend-grid">
+<div class="lg"><span class="ico">🎯</span><span><b>Jaunā prasme</b> — skila uzlabošana</span></div>
+<div class="lg"><span class="ico">🪓</span><span><b>Darba uzdevums</b> — konkrēts uzdevums</span></div>
+<div class="lg"><span class="ico">📖</span><span><b>SOP/noteikums</b> — pēc kā vadāmies</span></div>
+<div class="lg"><span class="ico">🚀</span><span><b>Stratēģija</b> — mērķa ceļš</span></div>
+<div class="lg"><span class="ico">🧪</span><span><b>Tests/pētījums</b> — izpēte</span></div>
+<div class="lg"><span class="ico">🔌</span><span><b>Pieslēgums</b> — integrācija/MCP</span></div>
+<div class="lg"><span class="ico">⚠️</span><span><b>Izmaiņa</b> — fiksēta izmaiņa</span></div>
+<div class="lg"><span class="ico">🛑</span><span><b>Blocker</b> — vajag OK</span></div>
+<div class="lg"><span class="ico">✏️</span><span><b>Labots</b> — publicēts izlabotā versijā</span></div>
+</div></div>
+<h2 style="color:#60a5fa;font-size:15px;margin:14px 0 8px">📅 2026-08-17</h2><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0008-amazon-ad-visuals — Task w-0008 — Research: which Amazon ad images/banners work best (for our campai</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0008-amazon-ad-visuals.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0007-hel10-browser-data — Task w-0007 — Hermione: use the browser agent to collect Helium 10 data (no MCP)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0007-hel10-browser-data.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0005-rank-tracking — Task w-0005 — Daily keyword rank tracking setup + first snapshot (owner)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0005-rank-tracking.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0004-unused-amazon-options — Task w-0004 — Research: Amazon ads change-options NOT yet in our plan (owner)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0004-unused-amazon-options.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0003-negative-threshold — Task w-0003 — Research: negative-keyword threshold (how many clicks before we ne</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0003-negative-threshold.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0002-clicks-per-purchase — Task w-0002 — Clicks-per-purchase in our Amazon category (owner question)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0002-clicks-per-purchase.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">w-0001-ppc-bid-adjustments — Task w-0001 — Amazon PPC bid adjustments (owner-approved 2026-08-17)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/w-0001-ppc-bid-adjustments.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">t-0067-h10-product-research — Task t-0067 — Upgrade Product-Research Agent: Helium 10 demand &amp; market analysis</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/t-0067-h10-product-research.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">t-0066-secret-visuals-canva — Task t-0066 — Secret: campaign visuals (Canva + image-gen app) — test pipeline &amp;</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/t-0066-secret-visuals-canva.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">t-0064-display-brand-visuals — Task t-0064 — Koderis: display &amp; brand campaign visuals (3 variants per product)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/t-0064-display-brand-visuals.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">t-0062-migrate-to-h10-diamond — Task t-0062 — Migrate: cancel Seller Labs → Helium 10 Diamond + MCP → live (owne</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/t-0062-migrate-to-h10-diamond.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">t-0061-connect-h10 — Task t-0061 — Connect Helium 10 Platinum (via MCP / API) + first data sync</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/t-0061-connect-h10.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">s-500-sabine-h10-migration — Task t-0063 — Sabīne: koordinēt H10 Diamond migrāciju (bilances un servisu pārej</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/s-500-sabine-h10-migration.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Visual Render Guide</div>
+<div class="body">&gt; Written for task **t-0022**. This is the operating spec for every EWART WOODS product &gt; image made with an image model (Higgsfield or any other), and for the prompt-builder that &gt; feeds it. Lettering follows the task f</div>
+<div class="head" style="margin-top:4px;opacity:.7">visual-render-guide.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Stt Lv Fix</div>
+<div class="body">Owner complaint: "Kāpēc tu saki manu balsi nolasīt tik kļūdaini?" → fix so that LATVIAN voice notes are read back correctly. - STT config file (`config.yaml`) still uses **English-only** default or a stale value: - `stt.</div>
+<div class="head" style="margin-top:4px;opacity:.7">stt-lv-fix.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Strategy Map</div>
+<div class="body">Every agent must show WHICH strategy it works by. This registry lists all strategies (owners strategies + system) and maps them onto agents. Keep updated as strategies improve. 1. **amazon-ppc-strategy.md** — Amazon PPC </div>
+<div class="head" style="margin-top:4px;opacity:.7">strategy-map.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Strategy Index</div>
+<div class="body">Central index of every strategy, rule, skill &amp; memory point created 2026-08-16 → 17 (gathered from conversation). This is the "where is what" map – each entry points to the file/skill where the full text lives. Updated b</div>
+<div class="head" style="margin-top:4px;opacity:.7">STRATEGY-INDEX.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Sellerlabs Vs H10 Diamond</div>
+<div class="body">- **Amazon revenue July 2026: ~€10,726** (metrics, rev&gt;0) - **Amazon revenue last 30d: ~€10,463** - So we are in Seller Labs tier **$5K–$20K monthly revenue**. 1. **Seller Labs (Genius Bundle?)** — tier $5K–20K: **$99.99</div>
+<div class="head" style="margin-top:4px;opacity:.7">sellerlabs-vs-h10-diamond.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Research Saturation Method</div>
+<div class="body">1. **Decompose tasks into parts** — big tasks can be split so MULTIPLE agents (research/intel) each do a part in parallel; results are combined (pipeline engine). 2. **Research from MULTIPLE sources** — never one source;</div>
+<div class="head" style="margin-top:4px;opacity:.7">research-saturation-method.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Order Approval Agent Flow</div>
+<div class="body">The job Signie does by hand today: an order lands in one of our stores, somebody opens it, looks at what is in it, decides which courier to send it with, confirms the order, generates the shipping label, prints it, and m</div>
+<div class="head" style="margin-top:4px;opacity:.7">order-approval-agent-flow.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Module Test Log</div>
+<div class="body">Log every agent→module pairing test: task, module(s), result score, cost, verdict (use / replace / keep testing). A "better" module is adopted only when it EARNED it (quality per €). Updated continuously by Hermes; owner</div>
+<div class="head" style="margin-top:4px;opacity:.7">module-test-log.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Keyword Rank Tracking</div>
+<div class="body">Show how our products RANK for our keywords: which position today, direction (up/down) over time, per marketplace (DE/FR/UK/... ), with a daily snapshot. 1. **Seller Labs / Amazon Ads** — impression share &amp; top-of-search</div>
+<div class="head" style="margin-top:4px;opacity:.7">keyword-rank-tracking.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Hel10 Diamond Upgrade</div>
+<div class="body">Owner note: "Nav opcijas MCP. Nākamajai versijai tā ir — maksā 250$ vairāk." (No MCP option in our current plan; for the NEXT version it costs +$250/month.) | Tier | Price/mo | MCP? | |---|---|---| | Free | $0 | no | | P</div>
+<div class="head" style="margin-top:4px;opacity:.7">hel10-diamond-upgrade.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Daily Ads Feed Spec</div>
+<div class="body">- **id:** t-0065 - **from:** herme - **to:** secret + koderis (visuals) - **kind:** schedule (daily feed content spec) - **priority:** high - **approval:** owner (nothing created pre-approval) Only recommendations that t</div>
+<div class="head" style="margin-top:4px;opacity:.7">daily-ads-feed-spec.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Change Log</div>
+<div class="body">Every APPLIED change (business, ads, prices, listings) is recorded here with its reason and measured outcome. Agents READ this file and base proposals on it. One entry per change. | Date | Task/ID | Agent | What changed </div>
+<div class="head" style="margin-top:4px;opacity:.7">change-log.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Annual Goal Monthly Plan</div>
+<div class="body">&gt; Derived document. The owner's rules live in `annual-goal-million-euro.md`; this file &gt; turns them into numbers, a calendar and two templates. Every figure here comes from &gt; `scripts/annual-goal-plan.js` — do not hand-e</div>
+<div class="head" style="margin-top:4px;opacity:.7">annual-goal-monthly-plan.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Amazon Ppc Strategy</div>
+<div class="body">The owner's current Amazon advertising strategy. This is the operational playbook for the Ads Optimizer agent. Structured, source = owner dictation (2026-08-16). Focus ad spend on a FEW keywords that actually convert, to</div>
+<div class="head" style="margin-top:4px;opacity:.7">amazon-ppc-strategy.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Amazon Ppc Bid Topsearch Rules</div>
+<div class="body">Applies to the Ads Optimizer agent and the Secret EU Amazon worker. These rules are NUMERIC and must be executed exactly. Owner dictation 2026-08-17. - Target ACoS: **~30%** (ad-efficiency ceiling). Target TACoS: **~10%*</div>
+<div class="head" style="margin-top:4px;opacity:.7">amazon-ppc-bid-topsearch-rules.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Agents Inventory</div>
+<div class="body">Mirror of the `agents` table in the database plus the farm's registered agents, so the farm app and Hermes know who is real, what model they run, and their access kind. Standard: kind `read` = auto-run (read-only), `writ</div>
+<div class="head" style="margin-top:4px;opacity:.7">agents-inventory.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Agent Service Registry</div>
+<div class="body">Purpose (owner rule, 2026-08-17): know WHICH agent has WHICH service connections so we can assign the RIGHT tasks to the RIGHT agents, spot NEW useful services, and recommend subscription upgrades when a free tier helps </div>
+<div class="head" style="margin-top:4px;opacity:.7">agent-service-registry.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Agent Model Map</div>
+<div class="body">Owner rule (2026-08-16): for every agent, attach the model/module that fits THAT task BEST — best text, best visuals, best research — not one default for everything. This file is the live list of which module each agent </div>
+<div class="head" style="margin-top:4px;opacity:.7">agent-model-map.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Ads Test Campaign Rules</div>
+<div class="body">Test campaigns (pārbaudes kampaņas) define WHERE we start with new products — which countries, which products, low bids, and how we scale. They follow this exact recipe. Launch FIRST test campaigns only in markets where </div>
+<div class="head" style="margin-top:4px;opacity:.7">ads-test-campaign-rules.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Ads Auto Rules</div>
+<div class="body">&gt; **OWNERSHIP:** Hermione (supervisor) owns this file. Its MAIN task is strategic decisions &gt; on NEW campaigns: which products get them, how they are built, how they move Top-of-Search. &gt; The file is the working rulebook</div>
+<div class="head" style="margin-top:4px;opacity:.7">ads-auto-rules.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0060-daily-ads-feed — Task t-0060 — Build the Daily Ads-Recommendations Hub (3-provider, approve butto</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0060-daily-ads-feed.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0059-farm-ui-upgrade — Task t-0059 — KODERIS: farm app UI/UX upgrade (owner requirements, 2026-08-17)</div>
+<div class="body">**kind:** `code_local` — build and improve the farm app UI. Local code only, `node --check`, run the server locally, verify. NO deploy, NO paid keys, NO live data edits. Complete t</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0059-farm-ui-upgrade.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0058-ppc-trends-research — Task t-0058 — Research: current 2025–26 Amazon PPC strategies &amp; what we can add </div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0058-ppc-trends-research.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0057-ance-cowork-bringup — Task (for Claude Code cowork — ON ANCE'S COMPUTER) — bring up the Ance autopilot</div>
+<div class="body">You are Claude Code in a cowork session **on Ance's new computer**. Your whole job: install and verify the EWART WOODS farm autopilot for the **Ance** agent (Etsy + Amazon US/CA). </div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0057-ance-cowork-bringup.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0056-ance-first-check — Task t-0056 — Ance first job: confirm autopilot + first Etsy/Amazon US/CA snapsh</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0056-ance-first-check.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0055-secret-send-email-ance — Task t-0055 — Secret: E-pats uz ance.ewartwoods@gmail.com (Ance darba pakete)</div>
+<div class="body"># 2026-08-17 ("vai tu vari izsūtīt epastus caur # kādu no mūsu aģentiem?") — process it; still</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0055-secret-send-email-ance.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0054-ance-bringup — ANCE — Bring-up instructions for the Etsy + US/CA Amazon worker</div>
+<div class="body">You are setting up a new farm worker on a NEW computer that will manage: Agent name: **Ance**. To connect her to the farm exactly like the "Secret" Amazon-EU worker already running</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0054-ance-bringup.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0053-secret-ppc-intel — Task t-0053 — Secret: Amazon PPC intel + new efficient ad-system recommendations</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0053-secret-ppc-intel.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0053-secret-amazon-ads-daily — Task t-0053 — Secret: start the daily Amazon Ads analysis &amp; optimisation (EU)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0053-secret-amazon-ads-daily.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0052-depth-physics — Task t-0052 — Depth &amp; perspective physics for farm characters (further = smaller</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0052-depth-physics.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0051-secret-bringup-cowork — CLAUDE COWORK — bring up the "Secret" Amazon-EU farm worker on this MacBook</div>
+<div class="body">You are running in a Claude Code cowork session on the owner's MacBook Air (/Users/secretingredient). Your job is to set up the **Secret** worker — the EWART WOODS farm's autonomou</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0051-secret-bringup-cowork.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0051-secret-bringup — Task t-0051 — Bring up the "Secret" Amazon-EU worker on the second computer</div>
+<div class="body">**second computer** (the one that manages our European Amazon stores).</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0051-secret-bringup.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0050-xai-agent-grok — Task t-0050 — Add the owner's xAI (Grok) as a separate farm agent</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0050-xai-agent-grok.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0049-gemini-agent-dzemma — Task t-0049 — Add the owner's existing Gemini as a separate farm agent "Džemma"</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0049-gemini-agent-dzemma.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0048-gpt-agent-gatis — Task t-0048 — Add the owner's existing GPT as a separate farm agent "Gatis"</div>
+<div class="body">Code cowork session on the Mac, with the owner watching/confirming live.</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0048-gpt-agent-gatis.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0047-automate-amazon-import — Task t-0047 — Automate Amazon sales/PPC daily import (owner: wants Amazon data a</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0047-automate-amazon-import.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0046-influencer-list — Task t-0046 — Influencer research: find + analyse + build shortlist (audience &amp; </div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0046-influencer-list.md</div></div><h2 style="color:#60a5fa;font-size:15px;margin:14px 0 8px">📅 2026-08-16</h2><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Team</div>
+<div class="body">- **Sabīne** — manager over ALL e-commerce stores. - **Signie (Signija)** — secretary; handles packaging &amp; warehouse; receives orders; creates production orders → she receives the FBA restock proposal (which products to </div>
+<div class="head" style="margin-top:4px;opacity:.7">team.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Profit Seo All Platforms</div>
+<div class="body">- THE main goal is **PROFIT, not just turnover**. Bigger profit is the target. - Therefore marketing must be **maximally efficient** — which makes **SEO central** (organic = cheapest, most efficient traffic). - SEO works</div>
+<div class="head" style="margin-top:4px;opacity:.7">profit-seo-all-platforms.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Influencer Strategy</div>
+<div class="body">Cooperation model for gifting products to influencers in exchange for posts/videos, and for paying extra when justified by their statistics. - We send the influencer our PRODUCT for a post/video. - **Baseline (coefficien</div>
+<div class="head" style="margin-top:4px;opacity:.7">influencer-strategy.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Gpt Idea Input</div>
+<div class="body">This is the exact instruction set GPT uses to record the owner's ideas into the shared spreadsheet as clean, structured rows. It is the "capture" half of the idea pipeline; Hermes is the "action" half. Keep this prompt s</div>
+<div class="head" style="margin-top:4px;opacity:.7">gpt-idea-input.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Focus On Most Benefit</div>
+<div class="body">Track which actions give us the BIGGEST benefit. Focus effort in that direction. 1. **Tag every completed work/task with effect:** after each action, record its outcome vs the goal (profit, sales, scores). Use the per-pl</div>
+<div class="head" style="margin-top:4px;opacity:.7">focus-on-most-benefit.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Fba Stock Strategy</div>
+<div class="body">Source = owner dictation. Operational guide for the FBA restock agent (t-0040). 1. **Proven sellers** — products that have shown good results and sell fast, with good profit. 2. **Test products** — never sent to FBA befo</div>
+<div class="head" style="margin-top:4px;opacity:.7">fba-stock-strategy.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Etsy Ads Search Terms</div>
+<div class="body">Source = owner dictation (2026-08-16). Operational guide for Etsy ads analysis + listing SEO. - There are (about) three bid/placement variants Etsy offers for ads; choose which to use based on **ROAS (return on ad spend)</div>
+<div class="head" style="margin-top:4px;opacity:.7">etsy-ads-search-terms.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Email Marketing Strategy</div>
+<div class="body">The owner's email-marketing direction. This is the operational guide for the email agent (Klaviyo flow work). Source = owner dictation (2026-08-16). Use email marketing to: 1. **Win back existing customers** (get old cli</div>
+<div class="head" style="margin-top:4px;opacity:.7">email-marketing-strategy.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Brand Principles</div>
+<div class="body">This document is the canonical set of business principles every agent in the farm must respect. It is what Hermes (supervisor) and every downstream agent reference so all work aligns to one strategy and no idea gets lost</div>
+<div class="head" style="margin-top:4px;opacity:.7">brand-principles.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Blog Placement Strategy</div>
+<div class="body">Source = owner dictation (2026-08-16). Operational guide for outreach/blog agent + budget. Every week: **contact found blogs**, AGREE placement of our blog posts. Get the **best price vs blog statistics**. Prefer better </div>
+<div class="head" style="margin-top:4px;opacity:.7">blog-placement-strategy.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Annual Goal Million Euro</div>
+<div class="body">**Turnover target: €1,000,000 per year** (increase sales), in parallel with improving production, reducing costs, raising prices systematically. One annual goal, split into months and weekly tasks, all visible in the Far</div>
+<div class="head" style="margin-top:4px;opacity:.7">annual-goal-million-euro.md</div></div><div class="entry"><div class="head">🚀 Stratēģija</div>
+<div class="title">Amazon Ads Trends Draft</div>
+<div class="body">&gt; STATUS: DRAFT from general industry knowledge (not freshly fetched verifiable sources this &gt; session; Google fetch blocked). Treat as `directional` — truth rating 4/10 until the &gt; research agent (t-0021) returns a sour</div>
+<div class="head" style="margin-top:4px;opacity:.7">amazon-ads-trends-draft.md</div></div><div class="entry"><div class="head">📖 SOP/Noteikums</div>
+<div class="title">Ai Platforms</div>
+<div class="body">How the farm routes work across AI providers. The principle: **right model for the task, right cost** (owner directive — size model to difficulty, never waste tokens). | AI platform | Model | Handles | Status | |---|---|</div>
+<div class="head" style="margin-top:4px;opacity:.7">ai-platforms.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0046-enable-2-workers-mac — Task t-0046 — Run 2 parallel autopilot workers on the Mac (enable via launchd)</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0046", "kind": "code_local", "provider": "claude", "title": "Enable 2 parallel autopilot workers on the Mac via launchd (farm-wor</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0046-enable-2-workers-mac.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0045-influencer-outreach — Task t-0045 — Influencer outreach agent (free-product baseline, stats-scored, pa</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0045-influencer-outreach.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0045-enable-full-auto-mac — Task t-0045 — Enable FULL-AUTO provider routing on the Mac (finish wiring)</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0045", "kind": "code_local", "provider": "claude", "title": "Enable full-auto multi-provider autopilot on the Mac (launchd + OPEN</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0045-enable-full-auto-mac.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0044-multi-provider-routing — Task t-0044 — MULTI-PROVIDER ROUTING via OpenRouter, with Claude for special-nee</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0044", "kind": "code_local", "title": "Route farm agents across many LLM providers via OpenRouter, picking the best-fit model per</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0044-multi-provider-routing.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0043-website-seo-ux-audit — Task t-0043 — FULL WEBSITE AUDIT: ewartwoods.com SEO + UI/UX vs Google standards</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0043", "kind": "research", "title": "Deep full-site audit of ewartwoods.com for SEO + UI/UX improvements (Google standards)", "ob</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0043-website-seo-ux-audit.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0042-strategies-in-app — Task t-0042 — Strategy registry in the farm app: each agent shows its strategy, </div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0042-strategies-in-app.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0041-order-agent — Task t-0041 — Order approval + shipping-label agent (courier choice by cost, bro</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0041-order-agent.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0040-fba-restock — Task t-0040 — FBA restock proposal agent: which products to send to Amazon wareh</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0040-fba-restock.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0039-review-mining — Task t-0039 — Review-mining for new products: competitor review insights + our s</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0039-review-mining.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0038-platform-scorecards — Task t-0038 — Per-platform health scorecards (SEO level, ads level, listing qual</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0038-platform-scorecards.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0037-seo-everywhere — Task t-0037 — SEO everywhere agent (Etsy, Amazon, Shopify, CDon + new platforms)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0037-seo-everywhere.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0036-annual-goal-app — Task t-0036 — Annual goal 1M€: monthly plan + weekly tasks/results + pricing pro</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0036-annual-goal-app.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0035-etsy-ads-analysis — Task t-0035 — Etsy ads analysis agent: bid-variant by ROAS/life-stage + search-t</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0035-etsy-ads-analysis.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0034-audience-location — Task t-0034 — Researcher: where the target audience lives; precise location targ</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0034-audience-location.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0033-outreach-agent — Task t-0033 — Weekly blog-outreach agent (2 placements/wk, rating 1-10, budget 1</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0033-outreach-agent.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0032-persona-visual — Task t-0032 — Target-audience persona visual in the farm app (clickable home)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0032-persona-visual.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0031-target-audience — Task t-0031 — Target-audience persona analysis (maximally precise, data-based)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0031-target-audience.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0030-blog-scraper — Task t-0030 — Blog scaper/outreach agent: find region-fit blogs + contacts + tra</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0030-blog-scraper.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0029-agent-profile-modules-cost — Task t-0029 — Agent profile: show skills, completed work, modules used, money sp</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0029-agent-profile-modules-cost.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0028-monday-topics — Task t-0028 — Weekly blog-topic offering (every Monday morning on WhatsApp)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0028-monday-topics.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0027-blog-writer — Task t-0027 — Blog Writer agent (own site + external), learns brand style, inter</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0027-blog-writer.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0026-email-research — Task t-0026 — Email marketing: research current strategies/trends (sourced + tru</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0026-email-research.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0025-workshop-md — Task t-0025 — Locate &amp; share the workshop/production MD page (from Claude/Mac)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0025-workshop-md.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0024-market-trends-agent — Task t-0024 — Market-trends product agent (competitor hot products, eRank, size-</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0024-market-trends-agent.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0023-draughtsman-agent — Task t-0023 — Product Draughtsman (rasētājs) agent + workshop/instrument knowled</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0023-draughtsman-agent.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0022-visual-render-guide — Task t-0022 — Product visual rendering: size-accuracy + photorealistic Fujifilm-</div>
+<div class="body">gen, keep it local/read-only, no paid keys enabled)</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0022-visual-render-guide.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0021-strategy-research — Task t-0021 — Research: current strategies for Amazon PPC, Etsy listings, Amazon</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0021-strategy-research.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0020-fullscreen-draggable-scenes — Task t-0020 — Fullscreen draggable farm scenes with persistent positions</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0020-fullscreen-draggable-scenes.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0019-system-map — Task t-0019 — Visual system/hierarchy map on the farm (who does what, connection</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0019-system-map.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0018-subscriptions — Task t-0018 — Subscriptions overview on the farm main screen</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0018-subscriptions.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0017-intel-agent — Task t-0017 — Intelligence (Research) Agent: current-info hunter with sourced, t</div>
+<div class="body">extraction. This is a research task → runs read-only/auto for the gathering part.</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0017-intel-agent.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0016-living-farm-rooms — Task t-0016 — Persistent living farm: always-visible minions with live status do</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0016-living-farm-rooms.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0015-token-meter-hierarchy — Task t-0015 — TOKEN METER + AGENT HIERARCHY in the farm app</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0015", "kind": "code_local", "title": "Add a token-usage meter and restructure the farm into big AI agents + small specialist age</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0015-token-meter-hierarchy.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0014-bridge-exchanges-to-db — Task t-0014 — CONNECT THE APP TO THE REAL FARM TASK LOOP (exchange → DB bridge)</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0014", "kind": "code_local", "title": "Bridge the Hermes↔Claude exchange/ task loop into the app's Supabase tasks table so minion</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0014-bridge-exchanges-to-db.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0013-build-app-perminion-work — Task t-0013 — BUILD THE APP: per-minion work tab + Herme aggregation panel</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0013", "kind": "code_local", "title": "Implement per-minion 'their work' view + Herme aggregation panel in the farm app", "object</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0013-build-app-perminion-work.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0012-verify-connections — Task t-0012 — Verify all connections + confirm reachability (via Claude web/Mac)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0012-verify-connections.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0011-ads-analyst — Task t-0011 — Ads Analyst: cross-channel ad diagnostics (READ-ONLY)</div>
+<div class="body"></div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0011-ads-analyst.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0010-autopilot-auto-verify — Task t-0010 — Autopilot automatic-loop verification (read-only self-test)</div>
+<div class="body">Prove the autopilot loop runs **automatically** (via launchd, no manual run):</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0010-autopilot-auto-verify.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0009-autopilot-test — Task t-0009 — Autopilot end-to-end test (SELF-TEST, no business impact)</div>
+<div class="body">Prove the full autopilot loop works end to end, WITHOUT touching any business system:</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0009-autopilot-test.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0008-data-layer — Task t-0008 — Ecosystem M3: data layer build (read-only snapshots + product mast</div>
+<div class="body">Build the first version of the ecosystem data layer: capture a consistent set of</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0008-data-layer.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0007-autopilot — Task t-0007 — Ecosystem autopilot: autonomous task loop on the Mac (headless Cla</div>
+<div class="body">Close the last loop of the ecosystem: Claude picks up tasks from GitHub **by itself**,</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0007-autopilot.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0006-de-search-terms — Task t-0006 — Germany Amazon PPC: search-term harvest + negative build (READ-ONL</div>
+<div class="body">Find the specific search terms wasting money in Germany (Amazon.de, venue with `tokenValid: connected`), quantify the waste, and produce a ready-to-approve negative-keyword and bid</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0006-de-search-terms.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0005-git-sync-execute — Task t-0005 — Execute git synchronisation (key now registered)</div>
+<div class="body">Hermes confirms the Mac SSH public key has been added to GitHub. Execute the sync from `~/ewart-woods-farm`.</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0005-git-sync-execute.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0004-git-sync-setup — Task t-0004 — Git sync setup (Mac side)</div>
+<div class="body">Connect this Mac's farm workspace to the shared GitHub repo so Hermes and Claude can exchange tasks/results through git instead of the owner copy-pasting.</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0004-git-sync-setup.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0003-amazon-ppc-report — Task t-0003 — Amazon PPC situation report (read-only)</div>
+<div class="body">Give Hermes a full PPC picture across all 12 Amazon venues so the owner can decide where to act. NO changes — report only.</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0003-amazon-ppc-report.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0002-connection-health — Task t-0002 — Connection health check + protocol auto-load fix</div>
+<div class="body">1. Make the farm protocol auto-load in every session (fix blocker from t-0001: CLAUDE.md/skill not loaded because cwd != farm folder).</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0002-connection-health.md</div></div><div class="entry"><div class="head">🪓 Uzdevums</div>
+<div class="title">0001-farm-kickoff — Task t-0001 — FARM KICKOFF: prepare the Claude side of the farm</div>
+<div class="body">```json { "contract_version": "1.0", "task_id": "t-0001", "kind": "setup", "title": "Farm kickoff - prepare Claude side for supervised farm work", "objective": "Read the farm syste</div>
+<div class="head" style="margin-top:4px;opacity:.7">tasks/0001-farm-kickoff.md</div></div><div class="sub" style="margin-top:18px">Hermione · ģenerēts automātiski no repozitorija · 110 ieraksti</div></div></body></html>
