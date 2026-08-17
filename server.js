@@ -372,6 +372,60 @@ app.post('/api/task-inbox', (req, res) => {
   }
 });
 
+// ================= GATIS BRIDGE (Custom GPT <-> Hermes farm) =============
+// Lets Hermes hand tasks to the owner's subscription Custom GPT "Gatis" via
+// his GPT "Action" (webhook): Gatis polls for a task, works it, and posts the
+// result back. Files live in exchange/gatis/ (inbox.ndjson / outbox.ndjson).
+const GATIS_DIR = process.env.GATIS_DIR || (() => {
+  // Resolve the farm's exchange/gatis/ wherever the server runs:
+  //  - farm repo app/src → ../.. /exchange/gatis
+  //  - live app repo     → may be a sibling of this repo; fall back to env.
+  const cand = path.join(__dirname, '..', '..', 'exchange', 'gatis');
+  return fs.existsSync(cand) ? cand : path.join(__dirname, '..', 'exchange', 'gatis');
+})();
+const gatisPath = (f) => path.join(GATIS_DIR, f);
+function gatisRead(f){ try { return require('fs').readFileSync(gatisPath(f),'utf8').trim().split('\n').filter(Boolean); } catch(_){ return []; } }
+function gatisAppend(f, obj){ require('fs').appendFileSync(gatisPath(f), JSON.stringify(obj)+'\n', 'utf8'); }
+
+// GET /api/gatis/next  -> { task } : the next un-done inbox task for Gatis
+app.get('/api/gatis/next', (req, res) => {
+  try {
+    const tasks = gatisRead('inbox.ndjson').map((l,i)=>{ try{return JSON.parse(l);}catch(_){return null;} }).filter(Boolean);
+    const pending = tasks.filter(t => !(t.__done));
+    const out = gatisRead('outbox.ndjson').map(l=>{try{return JSON.parse(l);}catch(_){return null;}}).filter(Boolean);
+    const doneIds = new Set(out.map(o=>o.id));
+    const next = (pending.find(t => !doneIds.has(t.id)) || null);
+    res.json({ ok: true, task: next });
+  } catch (err) { res.status(500).json({ ok:false, error:String(err.message||err) }); }
+});
+
+// POST /api/gatis/result  { id, status, summary, artifacts? }  -> writes outbox
+app.post('/api/gatis/result', (req, res) => {
+  const id = String(req.body && req.body.id || '').slice(0,40);
+  const status = String(req.body && req.body.status || '').slice(0,20);
+  const summary = String(req.body && req.body.summary || '').slice(0,2000);
+  if (!id || !status) return res.status(400).json({ ok:false, error:'id un status obligāti.' });
+  try {
+    gatisAppend('outbox.ndjson', { id, at:new Date().toISOString(), from:'gatis', to:'herme', status, summary, artifacts:(req.body && req.body.artifacts)||[] });
+    res.json({ ok:true });
+  } catch (err) { res.status(500).json({ ok:false, error:String(err.message||err) }); }
+});
+
+// GET /api/gatis/context  -> the shared knowledge (skill) Gatis should keep
+app.get('/api/gatis/context', (req, res) => {
+  try { res.type('text').send(require('fs').readFileSync(gatisPath('context.md'),'utf8')); }
+  catch (err) { res.status(500).send(String(err.message||err)); }
+});
+
+// POST /api/gatis/skill  { text } -> append/update Gatis' skill note (his "prasmes")
+app.post('/api/gatis/skill', (req, res) => {
+  const text = String(req.body && req.body.text || '').trim().slice(0,4000);
+  if (!text) return res.status(400).json({ ok:false, error:'text obligāts.' });
+  const file = gatisPath('skills.md');
+  require('fs').appendFileSync(file, '- ' + text + '\n', 'utf8');
+  res.json({ ok:true });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
