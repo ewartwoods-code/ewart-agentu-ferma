@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon Reklāmu atskaite + ieteikumi (2026-08-18)</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:22px;line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-size:22px;color:#f1f5f9;margin-bottom:4px}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:18px}
+  .card{background:#111a2e;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:16px;color:#60a5fa;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th{text-align:left;color:#94a3b8;padding:6px 8px;border-bottom:1px solid #1e293b}
+  td{padding:6px 8px;border-bottom:1px solid #16213a}
+  .num{text-align:right}
+  .ok{color:#34d399;font-weight:700}.warn{color:#fbbf24;font-weight:700}.bad{color:#f87171;font-weight:700}
+  ul{padding-left:18px;font-size:13px}li{margin-bottom:6px}
+  .rec{background:#0f1729;border-left:3px solid #3b82f6;padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;font-size:13px}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+  .kpi .b{background:#0f1729;border:1px solid #1e293b;border-radius:10px;padding:10px;text-align:center}
+  .kpi .v{font-size:19px;font-weight:800;color:#60a5fa}
+  .kpi .l{font-size:11px;color:#94a3b8}
+  .comment-box{margin-top:8px;border-top:1px dashed #1e293b;padding-top:8px;display:flex;gap:8px}
+  .comment-box input{flex:1;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px}
+  .comment-box button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+  .comment-note{font-size:11.5px;color:#fbbf24;margin-top:5px}
+</style>
+</head><body><div class="wrap">
+<h1>📊 Amazon reklāmu atskaite un ieteikumi</h1>
+<div class="sub">2026-08-18 · avoti: t-0053 analīze (17.08), w-0002/3 pētījumi, Seller Labs backup 18.08 · visi skaiti no reāliem datiem</div>
+
+<div class="kpi">
+  <div class="b"><div class="v">609 + 17</div><div class="l">SP + SB kampaņas (ES)</div></div>
+  <div class="b"><div class="v">~65–77</div><div class="l">Klikšķi/pasūtījums (mēs)</div></div>
+  <div class="b"><div class="v">28–30x labāk</div><div class="l">Nozares benchmark (8–10)</div></div>
+  <div class="b"><div class="v">~137€</div><div class="l">Izšķerdējumi novērsti (mēn.)</div></div>
+</div>
+
+<div class="card"><h2>1) Kur esam (ACoS, 30d)</h2>
+<table>
+<tr><th>Tirgus</th><th class="num">ACoS 30d</th><th class="num">TACoS 30d</th><th>Statuss</th></tr>
+<tr><td>DE</td><td class="num bad">67.9% (enabled ~45%)</td><td class="num warn">20.6%</td><td>⚠ Problēma — virs 30%</td></tr>
+<tr><td>FR</td><td class="num warn">37.1%</td><td class="num warn">13.7%</td><td>Veselīgi, tuvu</td></tr>
+<tr><td>UK</td><td class="num ok">15.6%</td><td class="num ok">6.3%</td><td>✓ Labi</td></tr>
+<tr><td>NL</td><td class="num ok">10.3%</td><td class="num ok">5.4%</td><td>✓ Lieliski</td></tr>
+<tr><td>ES</td><td class="num ok">23.2%</td><td class="num ok">5.3%</td><td>✓ Labi</td></tr>
+<tr><td>SE+IT</td><td class="num bad">0 konversiju</td><td class="num">—</td><td>⚠ 100% izšķerdēts</td></tr>
+<tr><td>BE</td><td class="num bad">116.9%</td><td class="num bad">96.6%</td><td>⚠ 40 kamp. drupas</td></tr>
+</table>
+</div>
+
+<div class="card"><h2>🟢 Ieteikumi (rītdienai)</h2>
+<div class="rec"><b>1. Pabeigt H10 Diamond migrāciju</b> (t-0062, Sabīne) → MCP rītdien; tad SQP/STV/ASIN-negatīvi pieejami.</div>
+<div class="rec"><b>2. Fix-first 10 sliktākajiem ASIN</b> (w-0002, 254€/30d, 0 pasūt.) — listing/cena/atsauksmes pirms skalošanas.</div>
+<div class="rec"><b>3. Negatīvo slieksni</b> (w-0003) → iekļaut ads-auto-rules: ≥12–15 klikšķu / 0 pasūt. / ≥8–10€ → negatīvs.</div>
+<div class="rec"><b>4. SE/IT</b> — vai pauzēt uz laiku līdz struktūras pārbūvei (exact-first, mazi bidi, placements).</div>
+<div class="rec"><b>5. BE</b> — ~40 sīko kampaņu konsolidācija uz "TP Wave auto" modeli (ROAS 17×).</div>
+<div class="rec"><b>6. DE</b> — pēc augusta beigu pārbaudīt ACoS tendenci (17→72%), pirms lielām izmaiņām.</div>
+</div>
+
+<div class="card"><h2>💬 Komentāri / apstiprinājumi</h2>
+<div class="comment-box"><input placeholder="Komentārs vai apstiprināju ieteikumu…" data-c="amz-recs"><button data-cb="amz-recs">💬 Saglabāt</button></div>
+<div class="comment-note" data-n="amz-recs"></div>
+</div>
+
+<div class="sub" style="margin-top:12px">Hermione · avoti: t-0053, w-0002, w-0003, sellerlabs-backup 18.08 · HTML pārskats</div>
+</div>
+<script>
+const SB_URL='https://dkuiwjgnlprfysjqbbni.supabase.co';
+const SB_KEY='sb_publishable_OX5fwYbA5HQgMonsbA-p8w_AHSgeqV-';
+const h=()=>({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'});
+async function post(k,t){try{const r=await fetch(SB_URL+'/rest/v1/activity_log_comments',{method:'POST',headers:{...h(),'Prefer':'return=minimal'},body:JSON.stringify({entry_key:k,comment_text:t})});return r.ok}catch(e){return false}}
+document.querySelectorAll('[data-cb]').forEach(b=>b.addEventListener('click',async()=>{
+  const k=b.dataset.cb, inp=document.querySelector(`input[data-c="${k}"]`), n=document.querySelector(`[data-n="${k}"]`);
+  const t=(inp.value||'').trim(); if(!t){n.textContent='⚠️ Vispirms ieraksti komentāru.';return;}
+  let s={};try{s=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}')}catch(e){}
+  s[k]={text:t,ts:Date.now()}; localStorage.setItem('ewart_activity_comments',JSON.stringify(s));
+  const ok=await post(k,t);
+  n.textContent=ok?'✅ Saglabāts — Hermione redzēs.':'⚠️ Saglabāts lokāli.';
+  inp.value='';
+}));
+</script>
+</body></html>
