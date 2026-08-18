@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>t-0064 — Display & Brand vizuālo variantu apskate</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:20px;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:21px;color:#f1f5f9;margin-bottom:4px}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:16px}
+  .product{background:#111a2e;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:20px}
+  .product h2{font-size:16px;color:#60a5fa;margin-bottom:4px}
+  .product .meta{font-size:12px;color:#94a3b8;margin-bottom:10px}
+  .variants{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .variant{background:#0f1729;border:1px solid #334155;border-radius:10px;overflow:hidden}
+  .variant .label{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#16213a;font-size:13px;font-weight:700}
+  .variant iframe{width:100%;height:210px;border:none;background:#fff}
+  .variant .pick{display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap}
+  .variant .pick button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+  .variant .pick button.chosen{background:#10b981}
+  .note{font-size:11.5px;color:#fbbf24;padding:8px 12px 12px}
+  .comment-box{margin-top:10px;border-top:1px dashed #1e293b;padding-top:8px;display:flex;gap:8px}
+  .comment-box input{flex:1;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px}
+  .comment-box button{background:#10b981;color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+  .comment-note{font-size:11.5px;color:#fbbf24;margin-top:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎨 t-0064 — Display & Brand vizuālo variantu apskate (9 melnraksti)</h1>
+<div class="sub">Izvēlies A/B/C katram produktam + komentē — atbilde nonāks pie Hermiones · 0 EUR iztērēts · "DRAFT MOCKUP" (vietvietas māksla, nevis reāli foto)</div>
+
+<script>
+const SB_URL='https://dkuiwjgnlprfysjqbbni.supabase.co';
+const SB_KEY='sb_publishable_OX5fwYbA5HQgMonsbA-p8w_AHSgeqV-';
+const h=()=>({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'});
+async function post(k,t){try{const r=await fetch(SB_URL+'/rest/v1/activity_log_comments',{method:'POST',headers:{...h(),'Prefer':'return=minimal'},body:JSON.stringify({entry_key:k,comment_text:t})});return r.ok}catch(e){return false}}
+</script>
+
+<div class="product">
+<h2>🪵 Luno sienas plaukts (valrieksts)</h2>
+<div class="meta">ASIN B0D678XL89 · kategorija: wall_shelf · display + brand</div>
+<div class="variants" id="p1">
+</div>
+<div class="comment-box"><input placeholder="Komentārs par Luno…" data-c="t0064-luno"><button data-cb="t0064-luno">💬 Saglabāt</button></div>
+<div class="comment-note" data-n="t0064-luno"></div>
+</div>
+
+<div class="product">
+<h2>🔑 Metāla atslēgu turētājs</h2>
+<div class="meta">ASIN (katalogs) · kategorija: key_holder · display + brand</div>
+<div class="variants" id="p2">
+</div>
+<div class="comment-box"><input placeholder="Komentārs par atslēgu turētāju…" data-c="t0064-key"><button data-cb="t0064-key">💬 Saglabāt</button></div>
+<div class="comment-note" data-n="t0064-key"></div>
+</div>
+
+<div class="product">
+<h2>🧥 Koka drēbju pakaramais (valrieksts/osks)</h2>
+<div class="meta">ASIN (katalogs) · kategorija: coat_rack · display + brand</div>
+<div class="variants" id="p3">
+</div>
+<div class="comment-box"><input placeholder="Komentārs par pakaramo…" data-c="t0064-coat"><button data-cb="t0064-coat">💬 Saglabāt</button></div>
+<div class="comment-note" data-n="t0064-coat"></div>
+</div>
+
+<div class="sub" style="margin-top:12px">Hermione · 2026-08-18 · izvēles + komentāri → tiek apstrādāti</div>
+</div>
+<script>
+// Load the 9 variant HTML files into iframes
+const base = '/display-brand/';
+const products = [
+  { id:'p1', dir:'346-wood-waln', label:'Luno' },
+  { id:'p2', dir:'219-key', label:'Atslēgu turētājs' },
+  { id:'p3', dir:'35-coat-wood', label:'Pakaramais' }
+];
+products.forEach(pd=>{
+  const box = document.getElementById(pd.id);
+  ['A','B','C'].forEach(v=>{
+    const div = document.createElement('div');
+    div.className='variant';
+    div.innerHTML = `<div class="label">Variants ${v} <span class="tag">${pd.label}</span></div>
+      <iframe src="${base}${pd.dir}/variant-${v}.html" loading="lazy"></iframe>
+      <div class="pick"><button data-pick="${pd.dir}-${v}">✓ Izvēlēties ${v}</button></div>`;
+    box.appendChild(div);
+  });
+});
+// Pick buttons → save choice as comment
+document.querySelectorAll('[data-pick]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const key='t0064-pick-'+btn.dataset.pick;
+    document.querySelectorAll('[data-pick]').forEach(b=>b.classList.remove('chosen'));
+    btn.classList.add('chosen');
+    await post(key, 'IZVĒLĒTS: '+btn.dataset.pick);
+    btn.textContent='✓ Izvēlēts!';
+  });
+});
+// Comment boxes
+document.querySelectorAll('[data-cb]').forEach(b=>b.addEventListener('click', async()=>{
+  const k=b.dataset.cb, inp=document.querySelector(`input[data-c="${k}"]`), n=document.querySelector(`[data-n="${k}"]`);
+  const t=(inp.value||'').trim(); if(!t){n.textContent='⚠️ Vispirms ieraksti komentāru.';return;}
+  let s={};try{s=JSON.parse(localStorage.getItem('ewart_activity_comments')||'{}')}catch(e){}
+  s[k]={text:t,ts:Date.now()}; localStorage.setItem('ewart_activity_comments',JSON.stringify(s));
+  const ok=await post(k,t);
+  n.textContent=ok?'✅ Saglabāts — Hermione redzēs.':'⚠️ Saglabāts lokāli.';
+  inp.value='';
+}));
+</script>
+</body>
+</html>
