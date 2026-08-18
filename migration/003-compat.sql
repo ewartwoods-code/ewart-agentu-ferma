@@ -39,3 +39,4 @@ CREATE TABLE IF NOT EXISTS farm.agent_module_usage (
 );
 
 COMMIT;
+-- one-time compatibility migration
