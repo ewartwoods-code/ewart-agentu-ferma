@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/auth.test.js"
+    "test": "node --test test/auth.test.js",
+    "test:pg": "node --test test/integration.pg.test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

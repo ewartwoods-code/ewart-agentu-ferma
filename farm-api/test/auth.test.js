@@ -7,6 +7,7 @@ process.env.FARM_ADMIN_WRITE_TOKEN = 'local-test-admin-scope-placeholder';
 process.env.FARM_HERMES_WRITE_TOKEN = 'local-test-hermes-scope-placeholder';
 process.env.FARM_AGENT_WRITE_TOKEN = 'local-test-agent-scope-placeholder';
 process.env.ADMIN_TOKEN = 'local-test-rpc-admin-placeholder';
+process.env.FARM_APP_WRITE_TOKEN = 'local-test-app-scope-placeholder';
 
 const test = require('node:test');
 const assert = require('node:assert');
@@ -211,4 +212,95 @@ test('IDEMPOTENCY: a genuinely different row is still inserted', async () => {
   await call('POST', '/rest/v1/agent_events', { cred: AGENT, body: [{ agent_id: 'gatis', event_text: 'first' }] });
   await call('POST', '/rest/v1/agent_events', { cred: AGENT, body: [{ agent_id: 'gatis', event_text: 'second' }] });
   assert.strictEqual(pool.store.agent_events.length, 2);
+});
+
+// ------------------------------------------------- DISTINCT CREDENTIALS --
+const { assertDistinctScopeCredentials, WRITE_SCOPES } = require('../server');
+
+function withScopeEnv(values, fn) {
+  const saved = {};
+  for (const def of Object.values(WRITE_SCOPES)) { saved[def.env] = process.env[def.env]; }
+  try {
+    for (const [k, v] of Object.entries(values)) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    }
+    return fn();
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    }
+  }
+}
+
+test('DISTINCT: configuration with all-distinct credentials is accepted', () => {
+  withScopeEnv({
+    FARM_ADMIN_WRITE_TOKEN: 'distinct-a',
+    FARM_HERMES_WRITE_TOKEN: 'distinct-b',
+    FARM_AGENT_WRITE_TOKEN: 'distinct-c',
+    FARM_APP_WRITE_TOKEN: 'distinct-d'
+  }, () => {
+    assert.strictEqual(assertDistinctScopeCredentials(), true);
+  });
+});
+
+test('DISTINCT: two scopes sharing a credential is refused', () => {
+  withScopeEnv({
+    FARM_ADMIN_WRITE_TOKEN: 'shared-value',
+    FARM_HERMES_WRITE_TOKEN: 'shared-value',
+    FARM_AGENT_WRITE_TOKEN: 'distinct-c',
+    FARM_APP_WRITE_TOKEN: 'distinct-d'
+  }, () => {
+    assert.throws(() => assertDistinctScopeCredentials(), /share the same credential/);
+  });
+});
+
+test('DISTINCT: the refusal names the two variables and never the value', () => {
+  withScopeEnv({
+    FARM_ADMIN_WRITE_TOKEN: 'super-secret-shared',
+    FARM_AGENT_WRITE_TOKEN: 'super-secret-shared',
+    FARM_HERMES_WRITE_TOKEN: 'distinct-b',
+    FARM_APP_WRITE_TOKEN: 'distinct-d'
+  }, () => {
+    let message = '';
+    try { assertDistinctScopeCredentials(); } catch (e) { message = e.message; }
+    assert.match(message, /FARM_ADMIN_WRITE_TOKEN/);
+    assert.match(message, /FARM_AGENT_WRITE_TOKEN/);
+    assert.ok(!message.includes('super-secret-shared'), 'the shared value leaked into the error');
+  });
+});
+
+test('DISTINCT: a partially configured deployment is still validated', () => {
+  withScopeEnv({
+    FARM_ADMIN_WRITE_TOKEN: 'only-one',
+    FARM_HERMES_WRITE_TOKEN: undefined,
+    FARM_AGENT_WRITE_TOKEN: undefined,
+    FARM_APP_WRITE_TOKEN: 'only-one'
+  }, () => {
+    assert.throws(() => assertDistinctScopeCredentials(), /share the same credential/);
+  });
+});
+
+// --------------------------------------------------------------- APP SCOPE --
+test('POSITIVE: the app scope may persist chat turns and sync usage', async () => {
+  pool.reset();
+  const c = await call('POST', '/rest/v1/chat_messages', {
+    cred: process.env.FARM_APP_WRITE_TOKEN,
+    body: [{ session_id: 's1', role: 'user', content: 'hello' }]
+  });
+  assert.strictEqual(c.status, 201);
+  const u = await call('PATCH', '/rest/v1/agent_usage?agent_id=eq.gatis', {
+    cred: process.env.FARM_APP_WRITE_TOKEN,
+    body: { input_tokens: 5 }
+  });
+  assert.strictEqual(u.status, 200);
+});
+
+test('NEGATIVE: the app scope cannot write tasks or agents', async () => {
+  pool.reset();
+  const t = await call('POST', '/rest/v1/tasks', {
+    cred: process.env.FARM_APP_WRITE_TOKEN,
+    body: [{ agent_id: 'gatis', title: 'x' }]
+  });
+  assert.strictEqual(t.status, 403);
+  assert.strictEqual(pool.calls.length, 0);
 });

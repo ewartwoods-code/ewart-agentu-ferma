@@ -51,6 +51,13 @@ const WRITE_SCOPES = {
     env: 'FARM_AGENT_WRITE_TOKEN',
     insert: ['agent_events', 'agent_usage', 'agent_module_usage'],
     update: ['agent_status', 'agent_usage', 'agent_module_usage']
+  },
+  // The ewart-agentu-ferma web service writes exactly two things through this
+  // API: it persists Herme chat turns and syncs Anthropic usage counters.
+  app: {
+    env: 'FARM_APP_WRITE_TOKEN',
+    insert: ['chat_messages'],
+    update: ['agent_usage']
   }
 };
 
@@ -81,6 +88,25 @@ function resolveScope(credential) {
     if (timingSafeEq(credential, scope.value)) return scope;
   }
   return null;
+}
+
+// Two scopes sharing one credential would silently collapse the privilege
+// boundary: whichever scope matched first would decide the allowlist. Refuse to
+// start instead. Values are compared by digest and are never logged.
+function assertDistinctScopeCredentials(scopes = configuredScopes()) {
+  const seen = new Map();
+  for (const scope of scopes) {
+    const digest = crypto.createHash('sha256').update(String(scope.value)).digest('hex');
+    if (seen.has(digest)) {
+      throw new Error(
+        `farm-api refusing to start: scopes "${seen.get(digest)}" and "${scope.name}" ` +
+        `share the same credential. Give ${WRITE_SCOPES[seen.get(digest)].env} and ` +
+        `${WRITE_SCOPES[scope.name].env} distinct values.`
+      );
+    }
+    seen.set(digest, scope.name);
+  }
+  return true;
 }
 
 function scopeAllows(scope, op, table) {
@@ -391,11 +417,14 @@ app.get('/healthz', async (_req, res) => {
 });
 
 if (require.main === module) {
+  assertDistinctScopeCredentials();
   app.listen(PORT, () => console.log(`EWART farm-api listening on ${PORT}`));
 }
 
 module.exports = {
   app,
+  assertDistinctScopeCredentials,
+  WRITE_SCOPES,
   // Test seam only: never used by the running service.
   __setPoolForTests: p => { pool = p; }
 };
