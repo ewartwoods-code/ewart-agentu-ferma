@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!--
+  EWART WOODS — DIENAS RĪTA PĀRSKATS 2026-08-19 (par vakardienu 2026-08-18)
+  =========================================================================
+  ══ SMB OX (komentāru noliktava) ══════════════════════════════════════
+  localStorage atslēga:  'ewart_morning_report_comments'
+  Formāts: { "<recid>": { "status": "yes|no", "comment": "…", "ts": <ms> } }
+  (spogulots arī uz 'ewart_activity_comments' — saderībai ar citām lapām)
+  Katrs ieteikums = elements ar klasi .rec-id un id="rec-<ID>".
+  "Front" statuss = .front[data-front="<ID>"] — lēmuma/komentāra rādītājs.
+  HERMIONE lasa: (1) šo failu, (2) localStorage atslēgu, (3) Supabase
+  activity_log_comments (entry_key 'mr-2026-08-19-<ID>' / '-cmt').
+  ═════════════════════════════════════════════════════════════════════
+  NOTEIKUMS: nekādu izdomātu skaitļu — katram skaitlim šeit ir avots
+  (exchange/results/, data/, state/log.md). Kas nav izmērāms = "nav datu".
+-->
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dienas rīta pārskats — EWART WOODS · 2026-08-19</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;padding:22px;line-height:1.55}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:21px;color:#f1f5f9;margin-bottom:4px}
+  .sub{color:#94a3b8;font-size:12.5px;margin-bottom:16px}
+  .card{background:#111a2e;border:1px solid #1e293b;border-radius:12px;padding:15px 16px;margin-bottom:13px}
+  .card h2{font-size:15px;color:#60a5fa;margin-bottom:8px}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+  .kpi .b{background:#0f1729;border:1px solid #1e293b;border-radius:10px;padding:10px;text-align:center}
+  .kpi .v{font-size:18px;font-weight:800;color:#60a5fa}
+  .kpi .l{font-size:11px;color:#94a3b8}
+  .kpi .na{color:#f59e0b}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+  th{text-align:left;color:#94a3b8;padding:5px 7px;border-bottom:1px solid #1e293b}
+  td{padding:5px 7px;border-bottom:1px solid #16213a}
+  .num{text-align:right}
+  .ok{color:#34d399;font-weight:700}.warn{color:#fbbf24;font-weight:700}.bad{color:#f87171;font-weight:700}
+  ul{padding-left:18px;font-size:12.8px}li{margin-bottom:5px}
+  a{color:#60a5fa}
+  .todo{background:#0f1729;border-left:3px solid #f59e0b;padding:7px 11px;border-radius:0 8px 8px 0;margin:6px 0;font-size:12.5px}
+  /* ==== ieteikumu bloki (rec-id) ==== */
+  .rec{background:#0f1729;border:1px solid #1e293b;border-left:4px solid #3b82f6;border-radius:10px;padding:11px 14px;margin:9px 0}
+  .rec .rid{display:inline-block;background:#3b82f6;color:#fff;font-size:10.5px;font-weight:800;border-radius:8px;padding:2px 8px;margin-right:7px;letter-spacing:.4px}
+  .rec .rtxt{font-size:12.8px}
+  .front{display:inline-block;font-size:10.5px;font-weight:700;border-radius:10px;padding:2px 9px;margin:6px 2px 0 0}
+  .front.wait{background:#1e293b;color:#94a3b8}
+  .front.yes{background:#065f46;color:#6ee7b7}
+  .front.no{background:#7f1d1d;color:#fca5a5}
+  .approve{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0 4px}
+  .approve button{background:#3b82f6;border:none;color:#fff;padding:6px 13px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer}
+  .approve button.no{background:#475569}
+  .approve button.reset{background:#1e293b;color:#94a3b8;padding:6px 9px}
+  .approve button.chosen{background:#10b981}
+  .approve button.chosen.no{background:#ef4444}
+  .comment-box{display:flex;gap:7px;margin-top:6px;border-top:1px dashed #1e293b;padding-top:7px}
+  .comment-box input{flex:1;background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:7px 10px;font-size:12.5px;min-width:150px}
+  .comment-box button{background:#10b981;border:none;color:#fff;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer}
+  .comment-note{font-size:11px;color:#fbbf24;margin-top:4px}
+  /* ==== SMB OX ==== */
+  #smbox{background:#0d1526;border:1px solid #10b981;border-radius:10px;padding:11px 13px;margin-top:10px}
+  #smbox h3{font-size:12.5px;color:#34d399;margin-bottom:6px}
+  #smbox table{font-size:11.5px;margin:4px 0}
+  #smbox td{padding:3px 7px;border-bottom:1px solid #14213a}
+  #smbox .key{font-family:Consolas,monospace;color:#94a3b8;font-size:11px;margin-bottom:6px}
+  .badge{font-size:10px;background:#1e293b;border-radius:10px;padding:2px 8px;color:#94a3b8}
+  .mem{display:inline-block;font-size:11px;background:#1e293b;border:1px solid #243249;border-radius:8px;padding:3px 9px;margin:2px 3px 2px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>🌅 Dienas rīta pārskats — EWART WOODS · 19.08.2026</h1>
+<div class="sub">Par vakardienu <b>18.08.2026</b> · katrs ieteikums = savs bloks ar ID, pogām un komentāru lodziņu · komentāri saglabājas lokāli (localStorage <code>ewart_morning_report_comments</code>) un aizlido uz Hermione (Supabase) · <b>nekādu izdomātu skaitļu</b> — avoti: exchange/results/, data/, state/log.md</div>
+
+<!-- ============ 1. PĀRDOŠANA ============ -->
+<div class="card"><h2>💰 Pārdošana</h2>
+<div class="kpi">
+  <div class="b"><div class="v">nav datu</div><div class="l na">Pārd. 1d (18.08)</div></div>
+  <div class="b"><div class="v">nav datu</div><div class="l na">Pārd. 7d</div></div>
+  <div class="b"><div class="v">~10 463 €</div><div class="l">Amazon 30d (mērīts 17.08)</div></div>
+  <div class="b"><div class="v">~10 726 €</div><div class="l">Amazon jūlijs (mērīts 17.08)</div></div>
+</div>
+<p style="font-size:12.5px">1d/7d skaitļu šeit <b>nav — un tas nav 0</b>: metrics datubāze dzīvo uz Railway servera (<code>SCRAPER_DATABASE_URL</code>, t-0047), šim rīta mezglam nav pieslēguma, tāpēc vakardienas pārdošanu nevaru izmērīt. Pēdējie izmērītie Amazon ieņēmumi: <b>~10 463 € / 30d</b> un <b>~10 726 € / jūlijs</b> (avots: <i>knowledge/owner-strategy/sellerlabs-vs-h10-diamond.md</i>, DB, 17.08). Etsy/Shopify 30d skaitļi šajā repozitorijā netiek glabāti (0% izmērīts, t-0038).</p>
+</div>
+
+<!-- ============ 2. VAKARDJENA REZULTĀTI ============ -->
+<div class="card"><h2>📋 Kas izdarīts vakar (18.08) — ar pierādījumiem</h2>
+<ul>
+<li>✅ <b>w-0008</b> — Amazon reklāmu attēlu/banneru izpēte: 14 fakti ar avotiem + ticamību, 15 noteikumu melnraksts (<i>exchange/results/w-0008.md</i>)</li>
+<li>✅ <b>w-0005</b> — rank-tracking pirmais datu punkts: BSR tendence + 25 konvertējošie atslēgvārdi (<i>data/rank/rank-2026-08-18.csv</i>)</li>
+<li>✅ <b>t-0062 (read-only daļa)</b> — pilns Seller Labs backup: 9 EU veikali, SP/SB/SD kampaņas + atslēgvārdi (<i>data/secret/sellerlabs-backup-2026-08-18.json</i>)</li>
+<li>✅ <b>t-0066</b> — kampaņu vizuāļu pipeline spec + prompt ģeneratora skils (renderēšana = kredīti → gaida tavu OK)</li>
+<li>✅ <b>t-0067</b> — H10 produktu pētniecības metode + 2 karts: <i>wall toilet-paper storage</i> = <span class="ok">UZLABOT ESOŠO</span> (DE exact 1 827,60 €/90d @ ACoS 4,6% vs 45,7% vidējais), <i>live-edge siena skulptūra</i> = <span class="bad">NAV DATU</span></li>
+<li>✅ <b>w-0009 / w-0010</b> — MPI žurnāla backfill + drošības labojums (.env tagad .gitignore)</li>
+<li>⚠️ Gaida tavu lēmumu: w-0001 bidi · t-0062 H10 · t-0064 A/B/C · 0053 P1/P2 (sīkāk ieteikumos)</li>
+</ul>
+</div>
+
+<!-- ============ 3. REKLĀMAS ============ -->
+<div class="card"><h2>📊 Reklāmas — Amazon, 30d (mērīts 17.08, Seller Labs)</h2>
+<table>
+<tr><th>Tirgus</th><th class="num">Tēriņš</th><th class="num">Ad pārdošana</th><th class="num">ACoS</th><th class="num">Kopējā pārdošana</th><th class="num">TACoS</th><th>Statuss</th></tr>
+<tr><td>DE</td><td class="num">611,05 €</td><td class="num">900,03 €</td><td class="num bad">67,9%</td><td class="num">2 970,92 €</td><td class="num warn">20,6%</td><td>⚠ virs mērķa (enabled ~45%)</td></tr>
+<tr><td>FR</td><td class="num">656,38 €</td><td class="num">1 770,63 €</td><td class="num warn">37,1%</td><td class="num">4 795,31 €</td><td class="num warn">13,7%</td><td>tuvu mērķim</td></tr>
+<tr><td>UK (GBP)</td><td class="num">85,38 £</td><td class="num">546,09 £</td><td class="num ok">15,6%</td><td class="num">1 355,71 £</td><td class="num ok">6,3%</td><td>✓ labi</td></tr>
+<tr><td>NL</td><td class="num">27,04 €</td><td class="num">262,93 €</td><td class="num ok">10,3%</td><td class="num">497,32 €</td><td class="num ok">5,4%</td><td>✓ lieliski</td></tr>
+<tr><td>ES</td><td class="num">25,87 €</td><td class="num">111,36 €</td><td class="num ok">23,2%</td><td class="num">487,85 €</td><td class="num ok">5,3%</td><td>✓ labi</td></tr>
+<tr><td>SE (SEK)</td><td class="num">45,54 kr</td><td class="num">0</td><td class="num bad">—</td><td class="num">1 179,00 kr</td><td class="num">3,9%</td><td>⚠ 0 konversiju</td></tr>
+<tr><td>BE</td><td class="num">60,85 €</td><td class="num">52,07 €</td><td class="num bad">116,9%</td><td class="num">63,00 €</td><td class="num bad">96,6%</td><td>⚠ ~40 kampaņu drupas</td></tr>
+<tr><td>IT</td><td class="num">20,50 €</td><td class="num">0</td><td class="num bad">—</td><td class="num">143,68 €</td><td class="num">14,3%</td><td>⚠ 0 konversiju</td></tr>
+</table>
+<p style="font-size:11.5px;color:#94a3b8">Valūtas nesummējas (noteikums: nekad neskaitu kopā EUR/GBP/SEK). Avoti: <i>data/secret/ppc-intel-2026-08-17.json</i> (t-0053) · 17.08 apstiprināti un izpildīti: 5 kampaņas pauzētas + 4 negatīvie atslēgvārdi = ~137 €/mēn. nulles-pārdošanas tēriņa noņemts (t-0053) · klikšķi/pasūtījums 65–77 jeb CVR 1,3–1,5% pret nozares 8–10 (w-0002).</p>
+</div>
+
+<!-- ============ 4. IETEIKUMI (rec-id bloki) ============ -->
+<div class="card"><h2>✅ Ieteikumi — klikšķini <i>Apstiprinu / Noraidu</i> un komentē (katrs bloks = savs ID)</h2>
+
+<!-- R1 -->
+<div class="rec rec-id" id="rec-r1" data-recid="r1"><span class="rid">R1</span>
+<span class="rtxt"><b>Apstiprini w-0001 bid izmaiņas</b> — 0 € izmaksā, tikai taupa: DE <i>SP_TP Wave_FBA_broad</i> <span class="bad">−50%</span> (ACoS 101%), FR <i>SP Fba_auto</i> <span class="bad">−25%</span> (ACoS 44,5%), FR <i>ALL_Manual_phrase</i> <span class="ok">+15%</span> (ACoS 29,7%), BE <i>TP Wave auto</i> <span class="ok">+20%</span> (ROAS 17×). Avots: w-0001.</span>
+<span class="front wait" data-front="r1">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r1" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r1" data-act="no">✗ Noraidu</button><button class="reset" data-reset="r1" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r1"><button data-cb="r1">💬 Saglabāt</button></div><div class="comment-note" data-n="r1"></div>
+</div>
+
+<!-- R2 -->
+<div class="rec rec-id" id="rec-r2" data-recid="r2"><span class="rid">R2</span>
+<span class="rtxt"><b>Negatīvo atslēgvārdu noteikums → ads-auto-rules</b> (no w-0003): ≥12–15 klikšķu / 0 pasūtījumu / ≥8–10 € → negatīvais. Pēc noteikuma šodien: 0 terminu uzreiz negatīvot, 9 samazināt bid. Pamats: 5 797 nulles-pasūtījumu rindas = 2 404,83 € (90d, 8 veikali).</span>
+<span class="front wait" data-front="r2">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r2" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r2" data-act="no">✗ Noraidu</button><button class="reset" data-reset="r2" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r2"><button data-cb="r2">💬 Saglabāt</button></div><div class="comment-note" data-n="r2"></div>
+</div>
+
+<!-- R3 -->
+<div class="rec rec-id" id="rec-r3" data-recid="r3"><span class="rid">R3</span>
+<span class="rtxt"><b>Fix-first: 10 sliktākie ASIN</b> (w-0002) — 254,59 €/30d iztērēti, 0 pasūtījumu, 9/10 DE. Vispirms listing/cena/atsauksmes, tikai pēc tam reklāmu lēmumi. Kontrindicēts: turpināt liet tēriņu sliktajos ASIN.</span>
+<span class="front wait" data-front="r3">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r3" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r3" data-act="no">✗ Noraidu</button><button class="reset" data-reset="r3" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r3"><button data-cb="r3">💬 Saglabāt</button></div><div class="comment-note" data-n="r3"></div>
+</div>
+
+<!-- R4 -->
+<div class="rec rec-id" id="rec-r4" data-recid="r4"><span class="rid">R4</span>
+<span class="rtxt"><b>SE + IT: pauzēt reklāmas līdz struktūras pārbūvei</b> — 0 konversiju 30d (66,04 valūta-neskaidri tēriņš, t-0053), exact-first mazi bidi + placements. Alternatīva: atstāt ieslēgtu un zaudēt katru dienu.</span>
+<span class="front wait" data-front="r4">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r4" data-act="yes">✓ Apstiprinu (pauzēt)</button><button class="no" data-p="r4" data-act="no">✗ Nē, atstāt</button><button class="reset" data-reset="r4" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r4"><button data-cb="r4">💬 Saglabāt</button></div><div class="comment-note" data-n="r4"></div>
+</div>
+
+<!-- R5 -->
+<div class="rec rec-id" id="rec-r5" data-recid="r5"><span class="rid">R5</span>
+<span class="rtxt"><b>BE: konsolidēt ~40 kampaņu drupas</b> uz vienu <i>TP Wave auto</i> modeli (vienīgā BE kampaņa, kas pārdod, ROAS 17×; ACoS 116,9% kopā). Avots: t-0053.</span>
+<span class="front wait" data-front="r5">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r5" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r5" data-act="no">✗ Noraidu</button><button class="reset" data-reset="r5" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r5"><button data-cb="r5">💬 Saglabāt</button></div><div class="comment-note" data-n="r5"></div>
+</div>
+
+<!-- R6 -->
+<div class="rec rec-id" id="rec-r6" data-recid="r6"><span class="rid">R6</span>
+<span class="rtxt"><b>H10 Diamond: nesteigties</b> (t-0062). Pašas Hermione 17.08 memo (<i>sellerlabs-vs-h10-diamond.md</i>) rēķina: H10 Diamond +250 $/mēn. un mēs zaudētu Seller Labs izpildes kanālu. Lētākais nākamais solis: STIS/STIR bezmaksas atskaite + SQP (Brand Registry apstiprināts — w-0004).</span>
+<span class="front wait" data-front="r6">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r6" data-act="yes">✓ Apstiprinu (pagaidīt)</button><button class="no" data-p="r6" data-act="no">✗ Migrēt tagad</button><button class="reset" data-reset="r6" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r6"><button data-cb="r6">💬 Saglabāt</button></div><div class="comment-note" data-n="r6"></div>
+</div>
+
+<!-- R7 -->
+<div class="rec rec-id" id="rec-r7" data-recid="r7"><span class="rid">R7</span>
+<span class="rtxt"><b>DE: pēc augusta beigām pārbaudīt ACoS tendenci</b> — 30d 67,9%, bet 62% tēriņa bija jau pauzētās kampaņās; enabled ~45%. Pēc t-0053 pauzēm (17.08) un w-0001 bīdiem redzēsim īsto bildi. Pagaidām lielas izmaiņas DE netaisām.</span>
+<span class="front wait" data-front="r7">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r7" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r7" data-act="no">✗ Noraidu</button><button class="reset" data-reset="r7" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs…" data-c="r7"><button data-cb="r7">💬 Saglabāt</button></div><div class="comment-note" data-n="r7"></div>
+</div>
+
+<!-- R8 -->
+<div class="rec rec-id" id="rec-r8" data-recid="r8"><span class="rid">R8</span>
+<span class="rtxt"><b>Apstiprini 15 vizuālo noteikumu melnrakstu</b> (w-0008) — tad tas kļūst par oficiālu noteikumu un tiek izmantots t-0064/t-0066 vizuāļos (pašlaik tie ir mockups bez foto).</span>
+<span class="front wait" data-front="r8">⏳ gaida lēmumu</span>
+<div class="approve"><button data-p="r8" data-act="yes">✓ Apstiprinu</button><button class="no" data-p="r8" data-act="no">✗ Vēl labošu</button><button class="reset" data-reset="r8" title="noņemt lēmumu">↺</button></div>
+<div class="comment-box"><input placeholder="Komentārs / labojums…" data-c="r8"><button data-cb="r8">💬 Saglabāt</button></div><div class="comment-note" data-n="r8"></div>
+</div>
+
+</div>
+
+<!-- ============ 5. ATMIŅA ============ -->
+<div class="card"><h2>🧠 Atmiņa — zināšanu indekss (kas ir izmērīts un saglabāts) <span class="badge">MEM-1…14</span></h2>
+<p style="font-size:12.5px;margin-bottom:7px">Farmas atmiņa = <b>knowledge/</b> + žurnāls + SMADZENES indekss. Esošās atmiņas grupas (avots: <i>app/brain/brain-data.js</i>, 18.08 11:44):</p>
+<div>
+<span class="mem">🧪 research — MEM-1…11 (PPC tendences, ad-vizuāļi, e-pasts, Etsy, H10 metode, produktu rinda…)</span>
+<span class="mem">👥 audience — MEM-12 (personas analīze)</span>
+<span class="mem">🪚 workshop — MEM-13 (ražotnes instrumenti — vēl plācenis!)</span>
+<span class="mem">📌 now — MEM-14 (APSTIPRINĀTO plaukts)</span>
+</div>
+<p style="font-size:12.5px;margin-top:8px">📇 <b>Žurnāls:</b> <a href="../activity-log.html">knowledge/activity-log.html</a> — 110 ieraksti ar kategorijām: 🎯 jauna prasme · 🪓 darba uzdevums · 📖 SOP/noteikums · 🚀 stratēģija · 🧪 tests/pētījums · 🔌 pieslēgums · ⚠️ izmaiņa · 🛑 blocker · 💡 pētījums · ✏️ labots.<br>
+🧠 <b>SMADZENES:</b> <a href="../app/brain/index.html">app/brain/index.html</a> (uzdevumi, stratēģijas, atmiņas, veikumi). Vājās atmiņas, ko jāpapildina: workshop-tools (t-0025), Etsy dati (0% izmērīts), 1d/7d pārdošana (t-0047 blķeris).</p>
+</div>
+
+<!-- ============ SMB OX: komentāru noliktava ============ -->
+<div class="card"><h2>📦 SMB OX — komentāru + lēmumu noliktava</h2>
+<div class="key">localStorage['ewart_morning_report_comments'] → { "r1": {status, comment, ts}, … } (spogulis: 'ewart_activity_comments')</div>
+<div id="smbox"><h3>⏳ vēl nekas nesaglabāts</h3></div>
+</div>
+
+<div class="sub" style="margin-top:14px">Hermione · rīta pārskats 2026-08-19 (vakardiena 18.08) · dati: t-0053/t-0062/t-0066/t-0067, w-0001…w-0008, state/log.md · visi skaitļi ar avotiem, valūtas nav summētas · komentāri → localStorage + Supabase activity_log_comments</div>
+</div>
+
+<script>
+/* ═══ SMB OX — komentāru noliktava ═══
+ * Saglabā: localStorage['ewart_morning_report_comments']
+ * Formāts: { "<recid>": { status:"yes|no"|null, comment:"…", ts:<ms> } }
+ * Spoguļo uz 'ewart_activity_comments' (saderība ar citām lapām).
+ * Hermiona var nolasīt gan localStorage, gan Supabase activity_log_comments.
+ */
+const LS_KEY='ewart_morning_report_comments';
+const LS_LEGACY='ewart_activity_comments';
+const REPORT_TAG='2026-08-19';
+const RECS=['r1','r2','r3','r4','r5','r6','r7','r8'];
+const SB_URL='https://dkuiwjgnlprfysjqbbni.supabase.co';
+const SB_KEY='sb_publishable_OX5fwYbA5HQgMonsbA-p8w_AHSgeqV-';
+const h=()=>({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'});
+async function post(k,t){try{const r=await fetch(SB_URL+'/rest/v1/activity_log_comments',{method:'POST',headers:{...h(),'Prefer':'return=minimal'},body:JSON.stringify({entry_key:k,comment_text:t})});return r.ok}catch(e){return false}}
+function loadStore(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}')}catch(e){return {}}}
+function saveStore(s){
+  localStorage.setItem(LS_KEY,JSON.stringify(s));
+  try{const l=JSON.parse(localStorage.getItem(LS_LEGACY)||'{}');Object.assign(l,s);localStorage.setItem(LS_LEGACY,JSON.stringify(l));}catch(e){}
+  renderSmbox(); refreshFronts();
+}
+window.__SMBOX__={key:LS_KEY,get:loadStore,reset:()=>{localStorage.removeItem(LS_KEY);renderSmbox();refreshFronts();}};
+
+function refreshFronts(){
+  const s=loadStore();
+  RECS.forEach(id=>{
+    const f=document.querySelector(`[data-front="${id}"]`); if(!f) return;
+    const e=s[id]||{};
+    if(e.status==='yes'){f.className='front yes';f.textContent='✓ APSTIPRINĀTS';}
+    else if(e.status==='no'){f.className='front no';f.textContent='✗ NORAIDĪTS';}
+    else{f.className='front wait';f.textContent='⏳ gaida lēmumu';}
+    document.querySelectorAll(`[data-p="${id}"]`).forEach(b=>b.classList.remove('chosen','no'));
+    if(e.status){document.querySelectorAll(`[data-p="${id}"][data-act="${e.status}"]`).forEach(b=>b.classList.add('chosen'));}
+    const n=document.querySelector(`[data-n="${id}"]`);
+    if(n && e.ts) n.textContent=(e.comment?'💬 '+e.comment.substring(0,60)+'… · ':'')+'saglabāts '+new Date(e.ts).toLocaleString('lv-LV');
+  });
+}
+function renderSmbox(){
+  const s=loadStore(), box=document.getElementById('smbox');
+  const rows=RECS.filter(id=>s[id]&&(s[id].status||s[id].comment));
+  if(!rows.length){box.innerHTML='<h3>⏳ vēl nekas nesaglabāts — klikšķini uz pogām / komentāriem augšā</h3>';return;}
+  let html='<h3>📦 Saglabāts ('+rows.length+'/'+RECS.length+') — Hermione to izlasa no localStorage['+LS_KEY+'] un Supabase</h3><table><tr><th>ID</th><th>Lēmums</th><th>Komentārs</th><th>Laiks</th></tr>';
+  rows.forEach(id=>{const e=s[id];
+    html+='<tr><td><b>R'+id.slice(1)+'</b></td><td>'+(e.status==='yes'?'<span class="ok">✓ APSTIPRINĀTS</span>':e.status==='no'?'<span class="bad">✗ NORAIDĪTS</span>':'<span class="warn">—</span>')+'</td><td>'+(e.comment?e.comment:'—')+'</td><td>'+new Date(e.ts).toLocaleString('lv-LV')+'</td></tr>';
+  });
+  html+='</table><button onclick="navigator.clipboard.writeText(JSON.stringify(window.__SMBOX__.get(),null,2))" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer">📋 Kopēt JSON</button> <button onclick="if(confirm(\'Notīrīt visus komentārus lokāli?\'))window.__SMBOX__.reset()" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer">🗑 Notīrīt lokālo</button>';
+  box.innerHTML=html;
+}
+
+/* lēmumu pogas */
+document.querySelectorAll('[data-p]').forEach(btn=>btn.addEventListener('click',async()=>{
+  const id=btn.dataset.p, act=btn.dataset.act;
+  const s=loadStore(); s[id]=s[id]||{}; s[id].status=act; s[id].ts=Date.now(); saveStore(s);
+  const ok=await post('mr-'+REPORT_TAG+'-'+id, (act==='yes'?'APSTIPRINĀTS ':'NORAIDĪTS ')+'R'+id.slice(1));
+  const n=document.querySelector(`[data-n="${id}"]`);
+  if(n) n.textContent=ok?'✅ Saglabāts sistēmā — Hermione redzēs.':'⚠️ Saglabāts lokāli (nav sistēmas).';
+}));
+document.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>{
+  const id=b.dataset.reset, s=loadStore(); if(s[id]){s[id].status=null;s[id].ts=Date.now();saveStore(s);}
+  const n=document.querySelector(`[data-n="${id}"]`); if(n) n.textContent='Lēmums noņemts.';
+}));
+/* komentāru lodziņi */
+document.querySelectorAll('[data-cb]').forEach(b=>b.addEventListener('click',async()=>{
+  const id=b.dataset.cb, inp=document.querySelector(`input[data-c="${id}"]`), n=document.querySelector(`[data-n="${id}"]`);
+  const t=(inp.value||'').trim(); if(!t){n.textContent='⚠️ Vispirms ieraksti komentāru.';return;}
+  const s=loadStore(); s[id]=s[id]||{}; s[id].comment=t; s[id].ts=Date.now(); saveStore(s);
+  const ok=await post('mr-'+REPORT_TAG+'-'+id+'-cmt', t);
+  n.textContent=ok?'✅ Komentārs saglabāts — Hermione redzēs.':'⚠️ Saglabāts lokāli.';
+  inp.value='';
+}));
+
+refreshFronts(); renderSmbox();
+</script>
+</body></html>
