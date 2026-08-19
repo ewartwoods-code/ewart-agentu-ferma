@@ -1,14 +1,15 @@
 BEGIN;
 
 -- Canonical identities used by the shared Railway agent bridge.
-INSERT INTO farm.agents (id, name, role, tier, created_at) VALUES
-  ('max-claude', 'Max / Claude', 'Galvenais domāšanas un koordinācijas aģents', 'major', now()),
-  ('koderis', 'Koderis', 'Programmatūras izstrāde un infrastruktūra', 'major', now()),
-  ('ance', 'Ance', 'Etsy un Amazon US/CA operācijas', 'major', now()),
-  ('secret', 'Secret', 'Amazon EU operācijas', 'major', now()),
-  ('dzemma', 'Džemma / Gemini', 'Apjoma izpēte, dokumenti un vizuālā analīze', 'major', now()),
-  ('gatis', 'Gatis', 'Saimnieka GPT asistents un analītiķis', 'major', now()),
-  ('sabine', 'Sabīne', 'Amazon reklāmu un tirgus analīze', 'major', now())
+INSERT INTO farm.agents
+  (id, name, role, tier, cutout_url, video_url, pos_x, pos_y, created_at) VALUES
+  ('max-claude', 'Max / Claude', 'Galvenais domāšanas un koordinācijas aģents', 'major', '', '', 12, 20, now()),
+  ('koderis', 'Koderis', 'Programmatūras izstrāde un infrastruktūra', 'major', '', '', 25, 20, now()),
+  ('ance', 'Ance', 'Etsy un Amazon US/CA operācijas', 'major', '', '', 38, 20, now()),
+  ('secret', 'Secret', 'Amazon EU operācijas', 'major', '', '', 51, 20, now()),
+  ('dzemma', 'Džemma / Gemini', 'Apjoma izpēte, dokumenti un vizuālā analīze', 'major', '', '', 64, 20, now()),
+  ('gatis', 'Gatis', 'Saimnieka GPT asistents un analītiķis', 'major', '', '', 77, 20, now()),
+  ('sabine', 'Sabīne', 'Amazon reklāmu un tirgus analīze', 'major', '', '', 90, 20, now())
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   role = EXCLUDED.role,
