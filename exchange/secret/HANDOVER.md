@@ -22,7 +22,7 @@ API and must be done in the browser.
    - Claude Code CLI installed + authenticated (`claude` in PATH). This is what
      runs the headless tasks.
    - The farm repo cloned: `git clone
-     https://github.com/ewartwoods-code/ewart-woods-farm.git ~/ewart-woods-farm`
+     https://github.com/ewartwoods-code/ewart-agentu-ferma.git ~/ewart-agentu-ferma`
    - A GitHub token/SSH key with **push** rights to that repo (the worker must
      commit results and push).
 2. **Amazon access:** a **web login profile** (Chrome) with the EU Amazon seller
@@ -30,24 +30,17 @@ API and must be done in the browser.
    browser when API isn't possible. Best: a dedicated Chrome profile.
    - Also any Amazon Seller Central MCP/connector the owner already has on that
      machine (the worker can use it when available).
-3. **Env file** `~/ewart-woods-farm/.env` (NOT committed): put at least
-   - `OPENROUTER_API_KEY=...` (for non-claude routing, same as other agents)
-   - There is **no extra key needed for Claude** (subscription auth).
-4. **Run the setup** (see below) → it installs the launchd/plist (macOS) or
-   systemd/crond (Linux) so the worker ticks every 15 minutes automatically.
+3. Configure the bridge values in the computer's local secret store (never in
+   the repository): `EWART_BRIDGE_URL`, `EWART_AGENT_ID=secret`, and Secret's
+   own `EWART_AGENT_TOKEN`. Follow `docs/major-agent-connect-prompts.md`.
+4. Configure the polling schedule only after the authenticated read/write
+   smoke test succeeds. This repository does not currently ship an installer;
+   use the agent host's supported scheduler and keep credentials outside git.
 
 ## Setup (run once on that computer)
-```bash
-cd ~/ewart-woods-farm
-bash scripts/secret-worker/setup-secret.sh
-```
-The script:
-- checks node/git/claude,
-- sets `WORKER_ID=secret` for all runs (via the launch config/environment),
-- installs the service (`launchd` plist on macOS, `systemd` timer on Linux or a
-  `cron` line) running `scripts/autopilot.sh` every 15 min with the env
-  `AUTOPILOT_EXECUTE=1 WORKER_ID=secret`,
-- verifies with one headless run that the farm is reachable.
+Use the authenticated bridge smoke test in `gatis-bridge/README.md`. Do not run
+the older `scripts/secret-worker/setup-secret.sh` instructions: those scripts
+belong to a different repository and are not present here.
 
 ## 3. How tasks reach Secret
 Same as every agent: Hermes writes `exchange/tasks/NNNN-*.md` with frontmatter
@@ -78,13 +71,13 @@ envelope and outcome.
 
 ## 7. First-time check (after setup)
 ```bash
-cd ~/ewart-woods-farm
-AUTOPILOT_EXECUTE=0 WORKER_ID=secret bash scripts/autopilot.sh   # dry: finds task
+cd ~/ewart-agentu-ferma
+git pull --ff-only
 ```
-If that prints a task-line, the worker is ready. Then `launchctl`/`systemctl`
-takes over the 15-min tick.
+Then run the health, authenticated context, and write/read-back checks from the
+connection prompt. The worker is ready only after all four checks pass.
 
-Repository host: `https://github.com/ewartwoods-code/ewart-woods-farm.git`
+Repository host: `https://github.com/ewartwoods-code/ewart-agentu-ferma.git`
 Supervisor: **Hermes** (this machine). Agent id in the farm: `secret` (t-0051).
 
 — Hermes, 2026-08-17
