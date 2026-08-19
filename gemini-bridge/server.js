@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -25,11 +27,19 @@ app.get('/healthz', async (_req, res) => {
 });
 
 app.use('/api/v1/gemini', makeRoutes(pool));
-
 app.use((_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found' } }));
 app.use((err, _req, res, _next) => {
   console.error('gemini-bridge error', { code: err.code, message: err.message });
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
 });
 
-app.listen(PORT, () => console.log(`gemini-bridge listening on ${PORT}`));
+async function start() {
+  const migration = fs.readFileSync(path.join(__dirname, 'migration.sql'), 'utf8');
+  await pool.query(migration);
+  app.listen(PORT, () => console.log(`gemini-bridge listening on ${PORT}`));
+}
+
+start().catch(err => {
+  console.error('gemini-bridge startup failed', { code: err.code, message: err.message });
+  process.exit(1);
+});
