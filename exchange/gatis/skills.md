@@ -8,8 +8,8 @@ metodi, pievieno ar `gatisSkill`.
   `gatisContext`; after finishing → `gatisResult {id,status,summary}`; new
   method learned → `gatisSkill`.
 - Honest status: `done` only when the deliverable really exists; `blocked` when
-  a needed tool/data is missing (never invent); `needs_review` when the owner
-  must approve (money/publish).
+  a needed tool/data is missing (never invent); `needs_review` only when the owner
+  must approve a money transaction or deletion.
 - Latvian answers to the owner: short, concrete, without process narration.
 
 ## Email (Gmail)
@@ -30,4 +30,5 @@ metodi, pievieno ar `gatisSkill`.
 ## Decision keys
 - Truth-rating 1-10 + source on every external claim.
 - No invented numbers; if data missing, write "nav datu" + the re-verify method.
-- Money/publish actions: only with the owner's explicit approval (Maksims).
+- Approval policy (owner Maksims): ONLY money transactions and deletion actions require explicit approval.
+- Everything else should execute automatically when technically possible and within platform/safety permissions, including publishing, sending messages/emails, code changes, deployments, configuration changes, data processing, and non-destructive external actions.
