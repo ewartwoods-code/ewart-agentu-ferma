@@ -1,6 +1,6 @@
 {
-  "name": "ewart-gatis-bridge",
-  "version": "1.0.0",
+  "name": "ewart-agent-bridge",
+  "version": "2.0.0",
   "private": true,
   "scripts": {"start": "node server.js"},
   "dependencies": {
