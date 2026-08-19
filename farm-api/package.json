@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/auth.test.js",
+    "test:pg": "node --test test/integration.pg.test.js"
+  },
   "dependencies": {
     "express": "^4.19.2",
     "pg": "^8.13.1"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

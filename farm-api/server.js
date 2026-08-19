@@ -1,5 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -7,7 +8,7 @@ const DATABASE_URL = process.env.DATABASE_URL || '';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 
 if (!DATABASE_URL) throw new Error('DATABASE_URL is required');
-const pool = new Pool({ connectionString: DATABASE_URL, max: 5 });
+let pool = new Pool({ connectionString: DATABASE_URL, max: 5 });
 
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
@@ -23,6 +24,138 @@ const TABLES = new Set([
   'agent_skills','skills','chat_messages','commands','farm_plan','subscriptions','tasks',
   'token_budgets','agent_scene_positions','agent_module_usage'
 ]);
+
+// ---------------------------------------------------------------------------
+// Scoped write credentials (least privilege).
+//
+// Every database-mutating collection route is gated here. Each scope carries
+// its own credential and its own table/operation allowlist, so a leaked agent
+// credential cannot rewrite tasks and a leaked Hermes credential cannot touch
+// billing rows. The RPC admin token (ADMIN_TOKEN) stays separate and is NOT
+// accepted on these routes. Credential values are never logged.
+//
+// See farm-api/README.md for the variable names and the rollout order.
+// ---------------------------------------------------------------------------
+const WRITE_SCOPES = {
+  admin: {
+    env: 'FARM_ADMIN_WRITE_TOKEN',
+    insert: '*',
+    update: '*'
+  },
+  hermes: {
+    env: 'FARM_HERMES_WRITE_TOKEN',
+    insert: ['tasks', 'agent_events', 'agent_status', 'commands', 'farm_plan', 'skills', 'agent_skills', 'token_budgets'],
+    update: ['tasks', 'agent_events', 'agent_status', 'commands', 'farm_plan', 'skills', 'agent_skills', 'token_budgets']
+  },
+  agent: {
+    env: 'FARM_AGENT_WRITE_TOKEN',
+    insert: ['agent_events', 'agent_usage', 'agent_module_usage'],
+    update: ['agent_status', 'agent_usage', 'agent_module_usage']
+  },
+  // The ewart-agentu-ferma web service writes exactly two things through this
+  // API: it persists Herme chat turns and syncs Anthropic usage counters.
+  app: {
+    env: 'FARM_APP_WRITE_TOKEN',
+    insert: ['chat_messages'],
+    update: ['agent_usage']
+  }
+};
+
+function timingSafeEq(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+function presentedCredential(req) {
+  return String(req.headers.authorization || '').replace(/^Bearer\s+/i, '') ||
+         String(req.headers['x-api-key'] || '');
+}
+
+function configuredScopes() {
+  const out = [];
+  for (const [name, def] of Object.entries(WRITE_SCOPES)) {
+    const value = process.env[def.env] || '';
+    if (value) out.push({ name, def, value });
+  }
+  return out;
+}
+
+function resolveScope(credential) {
+  if (!credential) return null;
+  for (const scope of configuredScopes()) {
+    if (timingSafeEq(credential, scope.value)) return scope;
+  }
+  return null;
+}
+
+// Two scopes sharing one credential would silently collapse the privilege
+// boundary: whichever scope matched first would decide the allowlist. Refuse to
+// start instead. Values are compared by digest and are never logged.
+function assertDistinctScopeCredentials(scopes = configuredScopes()) {
+  const seen = new Map();
+  for (const scope of scopes) {
+    const digest = crypto.createHash('sha256').update(String(scope.value)).digest('hex');
+    if (seen.has(digest)) {
+      throw new Error(
+        `farm-api refusing to start: scopes "${seen.get(digest)}" and "${scope.name}" ` +
+        `share the same credential. Give ${WRITE_SCOPES[seen.get(digest)].env} and ` +
+        `${WRITE_SCOPES[scope.name].env} distinct values.`
+      );
+    }
+    seen.set(digest, scope.name);
+  }
+  return true;
+}
+
+function scopeAllows(scope, op, table) {
+  const allowed = scope.def[op];
+  if (!allowed) return false;
+  return allowed === '*' || allowed.includes(table);
+}
+
+// Gate a db-mutating collection route. Every rejection happens before any
+// database access, so an unauthorized caller never reaches Postgres.
+function requireWriteScope(op) {
+  return (req, res, next) => {
+    // Fail closed: an unconfigured deployment must never accept anonymous writes.
+    if (!configuredScopes().length) {
+      return res.status(403).json({ code: 'FARM_AUTH', message: 'write credentials are not configured' });
+    }
+    const scope = resolveScope(presentedCredential(req));
+    // Authenticate before revealing whether a table exists.
+    if (!scope) {
+      return res.status(401).json({ code: 'FARM_AUTH', message: 'missing or invalid write credential' });
+    }
+    const table = req.params.table;
+    if (!TABLES.has(table)) {
+      return res.status(404).json({ code: 'FARM_API', message: 'table not exposed' });
+    }
+    if (!scopeAllows(scope, op, table)) {
+      return res.status(403).json({ code: 'FARM_AUTH', message: `scope is not permitted to ${op} ${table}` });
+    }
+    req.writeScope = scope.name;
+    next();
+  };
+}
+
+// Repeat-safe inserts. Mirrors the agent bridge: an identical row written
+// again inside the window reuses the existing record instead of duplicating it.
+const IDEMPOTENT_INSERT_TABLES = new Set(['tasks', 'agent_events']);
+const IDEMPOTENCY_WINDOW = '10 minutes';
+
+async function findRecentDuplicate(table, row, keys) {
+  const cols = keys.filter(k => row[k] !== undefined && row[k] !== null && typeof row[k] !== 'object');
+  if (!cols.length) return null;
+  const values = [];
+  const where = cols.map(k => { values.push(row[k]); return `${ident(k)} = $${values.length}`; });
+  const sql = `SELECT * FROM ${tableName(table)} WHERE ${where.join(' AND ')}` +
+              ` AND created_at > now() - interval '${IDEMPOTENCY_WINDOW}'` +
+              ' ORDER BY created_at DESC LIMIT 1';
+  const out = await pool.query(sql, values);
+  return out.rows[0] || null;
+}
 
 function ident(v) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(String(v || ''))) throw new Error('invalid identifier');
@@ -102,31 +235,37 @@ async function genericGet(req, res) {
 
 app.get('/rest/v1/:table', genericGet);
 
-app.post('/rest/v1/:table', async (req, res) => {
+app.post('/rest/v1/:table', requireWriteScope('insert'), async (req, res) => {
   try {
     const table = req.params.table;
     tableName(table);
     const rows = Array.isArray(req.body) ? req.body : [req.body];
     if (!rows.length) return res.status(204).end();
     const inserted = [];
+    let reused = 0;
     for (const row of rows) {
       const keys = Object.keys(row || {}).filter(k => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(k));
       if (!keys.length) continue;
+      if (IDEMPOTENT_INSERT_TABLES.has(table)) {
+        const duplicate = await findRecentDuplicate(table, row, keys);
+        if (duplicate) { inserted.push(duplicate); reused++; continue; }
+      }
       const vals = keys.map(k => row[k]);
       const ps = vals.map((_, i) => `$${i + 1}`).join(',');
       const q = `INSERT INTO ${tableName(table)} (${keys.map(ident).join(',')}) VALUES (${ps}) RETURNING *`;
       const r = await pool.query(q, vals);
       inserted.push(...r.rows);
     }
+    res.setHeader('X-Idempotent-Reuse', String(reused));
     if (String(req.headers.prefer || '').includes('return=minimal')) return res.status(204).end();
-    res.status(201).json(inserted);
+    res.status(reused ? 200 : 201).json(inserted);
   } catch (err) {
     console.error('POST table failed', err);
     res.status(err.code === '42P01' ? 404 : 400).json({ code: err.code || 'FARM_API', message: err.message });
   }
 });
 
-app.patch('/rest/v1/:table', async (req, res) => {
+app.patch('/rest/v1/:table', requireWriteScope('update'), async (req, res) => {
   try {
     const table = req.params.table;
     tableName(table);
@@ -277,4 +416,15 @@ app.get('/healthz', async (_req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-app.listen(PORT, () => console.log(`EWART farm-api listening on ${PORT}`));
+if (require.main === module) {
+  assertDistinctScopeCredentials();
+  app.listen(PORT, () => console.log(`EWART farm-api listening on ${PORT}`));
+}
+
+module.exports = {
+  app,
+  assertDistinctScopeCredentials,
+  WRITE_SCOPES,
+  // Test seam only: never used by the running service.
+  __setPoolForTests: p => { pool = p; }
+};
