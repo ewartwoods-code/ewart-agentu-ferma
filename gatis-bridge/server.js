@@ -187,6 +187,11 @@ agentRouter.post('/claim', async (req, res) => {
     const updated = await client.query(`UPDATE farm.tasks
       SET status='active', started_at=COALESCE(started_at,now())
       WHERE id=$1 RETURNING *`, [task.id]);
+    await client.query(`INSERT INTO farm.agent_status(agent_id,status,current_task,quote,updated_at)
+      VALUES($1,'working',$2,'',now())
+      ON CONFLICT(agent_id) DO UPDATE SET
+        status='working', current_task=EXCLUDED.current_task, updated_at=now()`,
+      [agentId, task.title]);
     await client.query('COMMIT');
     await addEvent(agentId, `Uzdevums paņemts izpildei: ${task.title}`);
     res.json({ ok: true, agent_id: agentId, task: updated.rows[0] });
@@ -239,6 +244,16 @@ agentRouter.post('/result', async (req, res) => {
       [taskId, agentId, status, summary, resultUrl]);
 
     if (!out.rows[0]) return res.status(404).json({ ok: false, error: 'task not found for agent' });
+    const agentStatus = status === 'review' ? 'review'
+      : status === 'blocked' ? 'blocked'
+      : status === 'active' ? 'working'
+      : 'resting';
+    const currentTask = status === 'done' ? '' : out.rows[0].title;
+    await pool.query(`INSERT INTO farm.agent_status(agent_id,status,current_task,quote,updated_at)
+      VALUES($1,$2,$3,'',now())
+      ON CONFLICT(agent_id) DO UPDATE SET
+        status=EXCLUDED.status, current_task=EXCLUDED.current_task, updated_at=now()`,
+      [agentId, agentStatus, currentTask]);
     await addEvent(agentId, `Rezultāts: ${status} — ${summary}`);
     res.json({ ok: true, agent_id: agentId, task: out.rows[0] });
   } catch (e) {
