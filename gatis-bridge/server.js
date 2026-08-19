@@ -74,11 +74,20 @@ async function queryOptional(sql, values = [], fallback = null) {
 }
 
 async function addEvent(agentId, text) {
-  return queryOptional(
+  const existing = await queryOptional(
+    `SELECT id,agent_id,event_text,created_at FROM farm.agent_events
+     WHERE agent_id=$1 AND event_text=$2 AND created_at > now() - interval '10 minutes'
+     ORDER BY created_at DESC LIMIT 1`,
+    [agentId, text],
+    { rows: [] }
+  );
+  if (existing?.rows?.[0]) return { rows: existing.rows, idempotent: true };
+  const created = await queryOptional(
     'INSERT INTO farm.agent_events(agent_id,event_text) VALUES($1,$2) RETURNING *',
     [agentId, text],
     { rows: [] }
   );
+  return { ...created, idempotent: false };
 }
 
 app.get('/healthz', async (_req, res) => {
@@ -234,6 +243,12 @@ agentRouter.post('/result', async (req, res) => {
 
     const summary = String(req.body?.summary || req.body?.result_summary || '');
     const resultUrl = req.body?.result_url || null;
+    const current = await pool.query(`SELECT * FROM farm.tasks
+      WHERE id=$1 AND lower(coalesce(agent_id::text,''))=$2 LIMIT 1`, [taskId, agentId]);
+    if (!current.rows[0]) return res.status(404).json({ ok: false, error: 'task not found for agent' });
+    if (current.rows[0].status === status && String(current.rows[0].result_summary || '') === summary) {
+      return res.json({ ok: true, idempotent: true, agent_id: agentId, task: current.rows[0] });
+    }
     const out = await pool.query(`UPDATE farm.tasks
       SET status=$3,
           result_summary=$4,
@@ -267,7 +282,12 @@ agentRouter.post('/events', async (req, res) => {
     const text = String(req.body?.event_text || req.body?.text || '').trim();
     if (!text) return res.status(400).json({ ok: false, error: 'event_text is required' });
     const out = await addEvent(agentId, text);
-    res.status(201).json({ ok: true, agent_id: agentId, event: out?.rows?.[0] || null });
+    res.status(out?.idempotent ? 200 : 201).json({
+      ok: true,
+      idempotent: !!out?.idempotent,
+      agent_id: agentId,
+      event: out?.rows?.[0] || null
+    });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
